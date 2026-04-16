@@ -1,8 +1,9 @@
-# U15一関プロコンサーバー
+# U15舞鶴プロコンサーバー
 Combine Google Blockly and Procon Game Server.
 
-U15一関プロコンサーバーは[U-15プログラミングコンテスト一関](https://procon-ichinoseki.com/)での使用を想定したサーバです。
-[U-15長野プログラミングコンテスト](https://www.nagano-cci.or.jp/u15procon/)用に開発されたU15長野プロコンサーバーを一関仕様に改良しました。
+U15舞鶴プロコンサーバーは[U-15プログラミングコンテスト舞鶴](https://sites.google.com/view/maizuru-programming-contest/)での使用を想定したサーバです。
+[U-15長野プログラミングコンテスト](https://www.nagano-cci.or.jp/u15procon/)用に開発されたU15長野プロコンサーバーをベースに、
+[一関大会仕様に改良したサーバー](https://github.com/U15-Ichinoseki/blockly-chaser-ichinoseki)をさらに舞鶴大会仕様に変更しました。
 ビジュアルプログラミングの一つである[blockly](https://github.com/google/blockly)を用いてプログラミング初学者が気軽にプログラミングコンテストに参加できる環境づくりを目指しています。
 ゲーム仕様は[AsahikawaProcon-Server](https://github.com/hal1437/AsahikawaProcon-Server)を参考にブラウザ上でゲームの実行が可能です。
 
@@ -43,12 +44,12 @@ U15一関プロコンサーバーは[U-15プログラミングコンテスト一
 - Step.0:Node.js,npm インストール
 - Step.1:任意の場所でGitのリポジトリをクローン
 ```bash
-git clone https://github.com/U15-Ichinoseki/blockly-chaser-ichinoseki.git
+git clone https://github.com/U15-Maizuru/blockly-chaser-maizuru.git
 ```
 
 - Step.2:ダウンロードしたフォルダに移動後、パッケージをインストール
 ```bash
-cd ./blockly-procon
+cd ./blockly-chaser-mazuru
 npm install
 ```
 
