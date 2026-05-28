@@ -12,7 +12,8 @@
 
   <%- include('./common/config-init') %>
 
-    <script src="/javascripts/jquery-3.4.1.min.js"></script>
+  <script src="/javascripts/jquery-3.4.1.min.js"></script>
+  <script>const lng_list = <%- JSON.stringify(LNG) %>;</script>
 
 </head>
 
@@ -20,45 +21,32 @@
 
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-    <div class="header">
+  <div class="header">
 
-      <div class="back_page">
-        <div class="back_button"><a href="../"></a></div>
+    <div class="back_page">
+      <div class="back_button"><a href="../"></a></div>
+    </div>
+    <div class="control_area">
+      <div class="page_title">
+        <h1><span class="page_title_span">チュートリアル</span><%- title %></h1>
       </div>
-      <div class="control_area">
-        <div class="page_title">
-          <h1><span class="page_title_span">チュートリアル</span><%- title %></h1>
-        </div>
-        <div class="control_button">
-          <button id="configButton" title="<%- LNG[" CONFIG"] %>"></button>
-        </div>
+      <div class="control_button">
+        <button id="configButton" title="<%- LNG[" CONFIG"] %>"></button>
       </div>
-
     </div>
 
-    <div id="menu_area">
-      <div id="stage_list">
+  </div>
 
-      </div>
-      <div id="stage_info">
-        <div id="stage_join_div" class="display_off"></div>
-        <div id="stage_info_condition" class="display_off">
-          <span><%- LNG["CLEAR_CONDITION"] %></span>
-          <div id="stage_info_hart" class="stage_info_data"><%- LNG["INFO_HART_B"] %>
-              <div id="stage_info_hart_data" class="stage_info_data_inline"></div><%- LNG["INFO_HART_A"] %></div>
-          <div id="stage_info_put" class="stage_info_data"><%- LNG["INFO_PUT"] %></div>
-          <div id="stage_info_block" class="stage_info_data"><%- LNG["INFO_BLOCK_B"] %>
-              <div id="stage_info_block_data" class="stage_info_data_inline"></div><%- LNG["INFO_BLOCK_A"] %></div>
-          <div id="stage_info_turn" class="stage_info_data">
-            <div id="stage_info_turn_data" class="stage_info_data_inline"></div><%- LNG["INFO_TURN"] %>
-          </div>
-        </div>
-        <div id="stage_map" class="display_off"></div>
-      </div>
-      <div id="stage_info_name" class="display_off">
-        <div>
-        </div>
-        <script src="/javascripts/menu-tutorial.js"></script>
+  <div id="scale_root">
+    <div id="menu_area">
+      <div id="stage_list"></div>
+
+      <div id="stage_detail"></div>
+    </div>
+  </div>
+
+
+  <script src="/javascripts/menu-tutorial.js"></script>
 
 </body>
 
