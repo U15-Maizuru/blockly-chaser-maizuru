@@ -44,57 +44,50 @@
         <h1><span class="page_title_span">プログラミング</span><%- title %>【上級】</h1>
       </div>
       <div class="control_button">
-        <button id="runButton" class="notext" title="<%- LNG[" RUN"] %>">
-
-        </button>
-        <button id="stopButton" class="notext" title="<%- LNG[" STOP"] %>">
-
-        </button>
-        <button id="trashButton" class="notext" title="<%- LNG[" TRASH"] %>">
-
-        </button>
-        <button id="downloadButton" class="notext" title="<%- LNG[" SAVE"] %>">
-
-        </button>
-        <button id="downloadPythonButton" class="notext" title="Pythonで保存">
-
-        </button>
+        <button id="runButton" class="notext" title="<%- LNG[" RUN"] %>"></button>
+        <button id="stopButton" class="notext" title="<%- LNG[" STOP"] %>"></button>
+        <button id="trashButton" class="notext" title="<%- LNG[" TRASH"] %>"></button>
+        <button id="downloadButton" class="notext" title="<%- LNG[" SAVE"] %>"></button>
+        <button id="downloadPythonButton" class="notext" title="Pythonで保存"></button>
         <label for="file_load" title="<%- LNG[" LOAD"] %>">
           <input type="file" accept="application/zip,.blch,.json,.xml" id="file_load" style="display:none;">
         </label>
       </div>
     </div>
-
-
-  </div>
-  <div class="left_area">
-    <div class="tab_area">
-      <ul class="blockly_menu">
-        <li id="tab_blocks" class="tabon">プログラムブロック</li>
-        <li id="tab_python" class="taboff">python</li>
-        <li id="tab_javascript" class="taboff">javascript</li>
-        <li id="tab_json" class="taboff">json</li>
-        <li id="tab_xml" class="taboff">xml</li>
-      </ul>
-    </div>
-
-    <div class="blockly_area" id="content_area"></div>
-
-    <div id="content_blocks" class="content"></div>
-    <pre id="content_python" class="content" wrap="off"></pre>
-    <pre id="content_javascript" class="content lang-js"></pre>
-    <pre id="content_json" class="content" wrap="off"></pre>
-    <pre id="content_xml" class="content" wrap="off"></pre>
   </div>
 
-  <div class="right_area">
+  <div id="scale_root">
+    <div id="main_area">
+      <div class="left_area">
+        <div class="tab_area">
+          <ul class="blockly_menu">
+            <li id="tab_blocks" class="tabon">プログラムブロック</li>
+            <li id="tab_python" class="taboff">python</li>
+            <li id="tab_javascript" class="taboff">javascript</li>
+            <li id="tab_json" class="taboff">json</li>
+            <li id="tab_xml" class="taboff">xml</li>
+          </ul>
+        </div>
 
-    <div class="game_area">
-      <div id="game_board"></div>
-      <div id="game_info"></div>
+        <div class="blockly_area" id="content_area"></div>
+
+        <div id="content_blocks" class="content"></div>
+        <pre id="content_python" class="content" wrap="off"></pre>
+        <pre id="content_javascript" class="content lang-js"></pre>
+        <pre id="content_json" class="content" wrap="off"></pre>
+        <pre id="content_xml" class="content" wrap="off"></pre>
+      </div>
+
+      <div class="right_area">
+
+        <div class="game_area">
+          <div id="game_board"></div>
+          <div id="game_info"></div>
+        </div>
+        <textarea class="console_area" id="output" disabled="disabled"></textarea>
+
+      </div>
     </div>
-    <textarea class="console_area" id="output" disabled="disabled"></textarea>
-
   </div>
 
   <script src="/javascripts/fflate.js"></script>

@@ -261,10 +261,18 @@ Code.init = function () {
   var container = document.getElementById('content_area');
   var onresize = function (e) {
     var bBox = Code.getBBox_(container);
+    var offsetParent = container.offsetParent || document.body;
+    var parentRect = offsetParent.getBoundingClientRect();
+    var pageOffsetX = window.pageXOffset || document.documentElement.scrollLeft;
+    var pageOffsetY = window.pageYOffset || document.documentElement.scrollTop;
+    var parentX = parentRect.left + pageOffsetX;
+    var parentY = parentRect.top + pageOffsetY;
+    var top = bBox.y - parentY;
+    var left = bBox.x - parentX;
     for (var i = 0; i < Code.TABS_.length; i++) {
       var el = document.getElementById('content_' + Code.TABS_[i]);
-      el.style.top = bBox.y + 'px';
-      el.style.left = bBox.x + 'px';
+      el.style.top = top + 'px';
+      el.style.left = left + 'px';
       // Height and width need to be set, read back, then set again to
       // compensate for scrollbars.
       el.style.height = bBox.height + 'px';

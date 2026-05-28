@@ -6,5 +6,6 @@
     "INFO_PUT": "HOTにブロックをおいてクリア",
     "INFO_BLOCK_B": "プログラムブロックを",
     "INFO_BLOCK_A": "こいかでクリア",
-    "INFO_TURN": "ターンいないでクリア"
+    "INFO_TURN_B": "",
+    "INFO_TURN_A": "ターンいないでクリア"
 }

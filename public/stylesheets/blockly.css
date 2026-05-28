@@ -291,20 +291,43 @@ button {
   justify-content: flex-end;
 }
 
+#scale_root {
+  position: relative;
+  width: 100vw;
+  height: calc(100% - 51px);
+  overflow: none;
+  display: flex;
+  justify-content: center;
+  transform-origin: top left;
+}
+
+#main_area {
+  position: relative;
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
 
 .left_area {
   float: left;
-
   width: calc(100% - 480px);
-  height: calc(100% - 51px);
 }
 
 .right_area {
   float: right;
   overflow: auto;
   width: 480px;
-  height: calc(100% - 51px);
   background: #ddd;
+}
+
+@media (max-width: 1680px) {
+  #scale_root {
+    width: 1680px;
+    height: calc((100% - 51px) * 1680px / 100vw);
+    transform: scale(calc(100vw / 1680px));
+  }
 }
 
 .game_area {
