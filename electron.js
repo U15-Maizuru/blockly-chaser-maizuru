@@ -13,7 +13,13 @@ app.on('window-all-closed', () => {
 })
 
 app.on('ready', () => {
-  mainWindow = new BrowserWindow({width: 1280, height: 720, webPreferences: { nodeIntegration : false }});
+  mainWindow = new BrowserWindow({
+    width: 1680,
+    height: 950,
+    webPreferences: {
+      zoomFactor: 1.0,
+      nodeIntegration : false
+    }});
   mainWindow.setMenu(null);
   
   mainWindow.loadURL('http://127.0.0.1:3000')
