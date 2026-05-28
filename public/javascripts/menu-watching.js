@@ -244,10 +244,10 @@ function server_info(id, get_list) {
   server_access_div.appendChild(server_watch_button);
   server_access_div.appendChild(server_token_input);
 
+  document.getElementById("watching_info").appendChild(server_info_name);
   document.getElementById("watching_info").appendChild(table);
   document.getElementById("watching_info").appendChild(server_info_div);
   document.getElementById("watching_info").appendChild(server_access_div);
-  document.getElementById("menu_area").appendChild(server_info_name);
   document.getElementById("menu_area").classList.add("select_back");
 }
 
