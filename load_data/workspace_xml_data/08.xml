@@ -13,7 +13,7 @@
     
     <block type="controls_repeat_ext">
         <value name="TIMES">
-          <shadow type="math_number">
+          <shadow type="math_number_dropdown">
             <field name="NUM">1</field>
           </shadow>
         </value>

@@ -278,6 +278,25 @@ Blockly.Blocks['infinite_loop'] = {
   }
 };
 
+Blockly.Blocks['math_number_dropdown'] = {
+  init: function() {
+    // デフォルト値
+    const min = this.min ?? 0;
+    const max = this.max ?? 10;
+    const step = this.step ?? 1;
+
+    const options = [];
+    for (let i = min; i <= max; i += step) {
+      options.push([String(i), String(i)]);
+    }
+
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown(options), "NUM");
+    this.setOutput(true, "Number");
+    this.setColour(230);
+  }
+};
+
 
 // expert mode
 
