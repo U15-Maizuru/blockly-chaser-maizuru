@@ -38,11 +38,11 @@ python.pythonGenerator.forBlock['server_join'] = function (block) {
 
   // TODO: Assemble Python into code variable.
   Blockly.Python.definitions_['import_argparse'] = 'import argparse';
-  Blockly.Python.definitions_['import_chaser'] = 'from lib.CHaser import * # lib/CHaser.py';
+  Blockly.Python.definitions_['import_chaser'] = 'from lib.pyCHaser import * # lib/pyCHaser.py';
 
   Blockly.Python.definitions_['usage_comment'] = '"""\n'
     + '【ライブラリの配置方法】\n'
-    + '    同じフォルダ内に「lib」フォルダを作成し、その中に「CHaser.py」ファイルを配置してください。\n\n'
+    + '    同じフォルダ内に「lib」フォルダを作成し、その中に「pyCHaser.py」ファイルを配置してください。\n\n'
 
     + '【サーバーとの接続方法】\n'
     + '    Client クラスの引数に port, name, host を指定します。\n'
