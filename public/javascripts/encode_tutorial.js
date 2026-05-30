@@ -413,7 +413,7 @@ Code.download = function () {
     window.alert("ご利用のブラウザは本機能を使用できません");
   }
   else {
-    const version = "2.1.0+MZ"; // リリース時に更新
+    const version = "2.1.2+MZ"; // リリース時に更新
     
     const date = new Date();
     const yyyy = date.getFullYear();

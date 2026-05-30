@@ -387,6 +387,11 @@ javascript.javascriptGenerator.forBlock['infinite_loop'] = function (block) {
   return code;
 };
 
+javascript.javascriptGenerator.forBlock['math_number_dropdown'] = function(block) {
+  const value = block.getFieldValue('NUM');
+  return [value, Blockly.JavaScript.ORDER_ATOMIC];
+};
+
 javascript.javascriptGenerator.forBlock['comment_block'] = function(block) {
   const comment = block.getFieldValue('COMMENT');
   const code = `// ${comment}\n`;

@@ -19,7 +19,7 @@
 
     <block type="item4_value"></block>
 
-    <block type="math_number">
+    <block type="math_number_dropdown">
       <field name="NUM">0</field>
     </block>
 
