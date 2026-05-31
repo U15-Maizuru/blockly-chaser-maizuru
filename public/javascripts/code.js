@@ -252,6 +252,112 @@ Code.checkAllGeneratorFunctionsDefined = function (generator) {
   return valid;
 };
 
+Code.getWorkspaceScale_ = function (workspace) {
+  var injectionDiv = workspace && workspace.getInjectionDiv && workspace.getInjectionDiv();
+  if (!injectionDiv) {
+    return { scaleX: 1, scaleY: 1, rect: { left: 0, top: 0 } };
+  }
+  var rect = injectionDiv.getBoundingClientRect();
+  var scaleX = 1;
+  var scaleY = 1;
+  if (injectionDiv.offsetWidth) {
+    scaleX = rect.width / injectionDiv.offsetWidth || 1;
+  }
+  if (injectionDiv.offsetHeight) {
+    scaleY = rect.height / injectionDiv.offsetHeight || 1;
+  }
+  return { scaleX: scaleX, scaleY: scaleY, rect: rect };
+};
+
+Code.adjustPointerEventCoordinates_ = function (point, rect, scaleX, scaleY) {
+  return {
+    clientX: rect.left + (point.clientX - rect.left) / scaleX,
+    clientY: rect.top + (point.clientY - rect.top) / scaleY,
+    screenX: rect.left + (point.screenX - rect.left) / scaleX,
+    screenY: rect.top + (point.screenY - rect.top) / scaleY
+  };
+};
+
+Code.patchBlocklyScreenToWorkspaceCoordinates_ = function () {
+  if (!(Blockly && Blockly.utils && Blockly.utils.svgMath && Code.workspace)) {
+    return;
+  }
+  var svgMath = Blockly.utils.svgMath;
+  if (svgMath.__screenToWs_orig) {
+    return;
+  }
+  svgMath.__screenToWs_orig = svgMath.screenToWsCoordinates;
+  svgMath.screenToWsCoordinates = function (workspace, point) {
+    try {
+      var info = Code.getWorkspaceScale_(workspace);
+      if (info.scaleX === 1 && info.scaleY === 1) {
+        return svgMath.__screenToWs_orig(workspace, point);
+      }
+      var adjusted = {
+        x: info.rect.left + (point.x - info.rect.left) / info.scaleX,
+        y: info.rect.top + (point.y - info.rect.top) / info.scaleY
+      };
+      return svgMath.__screenToWs_orig(workspace, adjusted);
+    } catch (err) {
+      return svgMath.__screenToWs_orig(workspace, point);
+    }
+  };
+};
+
+Code.patchScaledPointerEvents_ = function () {
+  if (!Code.workspace || !window.PointerEvent) {
+    return;
+  }
+  var injectionDiv = Code.workspace.getInjectionDiv();
+  if (!injectionDiv) {
+    return;
+  }
+  var pointerHandler = function (e) {
+    if (!e.isTrusted) {
+      return;
+    }
+    var info = Code.getWorkspaceScale_(Code.workspace);
+    if (info.scaleX === 1 && info.scaleY === 1) {
+      return;
+    }
+    var adjusted = Code.adjustPointerEventCoordinates_(e, info.rect, info.scaleX, info.scaleY);
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    var props = {
+      pointerId: e.pointerId,
+      pointerType: e.pointerType,
+      isPrimary: e.isPrimary,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      clientX: adjusted.clientX,
+      clientY: adjusted.clientY,
+      screenX: adjusted.screenX,
+      screenY: adjusted.screenY,
+      button: e.button,
+      buttons: e.buttons,
+      pressure: e.pressure,
+      width: e.width,
+      height: e.height,
+      tiltX: e.tiltX,
+      tiltY: e.tiltY,
+      ctrlKey: e.ctrlKey,
+      shiftKey: e.shiftKey,
+      altKey: e.altKey,
+      metaKey: e.metaKey
+    };
+    try {
+      var newEvent = new PointerEvent(e.type, props);
+      e.target.dispatchEvent(newEvent);
+    } catch (err) {
+      console.warn('Failed to dispatch adjusted PointerEvent', err);
+    }
+  };
+  ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(function (eventName) {
+    injectionDiv.addEventListener(eventName, pointerHandler, true);
+  });
+};
+
 /**
  * Initialize Blockly.  Called on page load.
  */
@@ -348,6 +454,9 @@ Code.init = function () {
         wheel: true
       }
     });
+
+  Code.patchBlocklyScreenToWorkspaceCoordinates_();
+  Code.patchScaledPointerEvents_();
 
   if (blocklimit != "") {
     function onchange(event) {
