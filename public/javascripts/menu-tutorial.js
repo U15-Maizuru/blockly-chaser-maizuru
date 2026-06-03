@@ -97,6 +97,38 @@ function createStageCard(stage, stageList) {
     e.stopPropagation();
   });
 
+  stageDiv.addEventListener('dblclick', function (e) {
+    // 同じステージが選択されていて、詳細表示中ならステージを開始する
+    const stageDetail = document.getElementById('stage_detail');
+    if (!this.classList.contains('stage_select_on')) {
+      return;
+    }
+    if (stageDetail && !stageDetail.classList.contains('display_off')) {
+      window.location.href = '/tutorial?stage=' + encodeURIComponent(this.dataset.stageId);
+    }
+    e.stopPropagation();
+  });
+
+  // タブレット向け：ダブルタップ(短時間に2回のタッチ)でステージ開始
+  stageDiv.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    const last = this._lastTap || 0;
+    const delta = now - last;
+    this._lastTap = now;
+    // 2回タップが 400ms 未満ならダブルタップとみなす
+    if (delta > 0 && delta < 400) {
+      const stageDetail = document.getElementById('stage_detail');
+      if (!this.classList.contains('stage_select_on')) {
+        // 最初のタップで選択されるため、未選択の場合は何もしない
+        return;
+      }
+      if (stageDetail && !stageDetail.classList.contains('display_off')) {
+        window.location.href = '/tutorial?stage=' + encodeURIComponent(this.dataset.stageId);
+      }
+      e.stopPropagation();
+    }
+  });
+
   oneStage.appendChild(stageDiv);
   return oneStage;
 }
