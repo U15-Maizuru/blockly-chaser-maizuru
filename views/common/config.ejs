@@ -13,8 +13,10 @@
             <input type="radio" name="lng" id="lng_ja" checked><label for="lng_ja">日本語</label>
             <input type="radio" name="lng" id="lng_ja-k"><label for="lng_ja-k">にほんご</label>
           </div>
-          <span><%- LNG["PAGE_RELOAD"] %></span>
-          <span><%- LNG["UNSUPPORTED"] %></span>
+          <span>
+            <%- LNG["PAGE_RELOAD"] %>&nbsp;
+            <%- LNG["UNSUPPORTED"] %>
+          </span>
         </div>
 
         <div class="config_item">
@@ -45,9 +47,8 @@
           <div id="programming_data_reset" class="save_data_reset">リセット</div>
           <span><%- LNG["PROGRAMMING_RESET_SPAN"] %></span>
         </div>
-
-
       </div>
+
       <input id="config_tab_02" type="radio" name="CONFIG_TAB" class="config_tab_switch" /><label
         class="config_tab_label" for="config_tab_02">サウンド</label>
       <div class="config_tab_content">

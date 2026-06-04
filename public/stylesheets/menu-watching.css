@@ -13,20 +13,24 @@
     transform: scale(min(1, calc(100vw / 1280px)));
     display: flex;
     justify-content: center;
+    background: linear-gradient(135deg, rgba(235, 255, 253, 0.96), rgba(209, 248, 243, 0.94));
+    border-radius: 42px;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 24px 60px rgba(67, 189, 173, 0.18);
 }
 
 .select_back {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.4) 100%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.2) 100%);
 }
 
 #watching_list {
     position: relative;
     width: 680px;
-    background: rgba(255, 255, 255, 0.7);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    transform: skewX(-2deg);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 16px 40px rgba(67, 189, 173, 0.18);
     overflow: auto;
-
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
 }
@@ -47,25 +51,26 @@
 .server_group_title {
     font-size: 24px;
     font-weight: bold;
-    color: #333;
-    background: #e9e9e9;
-    padding: 6px 16px;
-    border-radius: 6px 6px 0 0;
-    margin-bottom: 4px;
-    letter-spacing: 0.05em;
+    color: #215c57;
+    background: linear-gradient(135deg, #d5fbf5, #a7ebdd);
+    padding: 10px 18px;
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .server_row {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 12px;
+    margin-bottom: 10px;
 }
 
 .one_watching_server {
     width: auto;
-    height: 80px;
+    height: auto;
     margin: 0;
     padding: 0;
     display: flex;
@@ -77,12 +82,13 @@
     margin: 10px 8px;
     width: 200px;
     height: 60px;
-    background: #5d5d5d;
-    border-radius: 10px;
+    background: linear-gradient(135deg, #c8f3f0, #88d9ce);
+    border-radius: 16px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-shadow: 0 12px 28px rgba(67, 189, 173, 0.18);
 }
 
 .server_vs_player {
@@ -101,7 +107,7 @@
     width: 100px;
     height: 20px;
     line-height: 20px;
-    background: #70c7ff;
+    background: #4dcfd8;
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
 }
 
@@ -113,7 +119,7 @@
     border: none;
     height: 28px;
     width: 7px;
-    background: #70c7ff;
+    background: #4dcfd8;
     border-radius: 5px 0 0 5px;
 }
 
@@ -125,7 +131,7 @@
     border: none;
     height: 7px;
     width: 5px;
-    background: #4d99ca;
+    background: #2d9ea7;
     border-radius: 5px 0 0 5px;
 }
 
@@ -145,7 +151,7 @@
     width: 100px;
     height: 20px;
     line-height: 20px;
-    background: #ffc107;
+    background: linear-gradient(135deg, #5ad7c2, #2faea1);
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
 }
 
@@ -157,7 +163,7 @@
     border: none;
     height: 28px;
     width: 7px;
-    background: #ffc107;
+    background: #4dcfd8;
     border-radius: 5px 0 0 5px;
 }
 
@@ -169,7 +175,7 @@
     border: none;
     height: 7px;
     width: 5px;
-    background: #d69400;
+    background: #2d9ea7;
     border-radius: 5px 0 0 5px;
 }
 
@@ -177,26 +183,26 @@
     margin-top: 20px;
     margin-left: 20px;
     text-align: left;
-    color: #fff;
+    color: #215c57;
     font-weight: bold;
     letter-spacing: 0.1em;
 }
 
 .server_id {
     font-size: 10px;
-    color: #fff;
+    color: #2d9ea7;
     font-weight: bold;
 }
 
 .server_id:before {
     content: 'ID';
     font-size: 10px;
-    color: #ff4e38;
+    color: #2d9ea7;
     margin-right: 5px;
     margin-left: 10px;
     padding: 0 5px;
-    background: #fff;
-    border-radius: 10px;
+    background: #e2faf4;
+    border-radius: 12px;
 }
 
 #map_table {
@@ -205,9 +211,9 @@
     margin-bottom: 30px;
     height: 300px;
     background: #fff;
-    padding: 5px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    padding: 8px;
+    border-radius: 24px;
+    box-shadow: 0 14px 30px rgba(67, 189, 173, 0.16);
 }
 
 table {
@@ -246,8 +252,14 @@ td img {
 }
 
 .server_select_on {
-    background: #ff4e38;
-    transform: scale(1.1);
+    background: linear-gradient(135deg, #ff9a56, #ff7d45);
+    transform: scale(1.08);
+    box-shadow: 0 16px 30px rgba(255, 141, 96, 0.24);
+}
+
+.server_select_on .server_name,
+.server_select_on .server_id {
+    color: #ffffff;
 }
 
 .hart_img {
