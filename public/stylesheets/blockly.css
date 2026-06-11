@@ -136,6 +136,12 @@ pre.content {
   padding: 5px;
 }
 
+[id^="content_"]:not(#content_blocks) {
+  font-size: 16px;
+  background: #e5f8f3;
+  background-image: none;
+}
+
 #content_blocks {
   padding: 0;
 }
@@ -264,7 +270,7 @@ button {
 .page_title h1 {
   width: 250px;
   background: #FFF;
-  padding: 10px 0 0 10px;
+  padding: 22px 0 10px 10px;
   font-size: 16px;
   border-radius: 30px;
   text-shadow: 1px 1px 1px #999999;
@@ -273,9 +279,9 @@ button {
 }
 
 .page_title_span {
-  font-size: 12px;
+  font-size: 8px;
   position: absolute;
-  top: 5px;
+  top: 10px;
   left: 8px;
   color: #FFF;
   width: 120px;
@@ -341,6 +347,7 @@ button {
   border: solid 1px #c1c1c1;
   text-align: center;
 
+  background: #f3fffb;
   background-repeat: no-repeat;
   background-size: contain;
   background-position: 0% 40%;
@@ -357,7 +364,7 @@ button {
   -webkit-background: #00266d;
   -webkit-color: #FFF;
   color: #FFF;
-  background: #00266d;
+  background: #3aa6d3;
 
   margin: 6px;
   padding: 3px 12px;
@@ -367,7 +374,7 @@ button {
 
 #runButton {
   border: 2px solid #ffffff;
-  background-color: #ff4e38;
+  background-color: #5ad7c2;
   background-image: url(../media/run.png);
   background-repeat: no-repeat;
   background-size: 25px;
@@ -375,12 +382,12 @@ button {
   width: 60px;
   height: 35px;
   border-radius: 18px 4px 4px 18px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
 }
 
 #reloadButton {
   border: 2px solid #ffffff;
-  background-color: #ff4e38;
+  background-color: #5ad7c2;
   background-image: url(../media/reload.png);
   background-repeat: no-repeat;
   background-size: 25px;
@@ -388,12 +395,12 @@ button {
   width: 60px;
   height: 35px;
   border-radius: 18px 4px 4px 18px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
 }
 
 #stopButton {
   border: 2px solid #ffffff;
-  background-color: #5d5d5d;
+  background-color: #2faea1;
   background-image: url(../media/stop.png);
   background-repeat: no-repeat;
   background-size: 25px;
@@ -401,12 +408,12 @@ button {
   width: 40px;
   height: 35px;
   border-radius: 4px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
 }
 
 #trashButton {
   border: 2px solid #ffffff;
-  background-color: #5d5d5d;
+  background-color: #2faea1;
   background-image: url(../media/trash.png);
   background-repeat: no-repeat;
   background-size: 25px;
@@ -414,12 +421,12 @@ button {
   width: 40px;
   height: 35px;
   border-radius: 4px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
 }
 
 #downloadButton {
   border: 2px solid #ffffff;
-  background-color: #5d5d5d;
+  background-color: #2faea1;
   background-image: url(../media/download.png);
   background-repeat: no-repeat;
   background-size: 25px;
@@ -427,12 +434,12 @@ button {
   width: 40px;
   height: 35px;
   border-radius: 4px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
 }
 
 #downloadPythonButton {
   border: 2px solid #ffffff;
-  background-color: #5d5d5d;
+  background-color: #2faea1;
   background-image: url(../media/downloadPython.png);
   background-repeat: no-repeat;
   background-size: 25px;
@@ -440,7 +447,7 @@ button {
   width: 40px;
   height: 35px;
   border-radius: 4px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
 }
 
 .Button_hidden {
@@ -448,17 +455,19 @@ button {
 }
 
 
-label {
+label[for="file_load"] {
+  display: inline-block;
   border: 2px solid #ffffff;
-  background-color: #5d5d5d;
+  background-color: #2faea1;
   background-image: url(../media/load.png);
   background-repeat: no-repeat;
   background-size: 25px;
   background-position: center center;
   width: 36px;
+  height: 35px;
   border-radius: 4px;
   margin: 1px 5px;
-  box-shadow: 0px 1px 2px 1px #7d7d7d;
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
   cursor: pointer;
 }
 
@@ -510,6 +519,15 @@ label {
   100% {
     opacity: 1;
   }
+}
+
+/* Ensure Blockly trashcan remains visible under zoom controls */
+.blocklyTrash,
+.blocklyTrash .blocklyTrashBody,
+.blocklyTrash .blocklyTrashLid {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 @-moz-keyframes blink {

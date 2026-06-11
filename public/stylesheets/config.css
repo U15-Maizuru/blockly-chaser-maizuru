@@ -1,17 +1,15 @@
 #config {
     position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
+    inset: 0;
+    z-index: 100;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
-    filter: drop-shadow(10px 10px 10px rgba(0, 0, 0, 0.5));
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(6px);
     opacity: 0;
     visibility: hidden;
-    transition: .3s linear;
+    transition: opacity .24s ease, visibility .24s ease;
 }
 
 #config.overlay_on {
@@ -20,105 +18,119 @@
 }
 
 #config_area {
-    width: 720px;
-    max-width: 90%;
-    height: 500px;
-    max-height: 90%;
-    z-index: 2;
-    background: #FFF;
-    padding: 10px;
-    -webkit-clip-path: polygon(5% 0, 95% 0, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0 95%, 0 5%);
-    clip-path: polygon(5% 0, 95% 0, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0 95%, 0 5%);
+    width: 760px;
+    max-width: 92%;
+    height: 600px;
+    max-height: 90vh;
+    z-index: 101;
+    background: #ffffff;
+    border-radius: 30px;
+    border: 1px solid rgba(93, 183, 172, 0.16);
+    box-shadow: 0 22px 56px rgba(0, 0, 0, 0.16);
+    padding: 0;
+    overflow: hidden;
 }
 
 .config_title {
     position: relative;
     text-align: center;
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 22px;
+    font-weight: 700;
     padding: 10px 0;
-    color: #5d5d5d;
-    text-shadow: 1px 1px 1px #ccc;
+    color: #1f5e55;
+    background: linear-gradient(135deg, #e7faf8, #bfe9e3);
+    box-shadow: inset 0 -1px 0 rgba(93, 183, 172, 0.18);
+    margin: 0;
 }
 
 .config_item {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 18px;
 }
 
 .config_item span {
     display: block;
     width: 100%;
-    margin: 0 10px;
-    margin-top: 5px;
-    text-align: center;
-    font-size: 14px;
-    color: #ff3131;
+    margin: 6px 0 0;
+    text-align: left;
+    font-size: 13px;
+    color: #666;
 }
 
 .config_item select {
-    width: calc(100% - 140px);
-    margin: 0 10px;
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(93, 183, 172, 0.3);
+    border-radius: 16px;
+    background: #fafafa;
+    color: #1f5e55;
 }
 
 #config_close {
     position: absolute;
-    right: 50px;
-    top: 0;
-    width: 30px;
-    height: 30px;
-    background: #00a0e6;
-    border-radius: 15px;
-    box-shadow: 1px 1px 1px #5f5f5f;
+    right: 20px;
+    top: 20px;
+    width: 34px;
+    height: 34px;
+    background: #4ab8a6;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(74, 184, 166, 0.22);
     color: #fff;
     cursor: pointer;
 }
 
 #config_close:before {
     content: "×";
+    display: block;
     text-align: center;
-    line-height: 30px;
+    line-height: 34px;
+    font-size: 20px;
 }
 
 #config_close:hover {
-    opacity: 0.5;
+    opacity: 0.85;
 }
-
 
 .config_tab_wrap {
     display: flex;
     flex-wrap: wrap;
-    height: calc(100% - 70px);
+    height: calc(100% - 84px);
 }
 
 .config_tab_label {
-    color: #FFF;
-    background: #00a0e6;
+    color: #1f5e55;
+    background: #e7faf8;
     text-align: center;
-    border: solid 1px #0092d2;
-    width: calc(25% - 2px);
-    padding: 5px 0;
+    border: none;
+    flex: 1 1 25%;
+    padding: 12px 0;
     order: -1;
     overflow: hidden;
     white-space: nowrap;
     cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+    box-shadow: inset 0 -1px 0 rgba(93, 183, 172, 0.14);
 }
 
 .config_tab_left {
-    border-radius: 15px 0px 0 15px;
+    border-radius: 16px 16px 0 0;
 }
 
 .config_tab_right {
-    border-radius: 0 15px 15px 0;
+    border-radius: 0 0 16px 16px;
 }
 
 .config_tab_content {
     width: 100%;
-    height: calc(100% - 38px);
+    height: calc(100% - 52px);
     display: none;
     overflow: auto;
+    padding: 18px 18px 20px;
+    gap: 10px;
+    box-sizing: border-box;
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
@@ -127,10 +139,9 @@
     display: none;
 }
 
-
 .config_tab_switch:checked+.config_tab_label {
-    background: #909090;
-    border: solid 1px #c1c1c1;
+    color: #ffffff;
+    background: linear-gradient(135deg, #5bcff2, #3aa6d3);
 }
 
 .config_tab_switch:checked+.config_tab_label+.config_tab_content {
@@ -142,29 +153,30 @@
 }
 
 .config_item_title {
-    position: relative;
-    color: #FFF;
-    background: #5d5d5d;
+    color: #1f5e55;
+    background: #f4fcfb;
     width: 100%;
-    height: 30px;
-    margin: 10px;
-    margin-top: 15px;
-    text-align: center;
-    line-height: 30px;
-    border-radius: 15px;
+    margin: 12px 0 8px;
+    padding: 10px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: left;
+    border-radius: 18px;
+    border: 1px solid rgba(93, 183, 172, 0.16);
 }
 
 .config_item_sub_title {
-    width: 100px;
-    height: 30px;
-    margin: 10px;
-    font-size: 13px;
-    font-weight: bold;
+    width: auto;
+    min-width: 110px;
+    height: 34px;
+    margin: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
     text-align: center;
-    line-height: 30px;
-    background: #00a0e6;
-    color: #FFF;
-    border-radius: 15px;
+    line-height: 34px;
+    background: linear-gradient(135deg, #5bcff2, #3aa6d3);
+    color: #ffffff;
+    border-radius: 18px;
 }
 
 
@@ -216,22 +228,29 @@ button.notext {
 }
 
 #configButton {
-    border: 2px solid #ffffff;
-    background-color: #5d5d5d;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background-color: #4ab8a6;
     background-image: url(../media/config.png);
     background-repeat: no-repeat;
-    background-size: 25px;
+    background-size: 22px;
     background-position: center center;
-    width: 40px;
-    height: 35px;
-    border-radius: 4px;
-    box-shadow: 0px 1px 2px 1px #7d7d7d;
+    width: 42px;
+    height: 36px;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(74, 184, 166, 0.24);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#configButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(74, 184, 166, 0.32);
 }
 
 .radioArea {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
 .radioArea input[type="radio"] {
@@ -242,57 +261,64 @@ button.notext {
 }
 
 .radioArea input[type="radio"]+label {
-    display: block;
-    width: 120px;
-    height: 30px;
-    margin: 0 5px;
-    line-height: 30px;
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 15px;
-    background: #909090;
-    color: #FFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    height: 34px;
+    margin: 0;
+    padding: 0 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 20px;
+    background: #e7faf8;
+    color: #1f5e55;
     cursor: pointer;
-    transition: .2s;
+    transition: background .2s ease, color .2s ease;
+    border: 1px solid rgba(93, 183, 172, 0.2);
 }
 
 .radioArea input[type="radio"]:checked+label {
-    background: #00a0e6;
+    background: linear-gradient(135deg, #5bcff2, #3aa6d3);
+    color: #ffffff;
+    border-color: transparent;
 }
 
 .radioArea input[type="radio"]:not(:checked)+label:hover {
-    background: rgba(0, 160, 230, 0.40);
+    background: rgba(93, 183, 172, 0.15);
 }
 
 .save_data_reset {
-    display: block;
-    width: 150px;
-    height: 30px;
-    margin: 0 auto;
-    text-align: center;
-    line-height: 30px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #FFF;
-    border-radius: 15px;
-    background: #ff9e9e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 160px;
+    padding: 12px 18px;
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #ff8d8d, #ff5a5a);
     cursor: pointer;
-    transition: .2s;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    box-shadow: 0 10px 30px rgba(255, 93, 93, 0.16);
 }
 
 .save_data_reset:hover {
-    background: #ff0000;
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #ff5a5a, #e02b2b);
 }
-
 
 input[type=range] {
     -webkit-appearance: none;
-    margin: 10px;
-    width: calc(100% - 70px);
+    margin: 12px 0;
+    width: 100%;
     overflow: hidden;
-    border: 1px solid #909090;
-    border-radius: 25px;
+    border: none;
+    border-radius: 18px;
+    background: #edf7fa;
 }
 
 input[type=range]:focus {
@@ -365,10 +391,13 @@ input[type=range]::-moz-range-thumb {
     width: 100%;
     height: 150px;
     margin: 0 10px;
+    padding: 24px;
+    box-sizing: border-box;
     resize: none;
     border: none;
     background: #f1f1f1;
-    text-align: center;
+    text-align: left;
+    white-space: pre-wrap;
     -ms-overflow-style: none;
     scrollbar-width: none;
 }

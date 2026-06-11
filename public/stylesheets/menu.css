@@ -1,18 +1,8 @@
 body {
-  background: url("/images/mainbg.jpg");
-  animation: bgiLoop 15s linear infinite;
-}
-
-@keyframes bgiLoop {
-  0% {
-    background-position: 0 0;
-  }
-
-  100% {
-    background-position: -256px 256px;
-  }
-}
-
-.animation_stop {
-  animation: none;
+  background: radial-gradient(circle at top left, #e9fbf9 0%, #d0f1f7 35%, #b5ecf1 65%, #ffffff 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
 }

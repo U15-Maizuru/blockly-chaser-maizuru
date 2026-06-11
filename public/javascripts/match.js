@@ -9,10 +9,6 @@ var load_map_size_y;
 var temp_msg;
 var key;
 
-window.onload = function () {
-    //document.getElementsByTagName("body")[0].classList.add("animation_stop");
-};
-
 for (parameters of query) {
     var qp = parameters.split('=');
     if (qp.length == 2) {
