@@ -1,6 +1,6 @@
 {
     "name": "トラップ回避",
-    "room_id": "room_007",
+    "room_id": "auto_007",
     "map_size_x": 15,
     "map_size_y": 17,
     "map_data":[

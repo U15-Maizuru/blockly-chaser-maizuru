@@ -1,6 +1,6 @@
 {
     "name": "迷路マップ",
-    "room_id": "room_009",
+    "room_id": "auto_009",
     "map_size_x": 15,
     "map_size_y": 17,
     "map_data":[
