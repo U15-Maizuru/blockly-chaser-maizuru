@@ -1,5 +1,6 @@
 #scale_root {
     width: 100vw;
+    height: calc(100vh - 60px);
     overflow-x: hidden;
     display: flex;
     justify-content: center;
@@ -8,7 +9,7 @@
 #menu_area {
     position: relative;
     width: 1280px;
-    height: calc((100% - 51px) / min(1, calc(100vw / 1280px)));
+    height: calc(100% / min(1, calc(100vw / 1280px)));
     transform-origin: top center;
     transform: scale(min(1, calc(100vw / 1280px)));
     display: flex;
@@ -180,7 +181,7 @@
 }
 
 .server_name {
-    margin-top: 20px;
+    margin-top: 8px;
     margin-left: 20px;
     text-align: left;
     color: #215c57;
@@ -203,6 +204,33 @@
     padding: 0 5px;
     background: #e2faf4;
     border-radius: 12px;
+}
+
+#server_mode_div {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 16px auto 8px;
+    width: 80%;
+}
+
+.mode_btn {
+    flex: 1;
+    padding: 10px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #215c57;
+    background: #e0f5f0;
+    border: 2px solid #88d9ce;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.mode_btn_active {
+    background: linear-gradient(135deg, #4dcfd8, #2faea1);
+    color: #fff;
+    border-color: transparent;
 }
 
 #map_table {
