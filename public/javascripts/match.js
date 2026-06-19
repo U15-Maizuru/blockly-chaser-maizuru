@@ -145,7 +145,7 @@ socket.on("game_result", function (msg) {
 
     game_result_display(msg.winer, msg.info);
 
-    socket.emit("match_end", { "room_id": query_list.room_id, "key": key });
+    socket.emit("match_end", { "room_id": query_list.room_id + "?" + query_list.room_token, "key": key });
 });
 
 socket.on("error", function (msg) {

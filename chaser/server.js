@@ -1555,6 +1555,10 @@ io.on('connection', function (socket) {
         }
         if (match_room_store[socket.id]) {
             io.in(match_room_store[socket.id]).emit("error", "サーバー側から切断されました");
+            if (!server_store[match_room_store[socket.id]]) {
+                delete match_room_store[socket.id];
+                return;
+            }
             if (server_store[match_room_store[socket.id]].cool.status && server_store[match_room_store[socket.id]].hot.status) {
                 game_server_reset(match_room_store[socket.id]);
             }
