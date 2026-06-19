@@ -7,8 +7,11 @@ function createserverList(get_list) {
     if (server.cpu) {
       // AUTO ルームのみ表示（1マップ1カード）
       mapList.push(server);
-    } else if (!get_list[key.replace(/^vs_/, 'auto_')]) {
-      // 対応する AUTO ルームがない VS 専用マップのみ追加
+    } else if (key.startsWith('upload_')) {
+      // アップロードされたオリジナルルームは常に表示
+      mapList.push(server);
+    } else if (key.startsWith('vs_') && !get_list[key.replace(/^vs_/, 'auto_')]) {
+      // 対応する AUTO ルームがない VS 専用ルームのみ追加
       mapList.push(server);
     }
   }

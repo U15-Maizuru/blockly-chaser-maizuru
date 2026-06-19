@@ -18,6 +18,7 @@ var tutorialRouter = require('./routes/tutorial');
 var menuMatchRouter = require('./routes/menu-match');
 var matchRouter = require('./routes/match');
 var watchingRouter = require('./routes/watching');
+var mapEditorRouter = require('./routes/map-editor');
 
 var server_data = require('./tool/server_data_load');
 var tutorial_data = require('./tool/tutorial_data_load');
@@ -60,6 +61,7 @@ app.use('/tutorial', tutorialRouter);
 app.use('/menu-match',menuMatchRouter);
 app.use('/match', matchRouter);
 app.use('/watching',watchingRouter);
+app.use('/map-editor', mapEditorRouter);
 
 
 
@@ -108,6 +110,39 @@ app.get('/api/join', async(req, res) => {
   res.json(join_list);
 });
 
+app.post('/api/upload-map', async (req, res) => {
+  const d = req.body;
+  const errors = [];
+  if (!d.name)                                                      errors.push('name が必要です');
+  if (!d.map_size_x || d.map_size_x < 5 || d.map_size_x > 30)     errors.push('map_size_x は 5〜30');
+  if (!d.map_size_y || d.map_size_y < 5 || d.map_size_y > 30)     errors.push('map_size_y は 5〜30');
+  if (!d.turn       || d.turn < 1       || d.turn > 500)           errors.push('turn は 1〜500');
+  if (d.map_data && d.map_data.length > 0) {
+    if (d.map_data.length !== d.map_size_y || d.map_data[0].length !== d.map_size_x)
+      errors.push('map_data の寸法が map_size と一致しない');
+  }
+  if (errors.length) return res.json({ ok: false, errors });
+
+  const shortCode = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const room_id   = 'upload_' + shortCode;
+  const roomData = {
+    name:          d.name,
+    room_id,
+    map_size_x:    d.map_size_x,
+    map_size_y:    d.map_size_y,
+    map_data:      d.map_data      || [],
+    auto_block:    d.auto_block    || 20,
+    auto_point:    d.auto_point    || 30,
+    auto_symmetry: d.auto_symmetry || false,
+    cool:          { status: false, turn: false },
+    hot:           { status: false, turn: false },
+    cpu:           { turn: "hot", level: 3 },
+    turn:          d.turn,
+  };
+  await server_data.create_new_map(roomData);
+  await chaser.reloadRoom(room_id);
+  res.json({ ok: true, room_id, shortCode });
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
