@@ -212,7 +212,7 @@
       }).then(r => r.json());
 
       if (res.ok) {
-        window.location.href = '/menu-match';
+        window.location.href = '/menu-match?select=' + res.room_id;
       } else {
         showStatus(res.errors.join(' / '), true);
       }

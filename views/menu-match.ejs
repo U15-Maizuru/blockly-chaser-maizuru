@@ -40,6 +40,37 @@
     <div id="scale_root">
       <div id="menu_area">
         <div id="watching_list">
+          <div class="section_title">マップ一覧</div>
+          <div id="server_list_cards"></div>
+          <div id="upload_map_area">
+            <div class="section_title section_title_row">
+              オリジナルルームを作る
+              <button id="btn_refresh_rooms">↺ 更新</button>
+            </div>
+
+            <div id="upload_room_cards"></div>
+
+            <div class="upload_sub_section">
+              <div class="upload_sub_label">ルームコードで参加</div>
+              <div id="room_code_area">
+                <input id="room_code_input" type="text" placeholder="例: A7F3"
+                       style="text-transform:uppercase"
+                       list="room_code_list">
+                <datalist id="room_code_list"></datalist>
+              </div>
+            </div>
+
+            <div class="upload_sub_section">
+              <div class="upload_sub_label">新しいルームを作る</div>
+              <div id="upload_map_buttons">
+                <a href="/map-editor" id="open_editor_btn">マップを作る</a>
+                <label for="upload_map_file" id="upload_map_label">マップをアップロード</label>
+                <input type="file" id="upload_map_file" accept=".json" style="display:none">
+              </div>
+            </div>
+
+            <div id="upload_map_status"></div>
+          </div>
         </div>
         <div id="watching_info">
 
