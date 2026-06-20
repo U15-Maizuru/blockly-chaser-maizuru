@@ -23,7 +23,7 @@ var MSG = {
     badXml: "XML のエラーです:\n%1\n\nXML の変更をやめるには「OK」、編集を続けるには「キャンセル」を選んでください。"
   };
   
-Blockly.Msg["GAME_SERVER"] = "ゲーム";
+Blockly.Msg["GAME_SERVER"] = "CHaser";
 Blockly.Msg["WAIT_MY_TURN"] = "自分のターンを待つ";
 Blockly.Msg["SERVER_JOIN_BEFORE"] = "にプレイヤー名";
 Blockly.Msg["SERVER_JOIN_AFTER"] = "で接続する";
