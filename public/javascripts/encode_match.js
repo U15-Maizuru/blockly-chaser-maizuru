@@ -104,7 +104,9 @@ function initApi(interpreter, scope) {
     name = name ? name.toString() : '';
 
     var user = {};
-    user.room_id = id;
+    user.room_id = (query_list.room_id && query_list.room_token)
+      ? query_list.room_id + '?' + query_list.room_token
+      : id;
     user.name = name;
     user.chara = query_list.chara;
     user.key = query_list.key;

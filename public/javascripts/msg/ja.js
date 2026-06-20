@@ -25,7 +25,7 @@ var MSG = {
   
 Blockly.Msg["GAME_SERVER"] = "CHaser";
 Blockly.Msg["WAIT_MY_TURN"] = "自分のターンを待つ";
-Blockly.Msg["SERVER_JOIN_BEFORE"] = "にプレイヤー名";
+Blockly.Msg["SERVER_JOIN_BEFORE"] = "に プレイヤー名";
 Blockly.Msg["SERVER_JOIN_AFTER"] = "で接続する";
 Blockly.Msg["MYSELF"] = "自分の";
 Blockly.Msg["LOOK_VAL"] = "近隣情報の";
