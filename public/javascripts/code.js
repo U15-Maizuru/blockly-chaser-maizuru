@@ -442,6 +442,7 @@ Code.init = function () {
       media: '/media/',
       maxBlocks: blocklimit,
       toolbox: toolboxXml,
+      trashcan: true,
       sounds: BlockSound,
       zoom:
       {
