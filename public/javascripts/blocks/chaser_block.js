@@ -17,12 +17,28 @@ window.addEventListener('load', function () {
 })
 
 function getServerList() {
-  var url = './../api/join';
-  fetch(url)
+  fetch('./../api/game')
     .then(function (data) {
       return data.json();
     })
     .then(function (json) {
+      const mapList = [];
+      for (var key in json) {
+        const s = json[key];
+        if (s.name.includes('room_onetime')) continue;
+        if (key.includes('?') || key.startsWith('upload_')) continue;
+        if (s.cpu) {
+          mapList.push([s.name, key]);
+        } else if (key.startsWith('vs_') && !json[key.replace(/^vs_/, 'auto_')]) {
+          mapList.push([s.name, key]);
+        }
+      }
+
+      const modeOptions = [
+        ['CPU対戦', 'auto'],
+        ['ユーザー対戦', 'vs'],
+      ];
+
       Blockly.Blocks['server_join'] = {
         init: function () {
           this.appendDummyInput()
@@ -31,7 +47,9 @@ function getServerList() {
               return /^[\x00-\x7F]*$/.test(newValue) ? newValue : '';
             }), "room_token")
             .appendField("で")
-            .appendField(new Blockly.FieldDropdown(json), "room_id")
+            .appendField(new Blockly.FieldDropdown(mapList), "map_id")
+            .appendField("の")
+            .appendField(new Blockly.FieldDropdown(modeOptions), "mode")
             .appendField(Blockly.Msg["SERVER_JOIN_BEFORE"])
             .appendField(new Blockly.FieldTextInput(""), "name")
             .appendField(Blockly.Msg["SERVER_JOIN_AFTER"]);

@@ -1,6 +1,6 @@
 {
     "name": "対称【密】マップ",
-    "room_id": "room_004",
+    "room_id": "auto_004",
     "map_size_x": 15,
     "map_size_y": 17,
     "map_data":[],

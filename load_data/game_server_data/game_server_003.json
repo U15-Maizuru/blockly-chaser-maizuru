@@ -1,6 +1,6 @@
 {
     "name": "ランダム【密】マップ",
-    "room_id": "room_003",
+    "room_id": "auto_003",
     "map_size_x": 15,
     "map_size_y": 17,
     "map_data":[],

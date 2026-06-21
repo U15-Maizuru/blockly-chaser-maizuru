@@ -1,6 +1,6 @@
 {
     "name": "バトルマップ",
-    "room_id": "room_008",
+    "room_id": "auto_008",
     "map_size_x": 15,
     "map_size_y": 17,
     "map_data":[
