@@ -1,25 +1,30 @@
 function createserverList(get_list) {
-  const mapList = [];
+  const existingList = [];  // auto_xxx（既存マップ）
+  const uploadList   = [];  // upload_xxx（アップロードルーム）
 
   for (var key in get_list) {
     const server = get_list[key];
     if (server.name.includes('room_onetime')) continue;
     if (server.cpu) {
-      // AUTO ルームのみ表示（1マップ1カード）
-      mapList.push(server);
-    } else if (!get_list[key.replace(/^vs_/, 'auto_')]) {
-      // 対応する AUTO ルームがない VS 専用マップのみ追加
-      mapList.push(server);
+      existingList.push(server);
+    } else if (key.startsWith('upload_') && !key.includes('?')) {
+      // token付き（upload_XXXX?token）は除外
+      uploadList.push(server);
+    } else if (key.startsWith('vs_') && !get_list[key.replace(/^vs_/, 'auto_')]) {
+      existingList.push(server);
     }
   }
 
-  const watchingListElem = document.getElementById('watching_list');
-  watchingListElem.innerHTML = '';
+  renderCards(existingList, document.getElementById('server_list_cards'),  get_list);
+  renderCards(uploadList,   document.getElementById('upload_room_cards'),   get_list);
+}
 
+function renderCards(list, container, get_list) {
+  container.innerHTML = '';
   const rowDiv = document.createElement('div');
   rowDiv.classList.add('server_row');
 
-  mapList.forEach(server => {
+  list.forEach(server => {
     const one_server_div = document.createElement('div');
     one_server_div.classList.add("one_watching_server");
     one_server_div.setAttribute("id", "link_id_" + server.room_id);
@@ -47,7 +52,7 @@ function createserverList(get_list) {
     rowDiv.appendChild(one_server_div);
   });
 
-  watchingListElem.appendChild(rowDiv);
+  container.appendChild(rowDiv);
 }
 
 function server_info(id, get_list) {
@@ -184,7 +189,10 @@ function server_info(id, get_list) {
     currentMode = mode;
     var effectiveId = (mode === 'vs') ? id.replace(/^auto_/, 'vs_') : id;
 
-    server_info_id.textContent = effectiveId;
+    // upload_ プレフィックスはルームコード（4文字）のみ表示
+    server_info_id.textContent = effectiveId.startsWith('upload_')
+      ? effectiveId.replace('upload_', '')
+      : effectiveId;
 
     if (mode === 'vs') {
       server_info_turn.textContent = lng_list["CONNECTION_ORDER"];
@@ -210,16 +218,113 @@ function server_info(id, get_list) {
 
 
 window.addEventListener('load', function () {
-  getserverList();
+  // マップエディタ/アップロード後の ?select= で自動選択
+  const params = new URLSearchParams(window.location.search);
+  getserverList(params.get('select'));
+
+  const fileInput = document.getElementById('upload_map_file');
+  const statusDiv = document.getElementById('upload_map_status');
+
+  // ファイルアップロード
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (!file.name.endsWith('.json')) {
+      return showUploadStatus('.json ファイルを選択してください', true);
+    }
+    if (file.size > 50 * 1024) {
+      return showUploadStatus('50 KB 以下のファイルにしてください', true);
+    }
+    const text = await file.text();
+    let json;
+    try { json = JSON.parse(text); }
+    catch { return showUploadStatus('JSON の解析に失敗しました', true); }
+
+    showUploadStatus('アップロード中…', false);
+    const res = await fetch('/api/upload-map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(json)
+    }).then(r => r.json());
+
+    if (res.ok) {
+      showUploadStatus('アップロードしました！　ルームコード: ' + res.shortCode, false);
+      getserverList(res.room_id);
+    } else {
+      showUploadStatus(res.errors.join(' / '), true);
+    }
+    fileInput.value = '';
+  });
+
+  // 更新ボタン
+  document.getElementById('btn_refresh_rooms').addEventListener('click', () => {
+    getserverList();
+  });
+
+  // ルームコード直接入室
+  const codeInput = document.getElementById('room_code_input');
+
+  function selectByCode() {
+    const code = codeInput.value.trim().split(/[\s―\-]/)[0].toUpperCase().slice(0, 4);
+    if (!code) return;
+    const room_id = 'upload_' + code;
+    fetch('./../api/game?room_id=' + room_id)
+      .then(r => r.json())
+      .then(function(data) {
+        if (data) {
+          codeInput.value = ''; // 選択後にクリアしてドロップダウンを全件表示に戻す
+          getserverList(room_id);
+        } else {
+          showUploadStatus('ルームが見つかりません', true);
+        }
+      });
+  }
+
+  // datalist から選択されたとき（「  ―  」を含む値が入った時点）自動実行
+  codeInput.addEventListener('input', function() {
+    if (codeInput.value.includes('  ―  ')) selectByCode();
+  });
+
+  codeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') selectByCode();
+  });
+
+  function showUploadStatus(msg, isError) {
+    statusDiv.textContent = msg;
+    statusDiv.style.color = isError ? '#e05555' : '#2faea1';
+  }
 })
 
-function getserverList() {
-  var url = './../api/game';
-  fetch(url)
-    .then(function (data) {
+function updateRoomCodeList(json) {
+  var datalist = document.getElementById('room_code_list');
+  if (!datalist) return;
+  datalist.innerHTML = '';
+  for (var key in json) {
+    if (key.startsWith('upload_') && !key.includes('?')) {
+      // token付き（upload_XXXX?token）は除外
+      var code = key.replace('upload_', '');
+      var option = document.createElement('option');
+      option.value = code + '  ―  ' + json[key].name;
+      datalist.appendChild(option);
+    }
+  }
+}
+
+function getserverList(autoSelectId) {
+  fetch('./../api/game')
+    .then(function(data) {
       return data.json();
     })
-    .then(function (json) {
+    .then(function(json) {
       createserverList(json);
+      updateRoomCodeList(json);
+      if (autoSelectId && json[autoSelectId]) {
+        document.querySelectorAll('.watching_server_div').forEach(function(d) {
+          d.classList.remove('server_select_on');
+        });
+        var card = document.querySelector('.' + autoSelectId);
+        if (card) card.classList.add('server_select_on');
+        server_info(autoSelectId, json);
+      }
     });
 }
