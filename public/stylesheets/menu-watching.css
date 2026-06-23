@@ -642,3 +642,8 @@ td img {
     font-weight: bold;
     min-height: 18px;
 }
+
+#chara_select_div { display: flex; gap: 8px; padding: 4px 14px 4px 4px; }
+.chara_select_btn { flex: 1; padding: 6px 0; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 10px; border: 2px solid #88d9ce; background: #e0f5f0; color: #215c57; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.chara_select_btn_cool_active { background: linear-gradient(135deg, #4dcfd8, #00a0e6); color: #fff; border-color: transparent; }
+.chara_select_btn_hot_active  { background: linear-gradient(135deg, #ff9a56, #ff2b1e); color: #fff; border-color: transparent; }

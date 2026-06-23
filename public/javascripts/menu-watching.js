@@ -128,6 +128,7 @@ function server_info(id, get_list) {
 
   var vs_btn   = null;
   var auto_btn = null;
+  var selectedChara = null;
 
   if (hasVsMode) {
     vs_btn = document.createElement('button');
@@ -165,8 +166,9 @@ function server_info(id, get_list) {
   server_match_button.addEventListener('click', function() {
     var effectiveId = (currentMode === 'vs') ? id.replace(/^auto_/, 'vs_') : id;
     var token = encodeURIComponent(server_token_input.value);
-    if (token === '') token = 'no_token';
-    window.location.href = '/match?room_id=' + effectiveId + '&room_token=' + token;
+    if (token === '') token = Math.random().toString(36).slice(2, 10);
+    var charaParam = (currentMode !== 'vs' && selectedChara) ? '&my_chara=' + selectedChara : '';
+    window.location.href = '/match?room_id=' + effectiveId + '&room_token=' + token + charaParam;
   });
 
   var server_watch_button = document.createElement('button');
@@ -197,9 +199,25 @@ function server_info(id, get_list) {
     if (mode === 'vs') {
       server_info_turn.textContent = lng_list["CONNECTION_ORDER"];
     } else {
-      var turn_status = lng_list["FIXITY"];
-      turn_status += (server.cpu.turn == "cool") ? lng_list["TURN_H"] : lng_list["TURN_C"];
-      server_info_turn.textContent = turn_status;
+      selectedChara = (server.cpu.turn == "cool") ? "hot" : "cool";
+      server_info_turn.textContent = '';
+      var chara_div = document.createElement('div');
+      chara_div.setAttribute('id', 'chara_select_div');
+      ["cool", "hot"].forEach(function(chara) {
+        var btn = document.createElement('button');
+        btn.textContent = chara.toUpperCase();
+        btn.classList.add('chara_select_btn');
+        if (chara === selectedChara) btn.classList.add('chara_select_btn_' + chara + '_active');
+        btn.onclick = function() {
+          selectedChara = chara;
+          chara_div.querySelectorAll('.chara_select_btn').forEach(function(b) {
+            b.classList.remove('chara_select_btn_cool_active', 'chara_select_btn_hot_active');
+          });
+          btn.classList.add('chara_select_btn_' + chara + '_active');
+        };
+        chara_div.appendChild(btn);
+      });
+      server_info_turn.appendChild(chara_div);
     }
 
     if (vs_btn)   vs_btn.classList.toggle('mode_btn_active', mode === 'vs');
