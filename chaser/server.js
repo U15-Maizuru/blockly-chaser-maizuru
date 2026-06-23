@@ -1261,11 +1261,16 @@ io.on('connection', function (socket) {
                     io.to(socket.id).emit("match_init_rec", { "key": socket.id });
 
                     if (server_store[msg.room_id].cpu) {
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].status = true;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].turn = false;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].getready = true;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].score = 0;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].name = "cpu";
+                        var validCharas = ['cool', 'hot'];
+                        var cpuChara = (msg.player_chara && validCharas.includes(msg.player_chara))
+                            ? (msg.player_chara === 'cool' ? 'hot' : 'cool')
+                            : server_store[msg.room_id].cpu.turn;
+                        server_store[msg.room_id].cpu.turn = cpuChara;
+                        server_store[msg.room_id][cpuChara].status = true;
+                        server_store[msg.room_id][cpuChara].turn = false;
+                        server_store[msg.room_id][cpuChara].getready = true;
+                        server_store[msg.room_id][cpuChara].score = 0;
+                        server_store[msg.room_id][cpuChara].name = "cpu";
                     }
                 }
                 else {

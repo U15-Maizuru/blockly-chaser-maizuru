@@ -35,6 +35,7 @@ if (query_list.room_id) {
                 
                 var server_init = {};
                 server_init.room_id = query_list.room_id + "?" + query_list.room_token;
+                if (query_list.my_chara) server_init.player_chara = query_list.my_chara;
                 socket.emit("match_init", server_init);
             }
             else {
@@ -50,8 +51,20 @@ var check_flag = true;
 
 socket.on("match_init_rec", function (msg) {
     if (!msg.error) {
-        document.getElementById('cool_player_iframe').src = "/match/player?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token + "&chara=cool&key=" + msg.key;
-        document.getElementById('hot_player_iframe').src = "/match/player?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token + "&chara=hot&key=" + msg.key;
+        var upperChara = (query_list.my_chara === 'hot') ? 'hot' : 'cool';
+        var lowerChara = (query_list.my_chara === 'hot') ? 'cool' : 'hot';
+        var base = "/match/player?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token;
+        var cpuParam = query_list.my_chara ? '&cpu_chara=' + lowerChara : '';
+        document.getElementById('cool_player_iframe').src = base + "&chara=" + upperChara + "&key=" + msg.key + cpuParam;
+        document.getElementById('hot_player_iframe').src  = base + "&chara=" + lowerChara + "&key=" + msg.key + cpuParam;
+        if (upperChara === 'hot') {
+            document.getElementById('cool_ready_title').textContent = 'hot';
+            document.getElementById('hot_ready_title').textContent  = 'cool';
+            document.getElementById('cool_ready').classList.add('hot_color_bg');
+            document.getElementById('hot_ready').classList.add('cool_color_bg');
+            document.getElementById('cool_ready_title').classList.add('hot_title_bg');
+            document.getElementById('hot_ready_title').classList.add('cool_title_bg');
+        }
         key = msg.key;
         document.getElementById("game_start").onclick = function () {
 
