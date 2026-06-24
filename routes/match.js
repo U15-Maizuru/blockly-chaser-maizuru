@@ -21,13 +21,10 @@ router.get('/player', async function(req, res, next) {
     game_server = await reloadServerData();
     if (req.query.room_id) {
         try {
-            if (game_server[req.query.room_id].cpu) {
-                if (game_server[req.query.room_id].cpu.turn == req.query.chara) {
-                    res.render('match-cpu');
-                }
-                else {
-                    res.render('match-player');
-                }
+            // cpu_charaが明示的に渡された場合のみCPUモード（VS対戦では付与されない）
+            var cpuChara = req.query.cpu_chara || null;
+            if (cpuChara && cpuChara === req.query.chara) {
+                res.render('match-cpu');
             }
             else {
                 res.render('match-player');
