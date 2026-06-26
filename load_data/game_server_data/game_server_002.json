@@ -1,6 +1,6 @@
 {
     "name": "対称マップ",
-    "room_id": "room_002",
+    "room_id": "auto_002",
     "map_size_x": 15,
     "map_size_y": 17,
     "map_data":[],

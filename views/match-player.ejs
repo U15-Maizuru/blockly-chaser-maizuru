@@ -57,7 +57,7 @@
                   let hasRoomToken = false;
 
                   for (var field of xml_one.getElementsByTagName("field")) {
-                    if (field.getAttribute("name") === "room_id") {
+                    if (field.getAttribute("name") === "map_id") {
                       field.textContent = query_list.room_id;
                     }
                     if (field.getAttribute("name") === "room_token") {
@@ -102,7 +102,7 @@
             if (Array.isArray(blockArray)) {
               for (const block of blockArray) {
                 if (block.type === "server_join" && query_list.room_id) {
-                  block.fields.room_id = query_list.room_id;
+                  block.fields.map_id = query_list.room_id;
                   block.fields.room_token = query_list.room_token;
                 }
               }
@@ -153,7 +153,7 @@
             if (Array.isArray(blockArray)) {
               for (const block of blockArray) {
                 if (block.type === "server_join" && query_list.room_id) {
-                  block.fields.room_id = query_list.room_id;
+                  block.fields.map_id = query_list.room_id;
                   block.fields.room_token = query_list.room_token;
                 }
               }

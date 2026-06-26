@@ -992,10 +992,20 @@ const createMap= async (json_data = null) => {
     
     await server_data.create_new_map(JSON.stringify(json_data));//server_data_load.jsが発火
     game_server = JSON.parse(JSON.stringify(server_data.load()));
-    server_store[json.room_id]=JSON.parse(JSON.stringify(game_server[json_data.room_id]));
+    server_store[json_data.room_id]=JSON.parse(JSON.stringify(game_server[json_data.room_id]));
 
     RoomTimeoutCheck();//ルームの削除判定関数を実施
     game_server_reset(json_data.room_id);//ルームの初期化（ランダムマップじゃなければ必須じゃなさそう）
+};
+
+// HTTP経由でカスタムマップを追加した後、chaser側のgame_server/server_storeを同期する
+const reloadRoom = async (room_id) => {
+    if (server_store[room_id]) return false;
+    game_server = JSON.parse(JSON.stringify(server_data.load()));
+    if (!game_server[room_id]) return false;
+    RoomTimeoutCheck();
+    game_server_reset(room_id);
+    return true;
 };
 
 // マップをコピーするための関数
@@ -1251,11 +1261,16 @@ io.on('connection', function (socket) {
                     io.to(socket.id).emit("match_init_rec", { "key": socket.id });
 
                     if (server_store[msg.room_id].cpu) {
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].status = true;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].turn = false;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].getready = true;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].score = 0;
-                        server_store[msg.room_id][server_store[msg.room_id].cpu.turn].name = "cpu";
+                        var validCharas = ['cool', 'hot'];
+                        var cpuChara = (msg.player_chara && validCharas.includes(msg.player_chara))
+                            ? (msg.player_chara === 'cool' ? 'hot' : 'cool')
+                            : server_store[msg.room_id].cpu.turn;
+                        server_store[msg.room_id].cpu.turn = cpuChara;
+                        server_store[msg.room_id][cpuChara].status = true;
+                        server_store[msg.room_id][cpuChara].turn = false;
+                        server_store[msg.room_id][cpuChara].getready = true;
+                        server_store[msg.room_id][cpuChara].score = 0;
+                        server_store[msg.room_id][cpuChara].name = "cpu";
                     }
                 }
                 else {
@@ -1555,6 +1570,10 @@ io.on('connection', function (socket) {
         }
         if (match_room_store[socket.id]) {
             io.in(match_room_store[socket.id]).emit("error", "サーバー側から切断されました");
+            if (!server_store[match_room_store[socket.id]]) {
+                delete match_room_store[socket.id];
+                return;
+            }
             if (server_store[match_room_store[socket.id]].cool.status && server_store[match_room_store[socket.id]].hot.status) {
                 game_server_reset(match_room_store[socket.id]);
             }
@@ -1589,6 +1608,7 @@ io.on('connection', function (socket) {
 });
 
 exports.io = io;
+exports.reloadRoom = reloadRoom;
 
 
 //cpu

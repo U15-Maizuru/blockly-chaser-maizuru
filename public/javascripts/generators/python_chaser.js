@@ -32,7 +32,8 @@ python.pythonGenerator.forBlock['wait'] = function (block) {
 
 
 python.pythonGenerator.forBlock['server_join'] = function (block) {
-  var dropdown_room_id = block.getFieldValue('room_id');
+  var map_id = block.getFieldValue('map_id');
+  var mode = block.getFieldValue('mode');
   var text_name = block.getFieldValue('name');
   var statements_main_loop_content = Blockly.Python.statementToCode(block, 'main_loop_content');
 
