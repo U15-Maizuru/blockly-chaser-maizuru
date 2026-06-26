@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>CHaser マップエディタ</title>
+  <link rel="icon" href="/images/favicon.ico">
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/menu.css' />
+  <link rel='stylesheet' href='/stylesheets/map-editor.css' />
+
+  <%- include('./common/config-init') %>
+</head>
+
+<body>
+  <%- include('./common/config', {LNG: C_LNG}) %>
+
+  <div class="header">
+    <div class="back_page">
+      <div class="back_button"><a href="/menu-match"></a></div>
+    </div>
+    <div class="control_area">
+      <div class="page_title">
+        <h1><%- title %></h1>
+      </div>
+      <div class="control_button">
+        <button id="configButton" title="設定"></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editor_root">
+    <div id="editor_area">
+
+      <div id="editor_settings">
+        <label class="setting_label">マップ名
+          <input id="map_name" type="text" placeholder="マイマップ" maxlength="30">
+        </label>
+        <label class="setting_label">ターン数
+          <input id="map_turn" type="number" min="1" max="500" value="100">
+        </label>
+      </div>
+
+      <div id="editor_main">
+        <div id="editor_grid_wrap">
+          <table id="editor_grid"></table>
+        </div>
+
+        <div id="editor_controls">
+          <div id="editor_toolbar">
+            <button class="tool_btn" data-value="0">なし</button>
+            <button class="tool_btn" data-value="1">ブロック</button>
+            <button class="tool_btn" data-value="2">アイテム</button>
+            <button class="tool_btn" data-value="3">COOL</button>
+            <button class="tool_btn" data-value="4">HOT</button>
+          </div>
+
+          <div id="editor_symmetry">
+            <button class="sym_btn sym_btn_active" data-mode="none">通常</button>
+            <button class="sym_btn" data-mode="mirror">ミラー</button>
+            <button class="sym_btn" data-mode="rotate">回転対称</button>
+          </div>
+
+          <div id="editor_file_bar">
+            <label for="load_map_file" id="btn_load">マップを読み込む</label>
+            <input type="file" id="load_map_file" accept=".json" style="display:none">
+            <button id="btn_clear">クリア</button>
+          </div>
+
+          <div id="editor_footer">
+            <button id="btn_create">対戦ルームを作成</button>
+            <button id="btn_download">ダウンロード</button>
+            <div id="editor_status"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/javascripts/map-editor.js"></script>
+</body>
+
+</html>

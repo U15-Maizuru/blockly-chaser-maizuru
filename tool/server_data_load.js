@@ -25,6 +25,14 @@ const init = async function () {
         } else {
           join_list.push(["AUTO: " + temp_game_server.name, temp_game_server.room_id]);
         }
+        // cpu ありの場合、cpu なしの VS ルームを自動生成
+        if (temp_game_server.cpu) {
+          var vs_map = JSON.parse(JSON.stringify(temp_game_server));
+          delete vs_map.cpu;
+          vs_map.room_id = temp_game_server.room_id.replace(/^auto_/, 'vs_');
+          game_server[vs_map.room_id] = vs_map;
+          join_list.push(["VS: " + vs_map.name, vs_map.room_id]);
+        }
       }
       else {
         logger.error('The format of the game server data is incorrect. Data to be loaded "' + gs + '"');

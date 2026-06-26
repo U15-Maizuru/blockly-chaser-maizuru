@@ -5,20 +5,15 @@ javascript.javascriptGenerator.forBlock['wait'] = function (block) {
 };
 
 javascript.javascriptGenerator.forBlock['server_join'] = function (block) {
-  var dropdown_room_id = block.getFieldValue('room_id');
-  var text_room_token = block.getFieldValue('room_token');
-  var text_name = block.getFieldValue('name');
+  var map_id = block.getFieldValue('map_id');
+  var mode = block.getFieldValue('mode');
+  var text_room_token = block.getFieldValue('room_token') || random_string(8);
+  var text_name = block.getFieldValue('name') || 'NoName';
   var statements_main_loop_content = Blockly.JavaScript.statementToCode(block, 'main_loop_content');
-  // TODO: Assemble JavaScript into code variable.
 
-  if (!text_room_token) {
-    text_room_token = random_string(8);
-  }
-  if (!text_name) {
-    text_name = "NoName"
-  }
+  var room_id = (mode === 'vs') ? map_id.replace(/^auto_/, 'vs_') : map_id;
 
-  code = 'join("' + dropdown_room_id + "?" + text_room_token + '", "' + text_name + '");\n';
+  code = 'join("' + room_id + '?' + text_room_token + '", "' + text_name + '");\n';
   return code + statements_main_loop_content;
 };
 

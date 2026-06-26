@@ -112,6 +112,12 @@
     border: 0;
 }
 
+/* キャラクター入れ替え時の色上書き */
+.hot_color_bg  { background: rgb(255, 120, 120, 70%) !important; }
+.cool_color_bg { background: rgb(63, 174, 247, 0.7)  !important; }
+.hot_title_bg  { background: #ff2b1e !important; }
+.cool_title_bg { background: #00a0e6 !important; }
+
 
 .uploadButton {
     display: flex;
