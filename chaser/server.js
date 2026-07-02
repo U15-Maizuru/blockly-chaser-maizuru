@@ -25,6 +25,10 @@ var match_room_store = {};
 var server_store = JSON.parse(JSON.stringify(game_server));
 var room_info = {};
 
+// map_data 上でのキャラクター種別の数値表現（自陣営 / 相手陣営）
+const CHARA_NUM = { "cool": 3, "hot": 4 };
+const CHARA_NUM_DIFF = { "cool": 4, "hot": 3 };
+
 //create_map
 function create_map(key) {
 
@@ -603,13 +607,11 @@ function move_player(room, chara, msg, id = false) {
         var y = server_store[room][chara].y;
 
         var xy_check = false;
-        var chara_num = { "cool": 3, "hot": 4 };
-        var chara_num_diff = { "cool": 4, "hot": 3 };
 
         var move_map_data = [];
 
         if (server_store[room].map_data[y][x] == 34) {
-            server_store[room].map_data[y][x] = chara_num_diff[chara];
+            server_store[room].map_data[y][x] = CHARA_NUM_DIFF[chara];
         }
         else {
             server_store[room].map_data[y][x] = 0;
@@ -646,10 +648,10 @@ function move_player(room, chara, msg, id = false) {
 
         if (xy_check) {
             if (server_store[room].map_data[y][x] == 0) {
-                server_store[room].map_data[y][x] = chara_num[chara];
+                server_store[room].map_data[y][x] = CHARA_NUM[chara];
             }
             else if (server_store[room].map_data[y][x] == 2) {
-                server_store[room].map_data[y][x] = chara_num[chara];
+                server_store[room].map_data[y][x] = CHARA_NUM[chara];
                 server_store[room][chara].score += 1;
 
                 if (msg === "top") {
@@ -666,7 +668,7 @@ function move_player(room, chara, msg, id = false) {
                 }
 
             }
-            else if (server_store[room].map_data[y][x] == chara_num_diff[chara]) {
+            else if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 server_store[room].map_data[y][x] = 34;
             }
 
@@ -682,11 +684,11 @@ function move_player(room, chara, msg, id = false) {
                         move_map_data.push(2);
                     }
                     else {
-                        if (tmp_map_data[_y + y][_x + x] == chara_num_diff[chara] || tmp_map_data[_y + y][_x + x] == 34) {
+                        if (tmp_map_data[_y + y][_x + x] == CHARA_NUM_DIFF[chara] || tmp_map_data[_y + y][_x + x] == 34) {
                             move_map_data.push(1);
                         }
                         else {
-                            if (tmp_map_data[_y + y][_x + x] == 0 || tmp_map_data[_y + y][_x + x] == chara_num[chara]) {
+                            if (tmp_map_data[_y + y][_x + x] == 0 || tmp_map_data[_y + y][_x + x] == CHARA_NUM[chara]) {
                                 move_map_data.push(0);
                             }
                             else if (tmp_map_data[_y + y][_x + x] == 1) {
@@ -731,8 +733,6 @@ function look(room, chara, msg, id = false) {
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-        var chara_num_diff = { "cool": 4, "hot": 3 };
-
         if (msg == "top") {
             x_range = [-1, 0, 1];
             y_range = [-3, -2, -1];
@@ -754,7 +754,7 @@ function look(room, chara, msg, id = false) {
                     look_map_data.push(2);
                 }
                 else {
-                    if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
+                    if (tmp_map_data[now_y + y][now_x + x] == CHARA_NUM_DIFF[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
                         look_map_data.push(1);
                     }
                     else {
@@ -812,8 +812,6 @@ function search(room, chara, msg, id = false) {
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-        var chara_num_diff = { "cool": 4, "hot": 3 };
-
         if (msg == "top") {
             x_range = [0];
             y_range = [-1, -2, -3, -4, -5, -6, -7, -8, -9];
@@ -836,7 +834,7 @@ function search(room, chara, msg, id = false) {
                     search_map_data.push(2);
                 }
                 else {
-                    if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
+                    if (tmp_map_data[now_y + y][now_x + x] == CHARA_NUM_DIFF[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
                         search_map_data.push(1);
                     }
                     else {
@@ -915,12 +913,10 @@ function put_wall(room, chara, msg, id = false) {
             }
         }
 
-        var chara_num = { "cool": 3, "hot": 4 };
-        var chara_num_diff = { "cool": 4, "hot": 3 };
         var player_put_chara = false;
 
         if (put_check) {
-            if (server_store[room].map_data[y][x] == chara_num_diff[chara]) {
+            if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 player_put_chara = true;
             }
             server_store[room].map_data[y][x] = 1;
@@ -942,11 +938,11 @@ function put_wall(room, chara, msg, id = false) {
                     put_map_data.push(2);
                 }
                 else {
-                    if (tmp_map_data[_y + now_y][_x + now_x] == chara_num_diff[chara] || tmp_map_data[_y + now_y][_x + now_x] == 34) {
+                    if (tmp_map_data[_y + now_y][_x + now_x] == CHARA_NUM_DIFF[chara] || tmp_map_data[_y + now_y][_x + now_x] == 34) {
                         put_map_data.push(1);
                     }
                     else {
-                        if (tmp_map_data[_y + now_y][_x + now_x] == 0 || tmp_map_data[_y + now_y][_x + now_x] == chara_num[chara]) {
+                        if (tmp_map_data[_y + now_y][_x + now_x] == 0 || tmp_map_data[_y + now_y][_x + now_x] == CHARA_NUM[chara]) {
                             put_map_data.push(0);
                         }
                         else if (tmp_map_data[_y + now_y][_x + now_x] == 1) {
