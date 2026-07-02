@@ -652,11 +652,3 @@ function endCode() {
     hart_score = 0;
     stage_data = JSON.parse(JSON.stringify(reset_data));
 }
-var hart_score = 0;
-var my_turn = false;
-
-
-function endCode() {
-    hart_score = 0;
-    stage_data = JSON.parse(JSON.stringify(reset_data));
-}
