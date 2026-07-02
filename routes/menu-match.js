@@ -1,35 +1,22 @@
 var express = require('express');
 var router = express.Router();
+var languageLoad = require('../tool/language_load.js');
 
-var fs = require('fs');
-var path = require('path');
-
-var LNG_JA = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja", "menu-watching.json"), "utf-8"));
-var LNG_JAK = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja-k", "menu-watching.json"), "utf-8"));
-var CONFIG_LNG_JA = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja", "config.json"), "utf-8"));
-var CONFIG_LNG_JAK = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja-k", "config.json"), "utf-8"));
-
+var LNG = languageLoad.loadLangJson('menu-watching.json');
+var CONFIG_LNG = languageLoad.loadLangJson('config.json');
+var TITLE = { ja: 'ルーム選択', 'ja-k': 'ルームせんたく' };
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
     try {
-        if (req.cookies.lng) {
-            if (req.cookies.lng == "ja") {
-                res.render('menu-match', { title: 'ルーム選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
-            }
-            else if (req.cookies.lng == "ja-k") {
-                res.render('menu-match', { title: 'ルームせんたく', LNG: LNG_JAK, C_LNG: CONFIG_LNG_JAK });
-            }
-            else {
-                res.render('menu-match', { title: 'ルーム選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
-            }
-        }
-        else {
-            res.render('menu-match', { title: 'ルーム選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
-        }
+        res.render('menu-match', {
+            title: languageLoad.pickByCookie(req, TITLE),
+            LNG: languageLoad.pickByCookie(req, LNG),
+            C_LNG: languageLoad.pickByCookie(req, CONFIG_LNG)
+        });
     }
     catch (e) {
-        res.render('menu-match', { title: 'ルーム選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
+        res.render('menu-match', { title: TITLE.ja, LNG: LNG.ja, C_LNG: CONFIG_LNG.ja });
     }
 });
 
