@@ -35,10 +35,9 @@ U15舞鶴プロコンサーバーは[U-15プログラミングコンテスト舞
 ## 動作環境
 ### 動作確認済み環境
 - Windows 11 / macOS 14
-- Node.js 14.x
 
 ### 推奨環境
-- 《Dockerfile掲載予定》
+- Node.js 18以上（`package.json` の `electron@^33` 系のビルド要件に基づく目安。`engines` フィールドでの明示的な指定はないため導入前に要確認）
 
 ## セットアップ
 - Step.0:Node.js,npm インストール
@@ -75,13 +74,10 @@ npm start
 
 - Step.2:フォルダー『dist』内にアプリ化されたファイルが生成される
 
-## 実装予定
-
-
 ## Contributing
 [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 ## Licence
-[LICENSE](.github/LICENSE)
+[LICENSE](LICENSE)
 
 本製作物には一部[Apache License 2.0](.github/ApacheLicense)で配布されている製作物が含まれています。
