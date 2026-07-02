@@ -267,9 +267,9 @@ function player_spon(key) {
 }
 
 
-function game_time_out(room, winer) {
+function game_time_out(room, winner) {
     io.in(room).emit(SOCKET_EVENTS.GAME_RESULT, {
-        "winer": winer,
+        "winner": winner,
         "info": "タイムアウトより"
     });
     
@@ -278,7 +278,7 @@ function game_time_out(room, winer) {
     game_server_reset(room);
 }
 
-function game_result_check(room, chara, effect_t = "r", effect_d = false, winer = false, winer_info = false) {
+function game_result_check(room, chara, effect_t = "r", effect_d = false, winner = false, winner_info = false) {
 
     if (server_store[room].cool.status && server_store[room].hot.status) {
 
@@ -307,18 +307,18 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
             "effect": effect
         });
 
-        if (!winer) {
+        if (!winner) {
             if (server_store[room].turn == 0) {
                 if (server_store[room].cool.score > server_store[room].hot.score) {
-                    winer = "cool";
+                    winner = "cool";
                 }
                 else if (server_store[room].cool.score < server_store[room].hot.score) {
-                    winer = "hot";
+                    winner = "hot";
                 }
                 else {
-                    winer = "draw";
+                    winner = "draw";
                 }
-                winer_info = "スコアより";
+                winner_info = "スコアより";
             }
             else {
 
@@ -328,25 +328,25 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
                 var rhy = server_store[room].hot.y;
 
                 if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3 && server_store[room].map_data[rhy][rhx] != 4) {
-                    winer = "draw";
-                    winer_info = "アタックにより";
+                    winner = "draw";
+                    winner_info = "アタックにより";
                 }
                 else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3) {
-                    winer = "hot";
-                    if (winer_info) {
-                        winer_info = "アタックにより";
+                    winner = "hot";
+                    if (winner_info) {
+                        winner_info = "アタックにより";
                     }
                     else {
-                        winer_info = "ブロック衝突により";
+                        winner_info = "ブロック衝突により";
                     }
                 }
                 else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rhy][rhx] != 4) {
-                    winer = "cool";
-                    if (winer_info) {
-                        winer_info = "アタックにより";
+                    winner = "cool";
+                    if (winner_info) {
+                        winner_info = "アタックにより";
                     }
                     else {
-                        winer_info = "ブロック衝突により";
+                        winner_info = "ブロック衝突により";
                     }
                 }
                 else {
@@ -407,26 +407,26 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
 
 
                     if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1) {
-                        winer = "hot";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "hot";
+                        winner_info = "ブロック閉じ込めにより";
                     }
 
                     if (h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
-                        winer = "cool";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "cool";
+                        winner_info = "ブロック閉じ込めにより";
                     }
 
                     if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1 && h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
-                        winer = "draw";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "draw";
+                        winner_info = "ブロック閉じ込めにより";
                     }
                 }
             }
         }
-        if (winer) {
+        if (winner) {
             io.in(room).emit(SOCKET_EVENTS.GAME_RESULT, {
-                "winer": winer,
-                "info": winer_info
+                "winner": winner,
+                "info": winner_info
             });
             
             //勝敗決定時に，ルームのCPU情報を削除

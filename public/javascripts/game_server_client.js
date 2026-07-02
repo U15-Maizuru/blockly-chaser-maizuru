@@ -406,10 +406,10 @@ socket.on(SOCKET_EVENTS.GAME_RESULT, function (msg) {
     var result = document.createElement("div");
     result.setAttribute("id", "game_result");
     var img = document.createElement('img');
-    if (msg.winer == "cool") {
+    if (msg.winner == "cool") {
         img.src = '/images/coolwin.png';
     }
-    else if (msg.winer == "hot") {
+    else if (msg.winner == "hot") {
         img.src = '/images/hotwin.png';
     }
     else {
