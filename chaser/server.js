@@ -29,6 +29,34 @@ var room_info = {};
 const CHARA_NUM = { "cool": 3, "hot": 4 };
 const CHARA_NUM_DIFF = { "cool": 4, "hot": 3 };
 
+// 1マスを 0(空き)/1(相手・壁)/2(範囲外)/3(不明) に分類する（move_player/look/search/put_wallで共通）
+function classifyCell(mapData, x, y, mapSizeX, mapSizeY, ownNum, oppNum) {
+    if (0 > x || (mapSizeX - 1) < x || 0 > y || (mapSizeY - 1) < y) {
+        return 2;
+    }
+    var cell = mapData[y][x];
+    if (cell == oppNum || cell == 34) {
+        return 1;
+    }
+    if (cell == 0 || cell == ownNum) {
+        return 0;
+    }
+    if (cell == 1) {
+        return 2;
+    }
+    return 3;
+}
+
+function scanCells(mapData, originX, originY, xRange, yRange, mapSizeX, mapSizeY, ownNum, oppNum) {
+    var result = [];
+    for (var dy of yRange) {
+        for (var dx of xRange) {
+            result.push(classifyCell(mapData, originX + dx, originY + dy, mapSizeX, mapSizeY, ownNum, oppNum));
+        }
+    }
+    return result;
+}
+
 //create_map
 function create_map(key) {
 
@@ -673,34 +701,10 @@ function move_player(room, chara, msg, id = false) {
             }
 
             var tmp_map_data = Array.from(server_store[room].map_data);
-            var x_range = [-1, 0, 1];
-            var y_range = [-1, 0, 1];
             var load_map_size_x = server_store[room].map_size_x;
             var load_map_size_y = server_store[room].map_size_y;
 
-            for (var _y of y_range) {
-                for (var _x of x_range) {
-                    if (0 > (_x + x) || (load_map_size_x - 1) < (_x + x) || 0 > (_y + y) || (load_map_size_y - 1) < (_y + y)) {
-                        move_map_data.push(2);
-                    }
-                    else {
-                        if (tmp_map_data[_y + y][_x + x] == CHARA_NUM_DIFF[chara] || tmp_map_data[_y + y][_x + x] == 34) {
-                            move_map_data.push(1);
-                        }
-                        else {
-                            if (tmp_map_data[_y + y][_x + x] == 0 || tmp_map_data[_y + y][_x + x] == CHARA_NUM[chara]) {
-                                move_map_data.push(0);
-                            }
-                            else if (tmp_map_data[_y + y][_x + x] == 1) {
-                                move_map_data.push(2);
-                            }
-                            else {
-                                move_map_data.push(3);
-                            }
-                        }
-                    }
-                }
-            }
+            move_map_data = scanCells(tmp_map_data, x, y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
             if (id) {
                 io.to(id).emit(SOCKET_EVENTS.MOVE_REC, {
                     "rec_data": move_map_data
@@ -746,31 +750,7 @@ function look(room, chara, msg, id = false) {
             x_range = [1, 2, 3];
             y_range = [-1, 0, 1];
         }
-        var look_map_data = [];
-
-        for (var y of y_range) {
-            for (var x of x_range) {
-                if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x) || 0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                    look_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[now_y + y][now_x + x] == CHARA_NUM_DIFF[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
-                        look_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                            look_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                        }
-                        else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                            look_map_data.push(2);
-                        }
-                        else {
-                            look_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var look_map_data = scanCells(tmp_map_data, now_x, now_y, x_range, y_range, load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.LOOK_REC, {
                 "rec_data": look_map_data
@@ -826,31 +806,7 @@ function search(room, chara, msg, id = false) {
             y_range = [0];
         }
 
-        var search_map_data = [];
-
-        for (var y of y_range) {
-            for (var x of x_range) {
-                if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x) || 0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                    search_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[now_y + y][now_x + x] == CHARA_NUM_DIFF[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
-                        search_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                            search_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                        }
-                        else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                            search_map_data.push(2);
-                        }
-                        else {
-                            search_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var search_map_data = scanCells(tmp_map_data, now_x, now_y, x_range, y_range, load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.SEARCH_REC, {
                 "rec_data": search_map_data
@@ -923,38 +879,12 @@ function put_wall(room, chara, msg, id = false) {
         }
 
         var tmp_map_data = Array.from(server_store[room].map_data);
-        var put_map_data = [];
         var now_x = server_store[room][chara].x;
         var now_y = server_store[room][chara].y;
-        var x_range = [-1, 0, 1];
-        var y_range = [-1, 0, 1];
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-
-        for (var _y of y_range) {
-            for (var _x of x_range) {
-                if (0 > (_x + now_x) || (load_map_size_x - 1) < (_x + now_x) || 0 > (_y + now_y) || (load_map_size_y - 1) < (_y + now_y)) {
-                    put_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[_y + now_y][_x + now_x] == CHARA_NUM_DIFF[chara] || tmp_map_data[_y + now_y][_x + now_x] == 34) {
-                        put_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[_y + now_y][_x + now_x] == 0 || tmp_map_data[_y + now_y][_x + now_x] == CHARA_NUM[chara]) {
-                            put_map_data.push(0);
-                        }
-                        else if (tmp_map_data[_y + now_y][_x + now_x] == 1) {
-                            put_map_data.push(2);
-                        }
-                        else {
-                            put_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var put_map_data = scanCells(tmp_map_data, now_x, now_y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
 
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.PUT_REC, {
@@ -1606,6 +1536,10 @@ io.on('connection', function (socket) {
 
 exports.io = io;
 exports.reloadRoom = reloadRoom;
+
+// テスト用（node --test から classifyCell/scanCells を検証する）
+exports.classifyCell = classifyCell;
+exports.scanCells = scanCells;
 
 
 //cpu
