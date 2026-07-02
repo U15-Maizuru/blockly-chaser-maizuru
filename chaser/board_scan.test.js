@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { classifyCell, scanCells } = require('./server.js');
+const { classifyCell, scanCells } = require('./board_scan.js');
 
 const MAP_SIZE = 5;
 const OWN = 3; // cool

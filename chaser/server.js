@@ -15,6 +15,7 @@ var path = require('path');
 const { json } = require('express/lib/response.js');
 
 const config = require('../config/config.js');
+const { classifyCell, scanCells } = require('./board_scan.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
 
@@ -28,34 +29,6 @@ var room_info = {};
 // map_data 上でのキャラクター種別の数値表現（自陣営 / 相手陣営）
 const CHARA_NUM = { "cool": 3, "hot": 4 };
 const CHARA_NUM_DIFF = { "cool": 4, "hot": 3 };
-
-// 1マスを 0(空き)/1(相手・壁)/2(範囲外)/3(不明) に分類する（move_player/look/search/put_wallで共通）
-function classifyCell(mapData, x, y, mapSizeX, mapSizeY, ownNum, oppNum) {
-    if (0 > x || (mapSizeX - 1) < x || 0 > y || (mapSizeY - 1) < y) {
-        return 2;
-    }
-    var cell = mapData[y][x];
-    if (cell == oppNum || cell == 34) {
-        return 1;
-    }
-    if (cell == 0 || cell == ownNum) {
-        return 0;
-    }
-    if (cell == 1) {
-        return 2;
-    }
-    return 3;
-}
-
-function scanCells(mapData, originX, originY, xRange, yRange, mapSizeX, mapSizeY, ownNum, oppNum) {
-    var result = [];
-    for (var dy of yRange) {
-        for (var dx of xRange) {
-            result.push(classifyCell(mapData, originX + dx, originY + dy, mapSizeX, mapSizeY, ownNum, oppNum));
-        }
-    }
-    return result;
-}
 
 //create_map
 function create_map(key) {
@@ -1536,10 +1509,6 @@ io.on('connection', function (socket) {
 
 exports.io = io;
 exports.reloadRoom = reloadRoom;
-
-// テスト用（node --test から classifyCell/scanCells を検証する）
-exports.classifyCell = classifyCell;
-exports.scanCells = scanCells;
 
 
 //cpu
