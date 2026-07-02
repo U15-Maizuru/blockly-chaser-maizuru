@@ -23,7 +23,7 @@ if (query_list.room_id) {
         })
         .then(function (json) {
             if (json) {
-                socket.emit('looker_join', query_list.room_id + "?" + query_list.room_token);
+                socket.emit(SOCKET_EVENTS.LOOKER_JOIN, query_list.room_id + "?" + query_list.room_token);
                 document.getElementById('server_name').textContent = String(json.name);
                 document.title += " - " + document.getElementById('server_name').textContent;                
             }
@@ -35,7 +35,7 @@ if (query_list.room_id) {
 }
 
 
-socket.on("joined_room", function (msg) {
+socket.on(SOCKET_EVENTS.JOINED_ROOM, function (msg) {
     load_map_size_x = msg.x_size;
     load_map_size_y = msg.y_size;
     if (msg.cool_name) {
@@ -50,7 +50,7 @@ socket.on("joined_room", function (msg) {
     ready_game("game_board");
 });
 
-socket.on("updata_board", function (msg) {
+socket.on(SOCKET_EVENTS.UPDATE_BOARD, function (msg) {
     temp_msg = msg;
     if (msg.effect) {
         makeTable(msg, load_map_size_x, load_map_size_y, msg.effect, "game_board");
@@ -60,7 +60,7 @@ socket.on("updata_board", function (msg) {
     }
 });
 
-socket.on("new_board", function (msg) {
+socket.on(SOCKET_EVENTS.NEW_BOARD, function (msg) {
     temp_msg = msg;
     game_bgm_flag = true;
     if (msg.effect) {
@@ -74,7 +74,7 @@ socket.on("new_board", function (msg) {
 var game_result_msg = "";
 var game_result_info = "";
 
-socket.on("game_result", function (msg) {
+socket.on(SOCKET_EVENTS.GAME_RESULT, function (msg) {
     //console.log(msg);
     if (localStorage["SOUND_STATUS"]) {
         if (localStorage["SOUND_STATUS"] == "on") {
@@ -93,7 +93,7 @@ socket.on("game_result", function (msg) {
 
 });
 
-socket.on("error", function (msg) {
+socket.on(SOCKET_EVENTS.ERROR, function (msg) {
     gameBgm.stop();
 });
 
