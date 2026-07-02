@@ -5,14 +5,24 @@ var languageLoad = require('../tool/language_load.js');
 
 var LNG = languageLoad.loadLangJson('programming.json');
 
-// programming-exp.js からも再利用する（画面名以外は完全に同一処理のため）
-function createProgrammingRouter(viewName) {
+// programming-exp.js からも再利用する（views/programming.ejs 1つを variant で描き分ける）
+function createProgrammingRouter(variant) {
   var router = express.Router();
   router.get('/', function (req, res, next) {
-    res.render(viewName, { "title": 'プログラミング', "LNG": languageLoad.pickByCookie(req, LNG) });
+    var locals = Object.assign({
+      "title": 'プログラミング',
+      "LNG": languageLoad.pickByCookie(req, LNG)
+    }, variant);
+    res.render('programming', locals);
   });
   return router;
 }
 
-module.exports = createProgrammingRouter('programming');
+module.exports = createProgrammingRouter({
+  htmlTitle: 'CHaser Programming',
+  menuPath: '/menu-programming',
+  levelLabel: '【初級】',
+  toolboxPartial: 'toolboxes/toolbox_categories',
+  expMode: false,
+});
 module.exports.createProgrammingRouter = createProgrammingRouter;
