@@ -354,7 +354,7 @@ function initEncodeRuntime(options) {
 
       setTimeout(function () {
         highlightPause = false;
-        if (t_code) {
+        if (typeof t_code === 'string' && t_code) {
           latestCode = t_code;
         }
         else {
@@ -390,6 +390,8 @@ function initEncodeRuntime(options) {
               }
             }
             catch (e) {
+              console.error(e);
+              console.log(latestCode);
               if (outputArea) {
                 outputArea.value += '\n\n<< Error ' + e + '>>';
               }
