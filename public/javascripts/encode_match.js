@@ -110,7 +110,7 @@ function initApi(interpreter, scope) {
     user.name = name;
     user.chara = query_list.chara;
     user.key = query_list.key;
-    socket.emit("player_join_match", user);
+    socket.emit(SOCKET_EVENTS.PLAYER_JOIN_MATCH, user);
 
     server_connect_status = true;
   };
@@ -127,7 +127,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("move_player", direction);
+          socket.emit(SOCKET_EVENTS.MOVE_PLAYER, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -155,7 +155,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("put_wall", direction);
+          socket.emit(SOCKET_EVENTS.PUT_WALL, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -188,7 +188,7 @@ function initApi(interpreter, scope) {
         callback(my_turn.join(''));
       }
       else if (myInterpreter) {
-        socket.emit("get_ready");
+        socket.emit(SOCKET_EVENTS.GET_READY);
         setTimeout(getDate, 200);
       }
     };
@@ -206,7 +206,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("look", direction);
+          socket.emit(SOCKET_EVENTS.LOOK, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -232,7 +232,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("search", direction);
+          socket.emit(SOCKET_EVENTS.SEARCH, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -311,7 +311,7 @@ function resetInterpreter() {
 
 function resetVar() {
   if (server_connect_status) {
-    socket.emit("leave_room");
+    socket.emit(SOCKET_EVENTS.LEAVE_ROOM);
   }
   my_turn = false;
   server_connect_status = false;

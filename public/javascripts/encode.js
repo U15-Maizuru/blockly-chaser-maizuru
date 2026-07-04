@@ -108,7 +108,7 @@ function initApi(interpreter, scope) {
     var user = {};
     user.room_id = id;
     user.name = name;
-    socket.emit("player_join", user);
+    socket.emit(SOCKET_EVENTS.PLAYER_JOIN, user);
 
     server_connect_status = true;
   };
@@ -125,7 +125,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("move_player", direction);
+          socket.emit(SOCKET_EVENTS.MOVE_PLAYER, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -153,7 +153,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("put_wall", direction);
+          socket.emit(SOCKET_EVENTS.PUT_WALL, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -186,7 +186,7 @@ function initApi(interpreter, scope) {
         callback(my_turn.join(''));
       }
       else if (myInterpreter) {
-        socket.emit("get_ready");
+        socket.emit(SOCKET_EVENTS.GET_READY);
         setTimeout(getDate, 100);
       }
     };
@@ -204,7 +204,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("look", direction);
+          socket.emit(SOCKET_EVENTS.LOOK, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -230,7 +230,7 @@ function initApi(interpreter, scope) {
           callback(look_search_data.join(''));
         }
         else if (myInterpreter) {
-          socket.emit("search", direction);
+          socket.emit(SOCKET_EVENTS.SEARCH, direction);
           setTimeout(getDate, 100);
         }
       };
@@ -316,7 +316,7 @@ function resetInterpreter() {
 
 function resetVar() {
   if (server_connect_status) {
-    socket.emit("leave_room");
+    socket.emit(SOCKET_EVENTS.LEAVE_ROOM);
   }
   my_turn = false;
   server_connect_status = false;

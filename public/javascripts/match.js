@@ -24,7 +24,7 @@ if (query_list.room_id) {
         })
         .then(function (json) {
             if (json) {
-                socket.emit('looker_join', query_list.room_id + "?" + query_list.room_token);
+                socket.emit(SOCKET_EVENTS.LOOKER_JOIN, query_list.room_id + "?" + query_list.room_token);
                 document.getElementById('server_name').textContent = String(json.name);
                 if (json.cpu) {
                     buttle_mode = "（テスト）";
@@ -36,7 +36,7 @@ if (query_list.room_id) {
                 var server_init = {};
                 server_init.room_id = query_list.room_id + "?" + query_list.room_token;
                 if (query_list.my_chara) server_init.player_chara = query_list.my_chara;
-                socket.emit("match_init", server_init);
+                socket.emit(SOCKET_EVENTS.MATCH_INIT, server_init);
             }
             else {
                 document.getElementById('server_name').textContent = "存在しないサーバー";
@@ -45,11 +45,11 @@ if (query_list.room_id) {
 }
 
 var match_start_check = function () {
-    socket.emit("match_start_check");
+    socket.emit(SOCKET_EVENTS.MATCH_START_CHECK);
 };
 var check_flag = true;
 
-socket.on("match_init_rec", function (msg) {
+socket.on(SOCKET_EVENTS.MATCH_INIT_REC, function (msg) {
     if (!msg.error) {
         var upperChara = (query_list.my_chara === 'hot') ? 'hot' : 'cool';
         var lowerChara = (query_list.my_chara === 'hot') ? 'cool' : 'hot';
@@ -72,7 +72,7 @@ socket.on("match_init_rec", function (msg) {
             clearInterval(check_timer);
             document.getElementById('ready_area').classList.add("display_off");
             document.getElementById('game_area').classList.remove("display_off");
-            socket.emit("match_start", { "room_id": query_list.room_id + "?" + query_list.room_token, "key": key });
+            socket.emit(SOCKET_EVENTS.MATCH_START, { "room_id": query_list.room_id + "?" + query_list.room_token, "key": key });
         }
         check_flag = true;
         check_timer = setInterval(match_start_check, 500);
@@ -84,7 +84,7 @@ socket.on("match_init_rec", function (msg) {
 });
 
 
-socket.on("match_start_check_rec", function (msg) {
+socket.on(SOCKET_EVENTS.MATCH_START_CHECK_REC, function (msg) {
     var game_start_button = document.getElementById('game_start');
     if (check_flag) {
         if (msg) {
@@ -101,7 +101,7 @@ socket.on("match_start_check_rec", function (msg) {
 });
 
 
-socket.on("joined_room", function (msg) {
+socket.on(SOCKET_EVENTS.JOINED_ROOM, function (msg) {
     load_map_size_x = msg.x_size;
     load_map_size_y = msg.y_size;
     if (msg.cool_name) {
@@ -115,7 +115,7 @@ socket.on("joined_room", function (msg) {
     }
 });
 
-socket.on("updata_board", function (msg) {
+socket.on(SOCKET_EVENTS.UPDATE_BOARD, function (msg) {
     clearInterval(check_timer);
     document.getElementById('ready_area').classList.add("display_off");
     document.getElementById('game_area').classList.remove("display_off");
@@ -128,7 +128,7 @@ socket.on("updata_board", function (msg) {
     }
 });
 
-socket.on("new_board", function (msg) {
+socket.on(SOCKET_EVENTS.NEW_BOARD, function (msg) {
     temp_msg = msg;
     game_bgm_flag = true;
     if (msg.effect) {
@@ -142,7 +142,7 @@ socket.on("new_board", function (msg) {
 var game_result_msg = "";
 var game_result_info = "";
 
-socket.on("game_result", function (msg) {
+socket.on(SOCKET_EVENTS.GAME_RESULT, function (msg) {
     if (localStorage["SOUND_STATUS"]) {
         if (localStorage["SOUND_STATUS"] == "on") {
             gameBgm.stop();
@@ -158,10 +158,10 @@ socket.on("game_result", function (msg) {
 
     game_result_display(msg.winer, msg.info);
 
-    socket.emit("match_end", { "room_id": query_list.room_id + "?" + query_list.room_token, "key": key });
+    socket.emit(SOCKET_EVENTS.MATCH_END, { "room_id": query_list.room_id + "?" + query_list.room_token, "key": key });
 });
 
-socket.on("error", function (msg) {
+socket.on(SOCKET_EVENTS.ERROR, function (msg) {
     gameBgm.stop();
 });
 
