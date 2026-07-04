@@ -15,6 +15,7 @@ var path = require('path');
 const { json } = require('express/lib/response.js');
 
 const config = require('../config/config.js');
+const { classifyCell, scanCells } = require('./board_scan.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
 
@@ -24,6 +25,10 @@ var looker = {};
 var match_room_store = {};
 var server_store = JSON.parse(JSON.stringify(game_server));
 var room_info = {};
+
+// map_data 上でのキャラクター種別の数値表現（自陣営 / 相手陣営）
+const CHARA_NUM = { "cool": 3, "hot": 4 };
+const CHARA_NUM_DIFF = { "cool": 4, "hot": 3 };
 
 //create_map
 function create_map(key) {
@@ -262,9 +267,9 @@ function player_spon(key) {
 }
 
 
-function game_time_out(room, winer) {
+function game_time_out(room, winner) {
     io.in(room).emit(SOCKET_EVENTS.GAME_RESULT, {
-        "winer": winer,
+        "winner": winner,
         "info": "タイムアウトより"
     });
     
@@ -273,7 +278,7 @@ function game_time_out(room, winer) {
     game_server_reset(room);
 }
 
-function game_result_check(room, chara, effect_t = "r", effect_d = false, winer = false, winer_info = false) {
+function game_result_check(room, chara, effect_t = "r", effect_d = false, winner = false, winner_info = false) {
 
     if (server_store[room].cool.status && server_store[room].hot.status) {
 
@@ -302,18 +307,18 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
             "effect": effect
         });
 
-        if (!winer) {
+        if (!winner) {
             if (server_store[room].turn == 0) {
                 if (server_store[room].cool.score > server_store[room].hot.score) {
-                    winer = "cool";
+                    winner = "cool";
                 }
                 else if (server_store[room].cool.score < server_store[room].hot.score) {
-                    winer = "hot";
+                    winner = "hot";
                 }
                 else {
-                    winer = "draw";
+                    winner = "draw";
                 }
-                winer_info = "スコアより";
+                winner_info = "スコアより";
             }
             else {
 
@@ -323,25 +328,25 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
                 var rhy = server_store[room].hot.y;
 
                 if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3 && server_store[room].map_data[rhy][rhx] != 4) {
-                    winer = "draw";
-                    winer_info = "アタックにより";
+                    winner = "draw";
+                    winner_info = "アタックにより";
                 }
                 else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3) {
-                    winer = "hot";
-                    if (winer_info) {
-                        winer_info = "アタックにより";
+                    winner = "hot";
+                    if (winner_info) {
+                        winner_info = "アタックにより";
                     }
                     else {
-                        winer_info = "ブロック衝突により";
+                        winner_info = "ブロック衝突により";
                     }
                 }
                 else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rhy][rhx] != 4) {
-                    winer = "cool";
-                    if (winer_info) {
-                        winer_info = "アタックにより";
+                    winner = "cool";
+                    if (winner_info) {
+                        winner_info = "アタックにより";
                     }
                     else {
-                        winer_info = "ブロック衝突により";
+                        winner_info = "ブロック衝突により";
                     }
                 }
                 else {
@@ -402,26 +407,26 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
 
 
                     if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1) {
-                        winer = "hot";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "hot";
+                        winner_info = "ブロック閉じ込めにより";
                     }
 
                     if (h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
-                        winer = "cool";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "cool";
+                        winner_info = "ブロック閉じ込めにより";
                     }
 
                     if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1 && h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
-                        winer = "draw";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "draw";
+                        winner_info = "ブロック閉じ込めにより";
                     }
                 }
             }
         }
-        if (winer) {
+        if (winner) {
             io.in(room).emit(SOCKET_EVENTS.GAME_RESULT, {
-                "winer": winer,
-                "info": winer_info
+                "winner": winner,
+                "info": winner_info
             });
             
             //勝敗決定時に，ルームのCPU情報を削除
@@ -603,13 +608,11 @@ function move_player(room, chara, msg, id = false) {
         var y = server_store[room][chara].y;
 
         var xy_check = false;
-        var chara_num = { "cool": 3, "hot": 4 };
-        var chara_num_diff = { "cool": 4, "hot": 3 };
 
         var move_map_data = [];
 
         if (server_store[room].map_data[y][x] == 34) {
-            server_store[room].map_data[y][x] = chara_num_diff[chara];
+            server_store[room].map_data[y][x] = CHARA_NUM_DIFF[chara];
         }
         else {
             server_store[room].map_data[y][x] = 0;
@@ -646,10 +649,10 @@ function move_player(room, chara, msg, id = false) {
 
         if (xy_check) {
             if (server_store[room].map_data[y][x] == 0) {
-                server_store[room].map_data[y][x] = chara_num[chara];
+                server_store[room].map_data[y][x] = CHARA_NUM[chara];
             }
             else if (server_store[room].map_data[y][x] == 2) {
-                server_store[room].map_data[y][x] = chara_num[chara];
+                server_store[room].map_data[y][x] = CHARA_NUM[chara];
                 server_store[room][chara].score += 1;
 
                 if (msg === "top") {
@@ -666,39 +669,15 @@ function move_player(room, chara, msg, id = false) {
                 }
 
             }
-            else if (server_store[room].map_data[y][x] == chara_num_diff[chara]) {
+            else if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 server_store[room].map_data[y][x] = 34;
             }
 
             var tmp_map_data = Array.from(server_store[room].map_data);
-            var x_range = [-1, 0, 1];
-            var y_range = [-1, 0, 1];
             var load_map_size_x = server_store[room].map_size_x;
             var load_map_size_y = server_store[room].map_size_y;
 
-            for (var _y of y_range) {
-                for (var _x of x_range) {
-                    if (0 > (_x + x) || (load_map_size_x - 1) < (_x + x) || 0 > (_y + y) || (load_map_size_y - 1) < (_y + y)) {
-                        move_map_data.push(2);
-                    }
-                    else {
-                        if (tmp_map_data[_y + y][_x + x] == chara_num_diff[chara] || tmp_map_data[_y + y][_x + x] == 34) {
-                            move_map_data.push(1);
-                        }
-                        else {
-                            if (tmp_map_data[_y + y][_x + x] == 0 || tmp_map_data[_y + y][_x + x] == chara_num[chara]) {
-                                move_map_data.push(0);
-                            }
-                            else if (tmp_map_data[_y + y][_x + x] == 1) {
-                                move_map_data.push(2);
-                            }
-                            else {
-                                move_map_data.push(3);
-                            }
-                        }
-                    }
-                }
-            }
+            move_map_data = scanCells(tmp_map_data, x, y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
             if (id) {
                 io.to(id).emit(SOCKET_EVENTS.MOVE_REC, {
                     "rec_data": move_map_data
@@ -731,8 +710,6 @@ function look(room, chara, msg, id = false) {
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-        var chara_num_diff = { "cool": 4, "hot": 3 };
-
         if (msg == "top") {
             x_range = [-1, 0, 1];
             y_range = [-3, -2, -1];
@@ -746,31 +723,7 @@ function look(room, chara, msg, id = false) {
             x_range = [1, 2, 3];
             y_range = [-1, 0, 1];
         }
-        var look_map_data = [];
-
-        for (var y of y_range) {
-            for (var x of x_range) {
-                if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x) || 0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                    look_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
-                        look_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                            look_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                        }
-                        else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                            look_map_data.push(2);
-                        }
-                        else {
-                            look_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var look_map_data = scanCells(tmp_map_data, now_x, now_y, x_range, y_range, load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.LOOK_REC, {
                 "rec_data": look_map_data
@@ -812,8 +765,6 @@ function search(room, chara, msg, id = false) {
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-        var chara_num_diff = { "cool": 4, "hot": 3 };
-
         if (msg == "top") {
             x_range = [0];
             y_range = [-1, -2, -3, -4, -5, -6, -7, -8, -9];
@@ -828,31 +779,7 @@ function search(room, chara, msg, id = false) {
             y_range = [0];
         }
 
-        var search_map_data = [];
-
-        for (var y of y_range) {
-            for (var x of x_range) {
-                if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x) || 0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                    search_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
-                        search_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                            search_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                        }
-                        else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                            search_map_data.push(2);
-                        }
-                        else {
-                            search_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var search_map_data = scanCells(tmp_map_data, now_x, now_y, x_range, y_range, load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.SEARCH_REC, {
                 "rec_data": search_map_data
@@ -915,50 +842,22 @@ function put_wall(room, chara, msg, id = false) {
             }
         }
 
-        var chara_num = { "cool": 3, "hot": 4 };
-        var chara_num_diff = { "cool": 4, "hot": 3 };
         var player_put_chara = false;
 
         if (put_check) {
-            if (server_store[room].map_data[y][x] == chara_num_diff[chara]) {
+            if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 player_put_chara = true;
             }
             server_store[room].map_data[y][x] = 1;
         }
 
         var tmp_map_data = Array.from(server_store[room].map_data);
-        var put_map_data = [];
         var now_x = server_store[room][chara].x;
         var now_y = server_store[room][chara].y;
-        var x_range = [-1, 0, 1];
-        var y_range = [-1, 0, 1];
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-
-        for (var _y of y_range) {
-            for (var _x of x_range) {
-                if (0 > (_x + now_x) || (load_map_size_x - 1) < (_x + now_x) || 0 > (_y + now_y) || (load_map_size_y - 1) < (_y + now_y)) {
-                    put_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[_y + now_y][_x + now_x] == chara_num_diff[chara] || tmp_map_data[_y + now_y][_x + now_x] == 34) {
-                        put_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[_y + now_y][_x + now_x] == 0 || tmp_map_data[_y + now_y][_x + now_x] == chara_num[chara]) {
-                            put_map_data.push(0);
-                        }
-                        else if (tmp_map_data[_y + now_y][_x + now_x] == 1) {
-                            put_map_data.push(2);
-                        }
-                        else {
-                            put_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var put_map_data = scanCells(tmp_map_data, now_x, now_y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
 
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.PUT_REC, {
