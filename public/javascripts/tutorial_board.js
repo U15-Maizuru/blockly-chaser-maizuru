@@ -509,7 +509,7 @@ function move_player(direction, chara = "cool") {
         else {
             if (mapdata[py + move_y][px + move_x] == 2) {
                 mapdata[py][px] = 1;
-                hart_score += "cool" ? 1 : 0;
+                hart_score += chara == "cool" ? 1 : 0;
             }
 
             if (mapdata[py + move_y][px + move_x] == 4) {
