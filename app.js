@@ -7,7 +7,6 @@ var morgan = require('morgan');
 const logger = require('./bin/logger.js');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 
 var menuProgrammingRouter = require('./routes/menu-programming');
 var programmingRouter = require('./routes/programming');
@@ -52,7 +51,6 @@ app.use('/about/LICENSE',express.static(path.join(__dirname, mode_path, 'LICENSE
 app.use('/about/TOS',express.static(path.join(__dirname, mode_path, '/TOS')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/menu-programming', menuProgrammingRouter);
 app.use('/programming', programmingRouter);
 app.use('/menu-programming-exp', menuProgrammingexpRouter);
