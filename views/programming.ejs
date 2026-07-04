@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="google" value="notranslate">
 
-  <title>CHaser Programming</title>
+  <title><%= htmlTitle %></title>
   <link rel="icon" href="/images/favicon.ico">
 
   <script src="/socket.io/socket.io.js"></script>
@@ -30,18 +30,23 @@
 
 
 
+  <% if (expMode) { %>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/blockly.css' />
+  <% } else { %>
   <link rel='stylesheet' href='/stylesheets/blockly.css' />
   <link rel='stylesheet' href='/stylesheets/style.css' />
+  <% } %>
 </head>
 
 <body>
   <div class="header">
     <div class="back_page">
-      <div class="back_button"><a href="/menu-programming"></a></div>
+      <div class="back_button"><a href="<%= menuPath %>"></a></div>
     </div>
     <div class="control_area">
       <div class="page_title">
-        <h1><span class="page_title_span">プログラミング</span><%- title %>【初級】</h1>
+        <h1><span class="page_title_span">プログラミング</span><%- title %><%= levelLabel %></h1>
       </div>
       <div class="control_button">
         <button id="runButton" class="notext" title="<%- LNG[" RUN"] %>"></button>
@@ -94,7 +99,7 @@
   <script>const APP_VERSION = "<%= appVersion %>";</script>
   <script src="/javascripts/encode.js"></script>
   <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
-    <%- include('toolboxes/toolbox_categories') %>
+    <%- include(toolboxPartial) %>
   </xml>
 
 </body>
