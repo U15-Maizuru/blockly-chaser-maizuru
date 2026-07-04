@@ -1,45 +1,36 @@
-const fs = require('fs');
 const path = require('path');
 const logger = require('../bin/logger.js');
 
 const config_load = require('../tool/config_data_load');
 const { create } = require('domain');
 const config = require('../config/config.js');
+const json_dir_load = require('../tool/json_dir_load');
 
 var mode_path = config_load.electron_conf_load();
 
-const game_server_list = fs.readdirSync(path.join(__dirname, mode_path, '..', "load_data", "game_server_data"));
 var game_server = {};
 var join_list = [];
 
 var additional_game_server = [];
 
 const init = async function () {
-  for (var gs of game_server_list) {
-    try {
-      var temp_game_server = JSON.parse(fs.readFileSync(path.join(__dirname, mode_path, '..', 'load_data', 'game_server_data', gs), 'utf8'));
-      if (temp_game_server.room_id) {
-        game_server[temp_game_server.room_id] = temp_game_server;
-        if (!temp_game_server.cpu){
-          join_list.push(["VS: " + temp_game_server.name, temp_game_server.room_id]);
-        } else {
-          join_list.push(["AUTO: " + temp_game_server.name, temp_game_server.room_id]);
-        }
-        // cpu ありの場合、cpu なしの VS ルームを自動生成
-        if (temp_game_server.cpu) {
-          var vs_map = JSON.parse(JSON.stringify(temp_game_server));
-          delete vs_map.cpu;
-          vs_map.room_id = temp_game_server.room_id.replace(/^auto_/, 'vs_');
-          game_server[vs_map.room_id] = vs_map;
-          join_list.push(["VS: " + vs_map.name, vs_map.room_id]);
-        }
-      }
-      else {
-        logger.error('The format of the game server data is incorrect. Data to be loaded "' + gs + '"');
-      }
+  var game_server_dir = path.join(__dirname, mode_path, '..', 'load_data', 'game_server_data');
+  var loaded = json_dir_load.loadDirAsMap(game_server_dir, JSON.parse, (parsed) => parsed.room_id, 'game server data');
+  for (var room_id in loaded) {
+    var temp_game_server = loaded[room_id];
+    game_server[room_id] = temp_game_server;
+    if (!temp_game_server.cpu){
+      join_list.push(["VS: " + temp_game_server.name, temp_game_server.room_id]);
+    } else {
+      join_list.push(["AUTO: " + temp_game_server.name, temp_game_server.room_id]);
     }
-    catch (e) {
-      logger.error('Failed to read the game server data. Data to be loaded "' + gs + '"');
+    // cpu ありの場合、cpu なしの VS ルームを自動生成
+    if (temp_game_server.cpu) {
+      var vs_map = JSON.parse(JSON.stringify(temp_game_server));
+      delete vs_map.cpu;
+      vs_map.room_id = temp_game_server.room_id.replace(/^auto_/, 'vs_');
+      game_server[vs_map.room_id] = vs_map;
+      join_list.push(["VS: " + vs_map.name, vs_map.room_id]);
     }
   }
   for (var map of additional_game_server) {
