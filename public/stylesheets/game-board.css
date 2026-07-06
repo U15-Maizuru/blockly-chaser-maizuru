@@ -255,7 +255,7 @@ td img {
   border-radius: 0 0 10px 10px;
 }
 
-#winer_info_div {
+#winner_info_div {
   display: block;
   width: 100%;
   margin: 11px 8px;
@@ -264,7 +264,7 @@ td img {
 }
 
 
-#winer_info_title {
+#winner_info_title {
   height: 30px;
   margin: 2px;
   margin-bottom: 0px;
@@ -273,7 +273,7 @@ td img {
   border-radius: 10px 10px 0 0;
 }
 
-#winer_info {
+#winner_info {
   height: 29px;
   padding-top: 1px;
   margin: 2px;

@@ -1,20 +1,28 @@
 var express = require('express');
-var router = express.Router();
 const logger = require('../bin/logger.js');
 
-var fs = require('fs');
-var path = require('path');
+var languageLoad = require('../tool/language_load.js');
 
-//GET page
-router.get('/', function (req, res, next) {
-  try {
-    var lg = req.cookies.lng;
-    var LNG = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", lg, "programming.json"), "utf-8"));
-  }
-  catch (e) {
-    var LNG = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja", "programming.json"), "utf-8"));
-  }
-  res.render('programming', { "title": 'プログラミング', "LNG": LNG });
+var LNG = languageLoad.loadLangJson('programming.json');
+
+// programming-exp.js からも再利用する（views/programming.ejs 1つを variant で描き分ける）
+function createProgrammingRouter(variant) {
+  var router = express.Router();
+  router.get('/', function (req, res, next) {
+    var locals = Object.assign({
+      "title": 'プログラミング',
+      "LNG": languageLoad.pickByCookie(req, LNG)
+    }, variant);
+    res.render('programming', locals);
+  });
+  return router;
+}
+
+module.exports = createProgrammingRouter({
+  htmlTitle: 'CHaser Programming',
+  menuPath: '/menu-programming',
+  levelLabel: '【初級】',
+  toolboxPartial: 'toolboxes/toolbox_categories',
+  expMode: false,
 });
-
-module.exports = router;
+module.exports.createProgrammingRouter = createProgrammingRouter;

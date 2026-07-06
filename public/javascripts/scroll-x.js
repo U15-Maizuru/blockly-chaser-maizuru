@@ -83,13 +83,13 @@ $(function () {
   $('.select_button').click(function () {
     var x = document.getElementsByClassName('slider-x');
     if (x[0].scrollLeft == 0) {
-      window.location.href = '/programming';
+      window.location.href = window.PROGRAMMING_PATH;
     }
     else if (x[0].scrollLeft == 250) {
-      //window.location.href = '/programming'; 
+      //window.location.href = window.PROGRAMMING_PATH;
     }
     else if (x[0].scrollLeft == 500) {
-      window.location.href = '/programming?loaddata=LastRun';
+      window.location.href = window.PROGRAMMING_PATH + '?loaddata=LastRun';
     }
     else {
 
@@ -106,12 +106,12 @@ $(function () {
 
     // XMLファイルとして読み込む場合
     if (fileName.endsWith(".xml")) {
-    reader.onload = function (e) {
+      reader.onload = function (e) {
         const xmlText = e.target.result.toString();
         let xmlDom;
 
-      try {
-        localStorage.setItem("Local", xmlText);
+        try {
+          localStorage.setItem("Local", xmlText);
         } catch (err) {
           console.error(err);
           alert("XMLファイルの読み込みに失敗しました");
@@ -121,10 +121,10 @@ $(function () {
         if (xmlDom) {
           Code.workspace.clear();
           Blockly.Xml.domToWorkspace(xmlDom, Code.workspace);
-      }
-    };
-    reader.readAsText(file);
-  }
+        }
+      };
+      reader.readAsText(file);
+    }
 
     // ── 非圧縮JSONファイルの処理 ──
     else if (fileName.endsWith(".json")) {
@@ -164,7 +164,7 @@ $(function () {
       };
       reader.readAsArrayBuffer(file);
     }
-    window.location.href = '/programming?loaddata=Local';
+    window.location.href = window.PROGRAMMING_PATH + '?loaddata=Local';
   }
 
   document.getElementById('file_load').addEventListener('change', readSingleFile, false);

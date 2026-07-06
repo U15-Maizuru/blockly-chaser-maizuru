@@ -310,7 +310,7 @@ var roop_run;
 var next_my_trun = false;
 
 
-socket.on("joined_room", function (msg) {
+socket.on(SOCKET_EVENTS.JOINED_ROOM, function (msg) {
     server_connect_status = true;
     load_map_size_x = msg.x_size;
     load_map_size_y = msg.y_size;
@@ -327,7 +327,7 @@ socket.on("joined_room", function (msg) {
 });
 
 
-socket.on("updata_board", function (msg) {
+socket.on(SOCKET_EVENTS.UPDATE_BOARD, function (msg) {
     if (msg.effect) {
         makeTable(msg, load_map_size_y, msg.effect, "game_board");
     }
@@ -336,7 +336,7 @@ socket.on("updata_board", function (msg) {
     }
 });
 
-socket.on("new_board", function (msg) {
+socket.on(SOCKET_EVENTS.NEW_BOARD, function (msg) {
     if (localStorage["SOUND_STATUS"]) {
         if (localStorage["SOUND_STATUS"] == "on") {
             gameBgm.play();
@@ -354,42 +354,42 @@ socket.on("new_board", function (msg) {
     }
 });
 
-socket.on("get_ready_rec", function (msg) {
+socket.on(SOCKET_EVENTS.GET_READY_REC, function (msg) {
     console.log(msg.rec_data);
     if (!my_turn) {
         my_turn = msg.rec_data;
     }
 });
 
-socket.on("move_rec", function (msg) {
+socket.on(SOCKET_EVENTS.MOVE_REC, function (msg) {
     if (my_turn) {
         my_turn = false;
         look_search_data = msg.rec_data;
     }
 });
 
-socket.on("put_rec", function (msg) {
+socket.on(SOCKET_EVENTS.PUT_REC, function (msg) {
     if (my_turn) {
         my_turn = false;
         look_search_data = msg.rec_data;
     }
 });
 
-socket.on("look_rec", function (msg) {
+socket.on(SOCKET_EVENTS.LOOK_REC, function (msg) {
     if (my_turn) {
         my_turn = false;
         look_search_data = msg.rec_data;
     }
 });
 
-socket.on("search_rec", function (msg) {
+socket.on(SOCKET_EVENTS.SEARCH_REC, function (msg) {
     if (my_turn) {
         my_turn = false;
         look_search_data = msg.rec_data;
     }
 });
 
-socket.on("game_result", function (msg) {
+socket.on(SOCKET_EVENTS.GAME_RESULT, function (msg) {
     Code.stopJS();
 
     if (localStorage["SOUND_STATUS"]) {
@@ -406,10 +406,10 @@ socket.on("game_result", function (msg) {
     var result = document.createElement("div");
     result.setAttribute("id", "game_result");
     var img = document.createElement('img');
-    if (msg.winer == "cool") {
+    if (msg.winner == "cool") {
         img.src = '/images/coolwin.png';
     }
-    else if (msg.winer == "hot") {
+    else if (msg.winner == "hot") {
         img.src = '/images/hotwin.png';
     }
     else {
@@ -419,7 +419,7 @@ socket.on("game_result", function (msg) {
     document.getElementById("game_board").appendChild(result);
 });
 
-socket.on("error", function (msg) {
+socket.on(SOCKET_EVENTS.ERROR, function (msg) {
     Code.stopJS();
     gameBgm.stop();
     window.alert(msg);

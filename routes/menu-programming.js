@@ -1,35 +1,30 @@
 var express = require('express');
-var router = express.Router();
+var languageLoad = require('../tool/language_load.js');
 
-var fs = require('fs');
-var path = require('path');
+var LNG = languageLoad.loadLangJson('menu-programming.json');
+var CONFIG_LNG = languageLoad.loadLangJson('config.json');
+var TITLE = { ja: 'データ選択', 'ja-k': 'データせんたく' };
 
-var LNG_JA = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja", "menu-programming.json"), "utf-8"));
-var LNG_JAK = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja-k", "menu-programming.json"), "utf-8"));
-var CONFIG_LNG_JA = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja", "config.json"), "utf-8"));
-var CONFIG_LNG_JAK = JSON.parse(fs.readFileSync(path.join(__dirname, '..', "language", "ja-k", "config.json"), "utf-8"));
-
-/* GET home page. */
-router.get('/', function (req, res, next) {
-    try {
-        if (req.cookies.lng) {
-            if (req.cookies.lng == "ja") {
-                res.render('menu-programming', { title: 'データ選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
-            }
-            else if (req.cookies.lng == "ja-k") {
-                res.render('menu-programming', { title: 'データせんたく', LNG: LNG_JAK, C_LNG: CONFIG_LNG_JAK });
-            }
-            else {
-                res.render('menu-programming', { title: 'データ選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
-            }
+// menu-programming-exp.js からも再利用する（views/menu-programming.ejs 1つを variant で描き分ける）
+function createMenuProgrammingRouter(variant) {
+    var router = express.Router();
+    router.get('/', function (req, res, next) {
+        try {
+            res.render('menu-programming', Object.assign({
+                title: languageLoad.pickByCookie(req, TITLE),
+                LNG: languageLoad.pickByCookie(req, LNG),
+                C_LNG: languageLoad.pickByCookie(req, CONFIG_LNG)
+            }, variant));
         }
-        else {
-            res.render('menu-programming', { title: 'データ選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
+        catch (e) {
+            res.render('menu-programming', Object.assign({ title: TITLE.ja, LNG: LNG.ja, C_LNG: CONFIG_LNG.ja }, variant));
         }
-    }
-    catch (e) {
-        res.render('menu-programming', { title: 'データ選択', LNG: LNG_JA, C_LNG: CONFIG_LNG_JA });
-    }
+    });
+    return router;
+}
+
+module.exports = createMenuProgrammingRouter({
+    htmlTitle: 'CHaser Programming Menu',
+    programmingPath: '/programming',
 });
-
-module.exports = router;
+module.exports.createMenuProgrammingRouter = createMenuProgrammingRouter;

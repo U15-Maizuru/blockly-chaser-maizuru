@@ -1,6 +1,7 @@
 
 
 const logger = require('../bin/logger.js');
+const SOCKET_EVENTS = require('../public/javascripts/socket_events.js');
 
 //socket.io
 var socket_io = require('socket.io');
@@ -14,6 +15,7 @@ var path = require('path');
 const { json } = require('express/lib/response.js');
 
 const config = require('../config/config.js');
+const { classifyCell, scanCells } = require('./board_scan.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
 
@@ -23,6 +25,10 @@ var looker = {};
 var match_room_store = {};
 var server_store = JSON.parse(JSON.stringify(game_server));
 var room_info = {};
+
+// map_data 上でのキャラクター種別の数値表現（自陣営 / 相手陣営）
+const CHARA_NUM = { "cool": 3, "hot": 4 };
+const CHARA_NUM_DIFF = { "cool": 4, "hot": 3 };
 
 //create_map
 function create_map(key) {
@@ -261,9 +267,9 @@ function player_spon(key) {
 }
 
 
-function game_time_out(room, winer) {
-    io.in(room).emit("game_result", {
-        "winer": winer,
+function game_time_out(room, winner) {
+    io.in(room).emit(SOCKET_EVENTS.GAME_RESULT, {
+        "winner": winner,
         "info": "タイムアウトより"
     });
     
@@ -272,7 +278,7 @@ function game_time_out(room, winer) {
     game_server_reset(room);
 }
 
-function game_result_check(room, chara, effect_t = "r", effect_d = false, winer = false, winer_info = false) {
+function game_result_check(room, chara, effect_t = "r", effect_d = false, winner = false, winner_info = false) {
 
     if (server_store[room].cool.status && server_store[room].hot.status) {
 
@@ -293,7 +299,7 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
             effect.d = effect_d;
         }
 
-        io.in(room).emit("updata_board", {
+        io.in(room).emit(SOCKET_EVENTS.UPDATE_BOARD, {
             "map_data": server_store[room].map_data,
             "cool_score": server_store[room].cool.score,
             "hot_score": server_store[room].hot.score,
@@ -301,18 +307,18 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
             "effect": effect
         });
 
-        if (!winer) {
+        if (!winner) {
             if (server_store[room].turn == 0) {
                 if (server_store[room].cool.score > server_store[room].hot.score) {
-                    winer = "cool";
+                    winner = "cool";
                 }
                 else if (server_store[room].cool.score < server_store[room].hot.score) {
-                    winer = "hot";
+                    winner = "hot";
                 }
                 else {
-                    winer = "draw";
+                    winner = "draw";
                 }
-                winer_info = "スコアより";
+                winner_info = "スコアより";
             }
             else {
 
@@ -322,25 +328,25 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
                 var rhy = server_store[room].hot.y;
 
                 if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3 && server_store[room].map_data[rhy][rhx] != 4) {
-                    winer = "draw";
-                    winer_info = "アタックにより";
+                    winner = "draw";
+                    winner_info = "アタックにより";
                 }
                 else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3) {
-                    winer = "hot";
-                    if (winer_info) {
-                        winer_info = "アタックにより";
+                    winner = "hot";
+                    if (winner_info) {
+                        winner_info = "アタックにより";
                     }
                     else {
-                        winer_info = "ブロック衝突により";
+                        winner_info = "ブロック衝突により";
                     }
                 }
                 else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rhy][rhx] != 4) {
-                    winer = "cool";
-                    if (winer_info) {
-                        winer_info = "アタックにより";
+                    winner = "cool";
+                    if (winner_info) {
+                        winner_info = "アタックにより";
                     }
                     else {
-                        winer_info = "ブロック衝突により";
+                        winner_info = "ブロック衝突により";
                     }
                 }
                 else {
@@ -401,26 +407,26 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winer 
 
 
                     if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1) {
-                        winer = "hot";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "hot";
+                        winner_info = "ブロック閉じ込めにより";
                     }
 
                     if (h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
-                        winer = "cool";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "cool";
+                        winner_info = "ブロック閉じ込めにより";
                     }
 
                     if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1 && h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
-                        winer = "draw";
-                        winer_info = "ブロック閉じ込めにより";
+                        winner = "draw";
+                        winner_info = "ブロック閉じ込めにより";
                     }
                 }
             }
         }
-        if (winer) {
-            io.in(room).emit("game_result", {
-                "winer": winer,
-                "info": winer_info
+        if (winner) {
+            io.in(room).emit(SOCKET_EVENTS.GAME_RESULT, {
+                "winner": winner,
+                "info": winner_info
             });
             
             //勝敗決定時に，ルームのCPU情報を削除
@@ -567,7 +573,7 @@ function get_ready(room, chara, id = false) {
             }
         }
         if (id) {
-            io.to(id).emit('get_ready_rec', {
+            io.to(id).emit(SOCKET_EVENTS.GET_READY_REC, {
                 "rec_data": my_map_data
             });
             server_store[room][chara].getready = false;
@@ -579,7 +585,7 @@ function get_ready(room, chara, id = false) {
     }
     else {
         if (id) {
-            io.to(id).emit('get_ready_rec', {
+            io.to(id).emit(SOCKET_EVENTS.GET_READY_REC, {
                 "rec_data": server_store[room][chara].true
             });
         }
@@ -602,13 +608,11 @@ function move_player(room, chara, msg, id = false) {
         var y = server_store[room][chara].y;
 
         var xy_check = false;
-        var chara_num = { "cool": 3, "hot": 4 };
-        var chara_num_diff = { "cool": 4, "hot": 3 };
 
         var move_map_data = [];
 
         if (server_store[room].map_data[y][x] == 34) {
-            server_store[room].map_data[y][x] = chara_num_diff[chara];
+            server_store[room].map_data[y][x] = CHARA_NUM_DIFF[chara];
         }
         else {
             server_store[room].map_data[y][x] = 0;
@@ -645,10 +649,10 @@ function move_player(room, chara, msg, id = false) {
 
         if (xy_check) {
             if (server_store[room].map_data[y][x] == 0) {
-                server_store[room].map_data[y][x] = chara_num[chara];
+                server_store[room].map_data[y][x] = CHARA_NUM[chara];
             }
             else if (server_store[room].map_data[y][x] == 2) {
-                server_store[room].map_data[y][x] = chara_num[chara];
+                server_store[room].map_data[y][x] = CHARA_NUM[chara];
                 server_store[room][chara].score += 1;
 
                 if (msg === "top") {
@@ -665,41 +669,17 @@ function move_player(room, chara, msg, id = false) {
                 }
 
             }
-            else if (server_store[room].map_data[y][x] == chara_num_diff[chara]) {
+            else if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 server_store[room].map_data[y][x] = 34;
             }
 
             var tmp_map_data = Array.from(server_store[room].map_data);
-            var x_range = [-1, 0, 1];
-            var y_range = [-1, 0, 1];
             var load_map_size_x = server_store[room].map_size_x;
             var load_map_size_y = server_store[room].map_size_y;
 
-            for (var _y of y_range) {
-                for (var _x of x_range) {
-                    if (0 > (_x + x) || (load_map_size_x - 1) < (_x + x) || 0 > (_y + y) || (load_map_size_y - 1) < (_y + y)) {
-                        move_map_data.push(2);
-                    }
-                    else {
-                        if (tmp_map_data[_y + y][_x + x] == chara_num_diff[chara] || tmp_map_data[_y + y][_x + x] == 34) {
-                            move_map_data.push(1);
-                        }
-                        else {
-                            if (tmp_map_data[_y + y][_x + x] == 0 || tmp_map_data[_y + y][_x + x] == chara_num[chara]) {
-                                move_map_data.push(0);
-                            }
-                            else if (tmp_map_data[_y + y][_x + x] == 1) {
-                                move_map_data.push(2);
-                            }
-                            else {
-                                move_map_data.push(3);
-                            }
-                        }
-                    }
-                }
-            }
+            move_map_data = scanCells(tmp_map_data, x, y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
             if (id) {
-                io.to(id).emit('move_rec', {
+                io.to(id).emit(SOCKET_EVENTS.MOVE_REC, {
                     "rec_data": move_map_data
                 });
             }
@@ -730,8 +710,6 @@ function look(room, chara, msg, id = false) {
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-        var chara_num_diff = { "cool": 4, "hot": 3 };
-
         if (msg == "top") {
             x_range = [-1, 0, 1];
             y_range = [-3, -2, -1];
@@ -745,33 +723,9 @@ function look(room, chara, msg, id = false) {
             x_range = [1, 2, 3];
             y_range = [-1, 0, 1];
         }
-        var look_map_data = [];
-
-        for (var y of y_range) {
-            for (var x of x_range) {
-                if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x) || 0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                    look_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
-                        look_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                            look_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                        }
-                        else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                            look_map_data.push(2);
-                        }
-                        else {
-                            look_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var look_map_data = scanCells(tmp_map_data, now_x, now_y, x_range, y_range, load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
         if (id) {
-            io.to(id).emit('look_rec', {
+            io.to(id).emit(SOCKET_EVENTS.LOOK_REC, {
                 "rec_data": look_map_data
             });
             game_result_check(room, chara, "l", msg);
@@ -783,7 +737,7 @@ function look(room, chara, msg, id = false) {
     }
     else {
         if (id) {
-            io.to(id).emit('look_rec', {
+            io.to(id).emit(SOCKET_EVENTS.LOOK_REC, {
                 "rec_data": server_store[room][chara].true
             });
         }
@@ -811,8 +765,6 @@ function search(room, chara, msg, id = false) {
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-        var chara_num_diff = { "cool": 4, "hot": 3 };
-
         if (msg == "top") {
             x_range = [0];
             y_range = [-1, -2, -3, -4, -5, -6, -7, -8, -9];
@@ -827,33 +779,9 @@ function search(room, chara, msg, id = false) {
             y_range = [0];
         }
 
-        var search_map_data = [];
-
-        for (var y of y_range) {
-            for (var x of x_range) {
-                if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x) || 0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                    search_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
-                        search_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                            search_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                        }
-                        else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                            search_map_data.push(2);
-                        }
-                        else {
-                            search_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var search_map_data = scanCells(tmp_map_data, now_x, now_y, x_range, y_range, load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
         if (id) {
-            io.to(id).emit('search_rec', {
+            io.to(id).emit(SOCKET_EVENTS.SEARCH_REC, {
                 "rec_data": search_map_data
             });
             game_result_check(room, chara, "s", msg);
@@ -865,7 +793,7 @@ function search(room, chara, msg, id = false) {
     }
     else {
         if (id) {
-            io.to(id).emit('search_rec', {
+            io.to(id).emit(SOCKET_EVENTS.SEARCH_REC, {
                 "rec_data": server_store[room][chara].true
             });
         }
@@ -914,53 +842,25 @@ function put_wall(room, chara, msg, id = false) {
             }
         }
 
-        var chara_num = { "cool": 3, "hot": 4 };
-        var chara_num_diff = { "cool": 4, "hot": 3 };
         var player_put_chara = false;
 
         if (put_check) {
-            if (server_store[room].map_data[y][x] == chara_num_diff[chara]) {
+            if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 player_put_chara = true;
             }
             server_store[room].map_data[y][x] = 1;
         }
 
         var tmp_map_data = Array.from(server_store[room].map_data);
-        var put_map_data = [];
         var now_x = server_store[room][chara].x;
         var now_y = server_store[room][chara].y;
-        var x_range = [-1, 0, 1];
-        var y_range = [-1, 0, 1];
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
-
-        for (var _y of y_range) {
-            for (var _x of x_range) {
-                if (0 > (_x + now_x) || (load_map_size_x - 1) < (_x + now_x) || 0 > (_y + now_y) || (load_map_size_y - 1) < (_y + now_y)) {
-                    put_map_data.push(2);
-                }
-                else {
-                    if (tmp_map_data[_y + now_y][_x + now_x] == chara_num_diff[chara] || tmp_map_data[_y + now_y][_x + now_x] == 34) {
-                        put_map_data.push(1);
-                    }
-                    else {
-                        if (tmp_map_data[_y + now_y][_x + now_x] == 0 || tmp_map_data[_y + now_y][_x + now_x] == chara_num[chara]) {
-                            put_map_data.push(0);
-                        }
-                        else if (tmp_map_data[_y + now_y][_x + now_x] == 1) {
-                            put_map_data.push(2);
-                        }
-                        else {
-                            put_map_data.push(3);
-                        }
-                    }
-                }
-            }
-        }
+        var put_map_data = scanCells(tmp_map_data, now_x, now_y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
 
         if (id) {
-            io.to(id).emit('put_rec', {
+            io.to(id).emit(SOCKET_EVENTS.PUT_REC, {
                 "rec_data": put_map_data
             });
             if (player_put_chara) {
@@ -1050,18 +950,18 @@ const RoomTimeoutCheck =async () => {
 
 io.on('connection', function (socket) {
 
-    socket.on('create_new_map', async function (json_data) {
+    socket.on(SOCKET_EVENTS.CREATE_NEW_MAP, async function (json_data) {
         
         if(json_data.key === config.commonKey){
             delete json_data.key;// JSONデータからkeyを削除
             await createMap(json_data);
-            io.emit('map_created', { status: 'success' });  
+            io.emit(SOCKET_EVENTS.MAP_CREATED, { status: 'success' });  
         }else{
-            io.emit('map_created', { status: 'error' });
+            io.emit(SOCKET_EVENTS.MAP_CREATED, { status: 'error' });
         }
     });
 
-    socket.on('player_join', async function (msg) {
+    socket.on(SOCKET_EVENTS.PLAYER_JOIN, async function (msg) {
         if (!server_store[msg.room_id]) {
             room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
@@ -1070,7 +970,7 @@ io.on('connection', function (socket) {
             }
             else{
                 console.log("コピー元ルームが存在しません");
-                io.to(socket.id).emit("error", "ルームが存在しません");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームが存在しません");
                 return;//以降の処理をスキップ
             }
         }
@@ -1141,7 +1041,7 @@ io.on('connection', function (socket) {
             store[socket.id] = usrobj;
             socket.join(msg.room_id);
 
-            io.in(store[socket.id].room).emit("joined_room", {
+            io.in(store[socket.id].room).emit(SOCKET_EVENTS.JOINED_ROOM, {
                 "x_size": server_store[msg.room_id].map_size_x,
                 "y_size": server_store[msg.room_id].map_size_y,
                 "cool_name": server_store[msg.room_id].cool.name,
@@ -1157,7 +1057,7 @@ io.on('connection', function (socket) {
                         console.log("game_start_timer room not exist",room);
                         return;
                     }
-                    io.in(room).emit("new_board", {
+                    io.in(room).emit(SOCKET_EVENTS.NEW_BOARD, {
                         "map_data": server_store[room].map_data,
                         "cool_score": server_store[room].cool.score,
                         "hot_score": server_store[room].hot.score,
@@ -1181,7 +1081,7 @@ io.on('connection', function (socket) {
             }
         }
         else if (!server_store[msg.room_id]) {
-            io.to(socket.id).emit("error", "サーバーIDが存在しません");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "サーバーIDが存在しません");
         }
         else if (server_store[msg.room_id].match) {
             var join_flag = false;
@@ -1212,7 +1112,7 @@ io.on('connection', function (socket) {
                 }
             }
             else {
-                io.to(socket.id).emit("error", "接続先サーバーは使用中です");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "接続先サーバーは使用中です");
             }
 
             if (join_flag) {
@@ -1226,7 +1126,7 @@ io.on('connection', function (socket) {
                 store[socket.id] = usrobj;
                 socket.join(msg.room_id);
 
-                io.in(store[socket.id].room).emit("joined_room", {
+                io.in(store[socket.id].room).emit(SOCKET_EVENTS.JOINED_ROOM, {
                     "x_size": server_store[msg.room_id].map_size_x,
                     "y_size": server_store[msg.room_id].map_size_y,
                     "cool_name": server_store[msg.room_id].cool.name,
@@ -1235,11 +1135,11 @@ io.on('connection', function (socket) {
             }
         }
         else {
-            io.to(socket.id).emit("error", "接続先サーバーは満室です");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "接続先サーバーは満室です");
         }
     });
 
-    socket.on('match_init', async function (msg) {
+    socket.on(SOCKET_EVENTS.MATCH_INIT, async function (msg) {
         if (!server_store[msg.room_id]) {
             room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
@@ -1248,7 +1148,7 @@ io.on('connection', function (socket) {
             }
             else{
                 console.log("コピー元ルームが存在しません");
-                io.to(socket.id).emit("error", "ルームが存在しません");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームが存在しません");
                 return;//以降の処理をスキップ
             }
         }
@@ -1258,7 +1158,7 @@ io.on('connection', function (socket) {
                 if (!match_room_store[socket.id]) {
                     match_room_store[socket.id] = msg.room_id;
                     server_store[msg.room_id].match = true;
-                    io.to(socket.id).emit("match_init_rec", { "key": socket.id });
+                    io.to(socket.id).emit(SOCKET_EVENTS.MATCH_INIT_REC, { "key": socket.id });
 
                     if (server_store[msg.room_id].cpu) {
                         var validCharas = ['cool', 'hot'];
@@ -1274,44 +1174,44 @@ io.on('connection', function (socket) {
                     }
                 }
                 else {
-                    io.to(socket.id).emit("match_init_rec", { "error": "他のサーバーでマッチ中です" });
+                    io.to(socket.id).emit(SOCKET_EVENTS.MATCH_INIT_REC, { "error": "他のサーバーでマッチ中です" });
                 }
             }
             else {
-                io.to(socket.id).emit("match_init_rec", { "error": "接続先サーバーは使用中です" });
+                io.to(socket.id).emit(SOCKET_EVENTS.MATCH_INIT_REC, { "error": "接続先サーバーは使用中です" });
             }
         }
         else {
-            io.to(socket.id).emit("error", "サーバーIDが存在しません");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "サーバーIDが存在しません");
         }
     });
 
-    socket.on('match_start_check', function () {
+    socket.on(SOCKET_EVENTS.MATCH_START_CHECK, function () {
         if (match_room_store[socket.id]) {
             if (!server_store[match_room_store[socket.id]]) {
                 delete match_room_store[socket.id];
                 return;
             }
             if (server_store[match_room_store[socket.id]].cool.status && server_store[match_room_store[socket.id]].hot.status) {
-                io.to(socket.id).emit("match_start_check_rec", true);
+                io.to(socket.id).emit(SOCKET_EVENTS.MATCH_START_CHECK_REC, true);
             }
             else {
-                io.to(socket.id).emit("match_start_check_rec", false);
+                io.to(socket.id).emit(SOCKET_EVENTS.MATCH_START_CHECK_REC, false);
             }
         }
         else {
-            io.to(socket.id).emit("error", "不正な操作です");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
         }
     });
 
-    socket.on('match_start', function (msg) {
+    socket.on(SOCKET_EVENTS.MATCH_START, function (msg) {
         clearTimeout(server_store[msg.room_id].timer);
         if (msg.room_id == match_room_store[msg.key]) {
             if (server_store[msg.room_id].cool.status && server_store[msg.room_id].hot.status) {
                 server_store[msg.room_id].match = false;
 
                 var game_start_timer = function (room) {
-                    io.in(room).emit("new_board", {
+                    io.in(room).emit(SOCKET_EVENTS.NEW_BOARD, {
                         "map_data": server_store[room].map_data,
                         "cool_score": server_store[room].cool.score,
                         "hot_score": server_store[room].hot.score,
@@ -1335,11 +1235,11 @@ io.on('connection', function (socket) {
             }
         }
         else {
-            io.to(socket.id).emit("error", "不正な操作です");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
         }
     });
 
-    socket.on('player_join_match', async function (msg) {
+    socket.on(SOCKET_EVENTS.PLAYER_JOIN_MATCH, async function (msg) {
         if (!server_store[msg.room_id]) {
             room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
@@ -1348,7 +1248,7 @@ io.on('connection', function (socket) {
             }
             else{
                 console.log("コピー元ルームが存在しません");
-                io.to(socket.id).emit("error", "ルームが存在しません");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームが存在しません");
                 return;//以降の処理をスキップ
             }
         }
@@ -1392,7 +1292,7 @@ io.on('connection', function (socket) {
                 store[socket.id] = usrobj;
                 socket.join(msg.room_id);
 
-                io.in(store[socket.id].room).emit("joined_room", {
+                io.in(store[socket.id].room).emit(SOCKET_EVENTS.JOINED_ROOM, {
                     "x_size": server_store[msg.room_id].map_size_x,
                     "y_size": server_store[msg.room_id].map_size_y,
                     "cool_name": server_store[msg.room_id].cool.name,
@@ -1400,15 +1300,15 @@ io.on('connection', function (socket) {
                 });
             }
             else {
-                io.to(socket.id).emit("error", "接続先サーバーは使用中です");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "接続先サーバーは使用中です");
             }
         }
         else {
-            io.to(socket.id).emit("error", "不正な操作です");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
         }
     });
 
-    socket.on('release', function (msg) {
+    socket.on(SOCKET_EVENTS.RELEASE, function (msg) {
         try {
             if (msg.room_id == match_room_store[msg.key]) {
                 if (!server_store[msg.room_id].release) {
@@ -1423,7 +1323,7 @@ io.on('connection', function (socket) {
                 }
             }
             else {
-                io.to(socket.id).emit("error", "不正な操作です");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
             }
         }
         catch (e) {
@@ -1431,37 +1331,37 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on('move_player', function (msg) {
+    socket.on(SOCKET_EVENTS.MOVE_PLAYER, function (msg) {
         if (store[socket.id]) {
             move_player(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on('get_ready', function () {
+    socket.on(SOCKET_EVENTS.GET_READY, function () {
         if (store[socket.id]) {
             get_ready(store[socket.id].room, store[socket.id].chara, socket.id)
         }
     });
 
-    socket.on('look', function (msg) {
+    socket.on(SOCKET_EVENTS.LOOK, function (msg) {
         if (store[socket.id]) {
             look(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on('search', function (msg) {
+    socket.on(SOCKET_EVENTS.SEARCH, function (msg) {
         if (store[socket.id]) {
             search(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on('put_wall', function (msg) {
+    socket.on(SOCKET_EVENTS.PUT_WALL, function (msg) {
         if (store[socket.id]) {
             put_wall(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on('looker_join', async function (msg) {
+    socket.on(SOCKET_EVENTS.LOOKER_JOIN, async function (msg) {
         if (!server_store[msg]) {
             room_id_check = msg.split("?")[0];
             //コピーもとが存在するかチェック
@@ -1470,7 +1370,7 @@ io.on('connection', function (socket) {
             }
             else{
                 console.log("コピー元ルームが存在しません");
-                io.to(socket.id).emit("error", "ルームが存在しません");
+                io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームが存在しません");
                 return;//以降の処理をスキップ
             }
         }
@@ -1489,7 +1389,7 @@ io.on('connection', function (socket) {
                 hot_name = server_store[msg].hot.name;
             }
 
-            io.to(socket.id).emit("joined_room", {
+            io.to(socket.id).emit(SOCKET_EVENTS.JOINED_ROOM, {
                 "x_size": server_store[msg].map_size_x,
                 "y_size": server_store[msg].map_size_y,
                 "cool_name": cool_name,
@@ -1501,7 +1401,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on('disconnect', function () {
+    socket.on(SOCKET_EVENTS.DISCONNECT, function () {
         if (store[socket.id] && server_store[store[socket.id].room]) {
             if (server_store[store[socket.id].room].cool.status && server_store[store[socket.id].room].hot.status && !server_store[store[socket.id].room].match) {
                 if (store[socket.id].chara == "cool") {
@@ -1524,7 +1424,7 @@ io.on('connection', function (socket) {
             delete looker[socket.id];
         }
         if (match_room_store[socket.id]) {
-            io.in(match_room_store[socket.id]).emit("error", "サーバー側から切断されました");
+            io.in(match_room_store[socket.id]).emit(SOCKET_EVENTS.ERROR, "サーバー側から切断されました");
             console.log("切断されたルーム", match_room_store[socket.id]);
             if (!server_store[match_room_store[socket.id]]) {
                 delete match_room_store[socket.id];
@@ -1546,7 +1446,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on('leave_room', function () {
+    socket.on(SOCKET_EVENTS.LEAVE_ROOM, function () {
         if (store[socket.id] && server_store[store[socket.id].room]) {
             if (server_store[store[socket.id].room].cool.status && server_store[store[socket.id].room].hot.status && !server_store[store[socket.id].room].match) {
                 if (store[socket.id].chara == "cool") {
@@ -1569,7 +1469,7 @@ io.on('connection', function (socket) {
             delete looker[socket.id];
         }
         if (match_room_store[socket.id]) {
-            io.in(match_room_store[socket.id]).emit("error", "サーバー側から切断されました");
+            io.in(match_room_store[socket.id]).emit(SOCKET_EVENTS.ERROR, "サーバー側から切断されました");
             if (!server_store[match_room_store[socket.id]]) {
                 delete match_room_store[socket.id];
                 return;
@@ -1590,7 +1490,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on('match_end', function (msg) {
+    socket.on(SOCKET_EVENTS.MATCH_END, function (msg) {
         if (msg.room_id == match_room_store[msg.key]) {
             if (match_room_store[socket.id]) {
                 delete match_room_store[socket.id];
@@ -1601,7 +1501,7 @@ io.on('connection', function (socket) {
             }
         }
         else {
-            io.to(socket.id).emit("error", "不正な操作です");
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
         }
     });
 
