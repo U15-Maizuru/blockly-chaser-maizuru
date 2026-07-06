@@ -195,7 +195,8 @@ function game_result_display(winner, info) {
 
     var re_button_link = document.createElement('a');
     re_button_link.classList.add("button_link");
-    re_button_link.href = "/match?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token;
+    var re_chara_param = query_list.my_chara ? "&my_chara=" + query_list.my_chara : "";
+    re_button_link.href = "/match?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token + re_chara_param;
     re_button_link.innerText = "もう一度";
     re_button.appendChild(re_button_link);
 
