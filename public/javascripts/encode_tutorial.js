@@ -345,6 +345,8 @@ Code.runJS = function () {
             }
           }
           catch (e) {
+            console.error(e);
+            console.log(latestCode);
             outputArea.value += '\n\n<< Error ' + e + '>>';
             resetInterpreter();
             resetVar();

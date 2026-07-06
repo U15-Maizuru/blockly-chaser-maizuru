@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>CHaser Programming Menu</title>
+  <title><%= htmlTitle %></title>
   <link rel="icon" href="/images/favicon.ico">
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
@@ -11,6 +11,7 @@
 
   <%- include('./common/config-init') %>
 
+    <script>window.PROGRAMMING_PATH = "<%= programmingPath %>";</script>
     <script src="/javascripts/jquery-3.4.1.min.js"></script>
     <script src="/javascripts/fflate.js"></script>
     <script src="/javascripts/scroll-x.js"></script>

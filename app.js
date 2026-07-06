@@ -7,7 +7,6 @@ var morgan = require('morgan');
 const logger = require('./bin/logger.js');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 
 var menuProgrammingRouter = require('./routes/menu-programming');
 var programmingRouter = require('./routes/programming');
@@ -24,6 +23,7 @@ var server_data = require('./tool/server_data_load');
 var tutorial_data = require('./tool/tutorial_data_load');
 var bgm_data = require('./tool/bgm_data_load');
 var config_load = require('./tool/config_data_load');
+var deep_clone = require('./tool/deep_clone');
 
 var chaser = require('./chaser/server.js');
 
@@ -52,7 +52,6 @@ app.use('/about/LICENSE',express.static(path.join(__dirname, mode_path, 'LICENSE
 app.use('/about/TOS',express.static(path.join(__dirname, mode_path, '/TOS')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/menu-programming', menuProgrammingRouter);
 app.use('/programming', programmingRouter);
 app.use('/menu-programming-exp', menuProgrammingexpRouter);
@@ -71,15 +70,15 @@ app.use('/map-editor', mapEditorRouter);
 //init load
 const bgm_list = bgm_data.load();
 
-let game_server = JSON.parse(JSON.stringify(server_data.load()));
+let game_server = deep_clone.deepClone(server_data.load());
 
 let join_list = server_data.list_load().filter(item => !item[0].includes('room_onetime'));
-const stage_data = JSON.parse(JSON.stringify(tutorial_data.load()));
+const stage_data = deep_clone.deepClone(tutorial_data.load());
 
 
 const reloadServerData = async () => {
-  game_server = JSON.parse(JSON.stringify(server_data.load()));
-  join_list = server_data.list_load().filter(item => !item[0].includes('room_onetime'));  
+  game_server = deep_clone.deepClone(server_data.load());
+  join_list = server_data.list_load().filter(item => !item[0].includes('room_onetime'));
 };
 
 
