@@ -366,12 +366,8 @@ function stage_result(status = false) {
             document.getElementById("back_menu").style.display="none";
         }
 
-        var reset_button = document.getElementById('resetButton');
-        var overlay_off = function () {
-            document.getElementById('overlay').classList.remove("overlay_on");
-        }
-        reset_button.addEventListener('click', overlay_off, true);
-        reset_button.addEventListener('touchend', overlay_off, true);
+        // オーバーレイを閉じる処理は Code.reloadJS 側で行う
+        // (ここで登録するとクリアのたびにリスナーが多重登録されるため)
 
     }
 

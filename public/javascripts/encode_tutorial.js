@@ -5,10 +5,21 @@ var outputArea = document.getElementById('output');
 var runButton = document.getElementById('runButton');
 var reloadButton = document.getElementById('reloadButton');
 var myInterpreter = null;
+var is_running = false;
 var runner;
 var map_info = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 var look_info = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 var search_info = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+// 実行/リセットボタンの排他表示を確定させる
+// toggle による相対切り替えだと二重呼び出しで状態がズレるため、絶対指定にして冪等にする
+// mode: 'run' = ▶ 実行を表示 / 'reset' = ⟳ リセットを表示
+function setRunUi(mode) {
+  if (!runButton || !reloadButton) return;
+  var running = (mode === 'reset');
+  runButton.classList.toggle('Button_hidden', running);
+  reloadButton.classList.toggle('Button_hidden', !running);
+}
 
 
 class ObjInterpreter extends Interpreter {
@@ -277,10 +288,7 @@ function generateCodeAndLoadIntoInterpreter() {
 
 function resetInterpreter() {
   myInterpreter = null;
-  if (runner) {
-    clearTimeout(runner);
-    runner = null;
-  }
+  is_running = false;
   if (runner) {
     clearTimeout(runner);
     runner = null;
@@ -308,11 +316,14 @@ else {
 }
 
 Code.runJS = function () {
-  if (!myInterpreter) {
+  // myInterpreter は下の setTimeout(100ms) の中でしか代入されないため、
+  // それだけでは 100ms の間に再入できてしまう。is_running で同期的にガードする
+  if (!myInterpreter && !is_running) {
+
+    is_running = true;
 
     resetStepUi(true);
-    runButton.classList.toggle("Button_hidden");
-    reloadButton.classList.toggle("Button_hidden");
+    setRunUi('reset');
 
     my_turn = true;
 
@@ -342,6 +353,7 @@ Code.runJS = function () {
               resetInterpreter();
               resetVar();
               resetStepUi(false);
+              setRunUi('reset');
             }
           }
           catch (e) {
@@ -351,6 +363,7 @@ Code.runJS = function () {
             resetInterpreter();
             resetVar();
             resetStepUi(false);
+            setRunUi('reset');
           }
         }
       };
@@ -364,15 +377,23 @@ Code.reloadJS = function () {
   Code.stopJS();
   endCode();
   makeTable("game_board");
-  runButton.classList.toggle("Button_hidden");
-  reloadButton.classList.toggle("Button_hidden");
+
+  // クリア時のオーバーレイが開いていれば閉じる
+  var overlay = document.getElementById('overlay');
+  if (overlay) {
+    overlay.classList.remove("overlay_on");
+  }
+
+  setRunUi('run');
 }
 Code.bindClick('reloadButton', Code.reloadJS);
 Code.bindClick('resetButton', Code.reloadJS);
 
 Code.stopJS = function () {
+  // 実行中だったかを先に控える (resetInterpreter() でフラグが消えるため)
+  var was_running = (myInterpreter != null) || is_running;
+
   if (myInterpreter) {
-    clearTimeout();
     resetVar();
     runButton.disabled = 'disabled';
     outputArea.value += '\n\n<< Stop Program >>';
@@ -382,6 +403,14 @@ Code.stopJS = function () {
   var c = document.getElementById("ready_player");
   if (c) {
     c.parentNode.removeChild(c);
+  }
+
+  // stage_result() は myInterpreter が既に null の状態でも呼んでくるため
+  // if の外でボタン状態を確定させる
+  // (未実行の状態で停止ボタンを押しただけのときは表示を変えない)
+  if (was_running) {
+    is_running = false;
+    setRunUi('reset');
   }
 };
 

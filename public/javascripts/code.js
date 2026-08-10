@@ -102,7 +102,11 @@ Code.bindClick = function (el, func) {
     el = document.getElementById(el);
   }
   el.addEventListener('click', func, true);
-  el.addEventListener('touchend', func, true);
+  el.addEventListener('touchend', function (e) {
+    // touchend の後にブラウザが click を合成するため、抑止しないと同じ処理が2回走る
+    e.preventDefault();
+    func(e);
+  }, true);
 };
 
 /**
