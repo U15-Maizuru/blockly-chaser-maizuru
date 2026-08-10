@@ -246,6 +246,44 @@ function cpu(level) {
             }, 250);
         }
     }
+    else if (level == 3) {
+        var random_list = [];
+        var item_list = [];
+        if (cpu_map_data[1] != 2) {
+            random_list.push('top');
+            if (cpu_map_data[1] == 3) item_list.push('top');
+        }
+        if (cpu_map_data[3] != 2) {
+            random_list.push('left');
+            if (cpu_map_data[3] == 3) item_list.push('left');
+        }
+        if (cpu_map_data[5] != 2) {
+            random_list.push('right');
+            if (cpu_map_data[5] == 3) item_list.push('right');
+        }
+        if (cpu_map_data[7] != 2) {
+            random_list.push('bottom');
+            if (cpu_map_data[7] == 3) item_list.push('bottom');
+        }
+
+        var move_list = item_list.length > 0 ? item_list : random_list;
+
+        if (move_list.length > 0) {
+            var random = Math.floor(Math.random() * move_list.length);
+            makeTable("game_board");
+            setTimeout(function () {
+                move_player(move_list[random], "hot");
+                my_turn = true;
+            }, 250);
+        }
+        else {
+            setTimeout(function () {
+                makeTable("game_board", { "p": "hot", "t": "s", "d": "right" });
+                cpu_map_data = get_map_data("hot", "search", "right");
+                setTimeout(function () { my_turn = true; }, 250);
+            }, 250);
+        }
+    }
     else {
         setTimeout(function () {
             cpu_map_data = look("top", "hot");
