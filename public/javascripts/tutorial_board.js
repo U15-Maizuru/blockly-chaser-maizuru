@@ -366,12 +366,8 @@ function stage_result(status = false) {
             document.getElementById("back_menu").style.display="none";
         }
 
-        var reset_button = document.getElementById('resetButton');
-        var overlay_off = function () {
-            document.getElementById('overlay').classList.remove("overlay_on");
-        }
-        reset_button.addEventListener('click', overlay_off, true);
-        reset_button.addEventListener('touchend', overlay_off, true);
+        // オーバーレイを閉じる処理は Code.reloadJS 側で行う
+        // (ここで登録するとクリアのたびにリスナーが多重登録されるため)
 
     }
 
@@ -509,7 +505,7 @@ function move_player(direction, chara = "cool") {
         else {
             if (mapdata[py + move_y][px + move_x] == 2) {
                 mapdata[py][px] = 1;
-                hart_score += "cool" ? 1 : 0;
+                hart_score += chara == "cool" ? 1 : 0;
             }
 
             if (mapdata[py + move_y][px + move_x] == 4) {
@@ -644,14 +640,6 @@ function put_wall(direction, chara = "cool") {
 
 
 var my_map_data = [];
-var hart_score = 0;
-var my_turn = false;
-
-
-function endCode() {
-    hart_score = 0;
-    stage_data = JSON.parse(JSON.stringify(reset_data));
-}
 var hart_score = 0;
 var my_turn = false;
 
