@@ -1,6 +1,6 @@
 {
   "name": "BlocklyCHaser",
-  "version": "2.5.0+MZ",
+  "version": "2.5.1+MZ",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
