@@ -7,6 +7,23 @@
 var app = require('../app');
 var debug = require('debug')('study:server');
 var http = require('http');
+var logger = require('./logger.js');
+
+/**
+ * 最終防衛線。
+ * 想定外の例外でプロセスが落ちると、進行中の対戦がすべて中断してしまう。
+ * ここで捕捉して記録し、サーバーは動かし続ける。
+ */
+
+process.on('uncaughtException', function (err) {
+  logger.error('uncaughtException: ' + (err && err.stack ? err.stack : err));
+  console.error('uncaughtException:', err);
+});
+
+process.on('unhandledRejection', function (reason) {
+  logger.error('unhandledRejection: ' + (reason && reason.stack ? reason.stack : reason));
+  console.error('unhandledRejection:', reason);
+});
 
 /**
  * Get port from environment and store in Express.
