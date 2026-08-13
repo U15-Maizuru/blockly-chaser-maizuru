@@ -15,6 +15,7 @@ var path = require('path');
 const { json } = require('express/lib/response.js');
 
 const config = require('../config/config.js');
+const validate_room = require('../tool/validate_room.js');
 const { classifyCell, scanCells } = require('./board_scan.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
@@ -42,6 +43,17 @@ function create_map(key) {
 
     var selectable_list = [];
 
+    var tx = Math.floor((server_store[key].map_size_x - 1) / 2);
+    var ty = Math.floor((server_store[key].map_size_y - 1) / 2);
+
+    // cool の対角位置に hot を置くため、対称点が盤面内に収まる位置だけを候補にする。
+    // 偶数サイズのマップでは対称点が盤外になる組み合わせがあり、そのまま配置すると例外になる
+    var isMirrorInside = function (s_x, s_y) {
+        var m_x = tx + (tx - s_x);
+        var m_y = ty + (ty - s_y);
+        return m_x >= 0 && m_x < server_store[key].map_size_x && m_y >= 0 && m_y < server_store[key].map_size_y;
+    };
+
     for (var s_x = 0; s_x < Math.floor(server_store[key].map_size_x / 2) + 1; s_x++) {
         for (var s_y = 0; s_y < server_store[key].map_size_y; s_y++) {
             if (s_y == Math.floor(server_store[key].map_size_y / 2) - 1 && s_x == Math.floor(server_store[key].map_size_x / 2)) {
@@ -50,21 +62,24 @@ function create_map(key) {
             else if (s_x == Math.floor(server_store[key].map_size_x / 2) - 1 && s_y <= Math.floor(server_store[key].map_size_y / 2) + 1 && s_y >= Math.floor(server_store[key].map_size_y / 2) - 1) {
                 continue;
             }
+            else if (!isMirrorInside(s_x, s_y)) {
+                continue;
+            }
             else {
                 selectable_list.push([s_x, s_y]);
             }
         }
     }
 
-
+    if (!selectable_list.length) {
+        logger.error('Failed to place players. room_id: ' + key);
+        return;
+    }
 
     var cxy = Math.floor(Math.random() * selectable_list.length);
 
     var cx = selectable_list[cxy][0];
     var cy = selectable_list[cxy][1];
-
-    var tx = Math.floor((server_store[key].map_size_x - 1) / 2);
-    var ty = Math.floor((server_store[key].map_size_y - 1) / 2);
 
     var hx = tx + (tx - cx);
     var hy = ty + (ty - cy);
@@ -139,18 +154,24 @@ function create_map(key) {
 
     if (server_store[key].auto_symmetry) {
         for (var i = 0; i < server_store[key].auto_point / 2; i++) {
+            // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+            if (!selectable_list.length) break;
             pxy = Math.floor(Math.random() * selectable_list.length);
             px = selectable_list[pxy][0];
             py = selectable_list[pxy][1];
 
             server_store[key].map_data[py][px] = 2;
-            server_store[key].map_data[ty + (ty - py)][tx + (tx - px)] = 2;
+            if (isMirrorInside(px, py)) {
+                server_store[key].map_data[ty + (ty - py)][tx + (tx - px)] = 2;
+            }
 
             selectable_list.splice(pxy, 1);
         }
     }
     else {
         for (var i = 0; i < server_store[key].auto_point; i++) {
+            // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+            if (!selectable_list.length) break;
             pxy = Math.floor(Math.random() * selectable_list.length);
             px = selectable_list[pxy][0];
             py = selectable_list[pxy][1];
@@ -179,18 +200,24 @@ function create_map(key) {
 
     if (server_store[key].auto_symmetry) {
         for (var i = 0; i < server_store[key].auto_block / 2; i++) {
+            // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+            if (!selectable_list.length) break;
             bxy = Math.floor(Math.random() * selectable_list.length);
             bx = selectable_list[bxy][0];
             by = selectable_list[bxy][1];
 
             server_store[key].map_data[by][bx] = 1;
-            server_store[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 1;
+            if (isMirrorInside(bx, by)) {
+                server_store[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 1;
+            }
 
             selectable_list.splice(bxy, 1);
         }
     }
     else {
         for (var i = 0; i < server_store[key].auto_block; i++) {
+            // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+            if (!selectable_list.length) break;
             bxy = Math.floor(Math.random() * selectable_list.length);
             bx = selectable_list[bxy][0];
             by = selectable_list[bxy][1];
@@ -884,18 +911,23 @@ function put_wall(room, chara, msg, id = false) {
 
 
 //socket.io_on
+// ルームを作成する。作成できた場合は true、既存または上限超過の場合は false を返す
 const createMap= async (json_data = null) => {
     if(server_store[json_data.room_id]){
         console.log("room already exist");
-        return;
+        return false;
     }
-    
-    await server_data.create_new_map(JSON.stringify(json_data));//server_data_load.jsが発火
+
+    const created = await server_data.create_new_map(JSON.stringify(json_data));//server_data_load.jsが発火
+    if (!created) {
+        return false;
+    }
     game_server = JSON.parse(JSON.stringify(server_data.load()));
     server_store[json_data.room_id]=JSON.parse(JSON.stringify(game_server[json_data.room_id]));
 
     RoomTimeoutCheck();//ルームの削除判定関数を実施
     game_server_reset(json_data.room_id);//ルームの初期化（ランダムマップじゃなければ必須じゃなさそう）
+    return true;
 };
 
 // HTTP経由でカスタムマップを追加した後、chaser側のgame_server/server_storeを同期する
@@ -948,22 +980,75 @@ const RoomTimeoutCheck =async () => {
 }
 
 
-io.on('connection', function (socket) {
-
-    socket.on(SOCKET_EVENTS.CREATE_NEW_MAP, async function (json_data) {
-        
-        if(json_data.key === config.commonKey){
-            delete json_data.key;// JSONデータからkeyを削除
-            await createMap(json_data);
-            io.emit(SOCKET_EVENTS.MAP_CREATED, { status: 'success' });  
-        }else{
-            io.emit(SOCKET_EVENTS.MAP_CREATED, { status: 'error' });
+// Socket.io はイベントハンドラ内の例外を捕捉しないため、
+// 想定外の入力による例外がそのままプロセス全体を停止させてしまう。
+// すべてのハンドラをこのラッパ経由で登録し、例外は該当ソケットへのエラー通知に留める
+function safeOn(socket, event, handler) {
+    socket.on(event, function (...args) {
+        const onError = function (e) {
+            logger.error('socket handler error (' + event + '): ' + (e && e.message));
+            console.error(e);
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "処理中にエラーが発生しました");
+        };
+        try {
+            const result = handler.apply(this, args);
+            if (result && typeof result.catch === 'function') {
+                result.catch(onError);
+            }
+        }
+        catch (e) {
+            onError(e);
         }
     });
+}
 
-    socket.on(SOCKET_EVENTS.PLAYER_JOIN, async function (msg) {
+io.on('connection', function (socket) {
+
+    safeOn(socket, SOCKET_EVENTS.CREATE_NEW_MAP, async function (json_data) {
+
+        if (!json_data || json_data.key !== config.commonKey) {
+            io.to(socket.id).emit(SOCKET_EVENTS.MAP_CREATED, { status: 'error' });
+            return;
+        }
+
+        delete json_data.key;// JSONデータからkeyを削除
+
+        // room_id は内部キーとしてそのまま使うため、文字列であることと形式を確認する
+        if (typeof json_data.room_id !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(json_data.room_id)) {
+            io.to(socket.id).emit(SOCKET_EVENTS.MAP_CREATED, { status: 'error', errors: ['room_id の形式が正しくありません'] });
+            return;
+        }
+
+        // 外部から来るルーム定義は経路によらず同じ検証を通す
+        // (HTTP の /api/upload-map と条件をずらさないこと)
+        const result = validate_room.validateRoom(json_data);
+        if (!result.ok) {
+            io.to(socket.id).emit(SOCKET_EVENTS.MAP_CREATED, { status: 'error', errors: result.errors });
+            return;
+        }
+
+        const roomData = Object.assign({}, result.value, {
+            room_id: json_data.room_id,
+            cool: json_data.cool || { status: false, turn: false },
+            hot:  json_data.hot  || { status: false, turn: false }
+        });
+        if (json_data.cpu) {
+            roomData.cpu = json_data.cpu;
+        }
+
+        const created = await createMap(roomData);
+        io.to(socket.id).emit(SOCKET_EVENTS.MAP_CREATED, { status: created ? 'success' : 'error' });
+    });
+
+    safeOn(socket, SOCKET_EVENTS.PLAYER_JOIN, async function (msg) {
+        // room_id は以降で文字列として扱うため、型を先に確認する
+        if (typeof msg?.room_id !== 'string') {
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
+            return;
+        }
+
         if (!server_store[msg.room_id]) {
-            room_id_check = msg.room_id.split("?")[0];
+            var room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
             if(server_store[room_id_check]){
                 await copyMapByID(msg.room_id);//?以降を削除
@@ -1139,9 +1224,15 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.MATCH_INIT, async function (msg) {
+    safeOn(socket, SOCKET_EVENTS.MATCH_INIT, async function (msg) {
+        // room_id は以降で文字列として扱うため、型を先に確認する
+        if (typeof msg?.room_id !== 'string') {
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
+            return;
+        }
+
         if (!server_store[msg.room_id]) {
-            room_id_check = msg.room_id.split("?")[0];
+            var room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
             if(server_store[room_id_check]){
                 await copyMapByID(msg.room_id);//?以降を削除
@@ -1186,7 +1277,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.MATCH_START_CHECK, function () {
+    safeOn(socket, SOCKET_EVENTS.MATCH_START_CHECK, function () {
         if (match_room_store[socket.id]) {
             if (!server_store[match_room_store[socket.id]]) {
                 delete match_room_store[socket.id];
@@ -1204,44 +1295,56 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.MATCH_START, function (msg) {
-        clearTimeout(server_store[msg.room_id].timer);
-        if (msg.room_id == match_room_store[msg.key]) {
-            if (server_store[msg.room_id].cool.status && server_store[msg.room_id].hot.status) {
-                server_store[msg.room_id].match = false;
-
-                var game_start_timer = function (room) {
-                    io.in(room).emit(SOCKET_EVENTS.NEW_BOARD, {
-                        "map_data": server_store[room].map_data,
-                        "cool_score": server_store[room].cool.score,
-                        "hot_score": server_store[room].hot.score,
-                        "turn": server_store[room].turn
-                    });
-
-                    server_store[room].cool.turn = true;
-
-                    if (server_store[room].timeout) {
-                        server_store[room].timer = setTimeout(game_time_out, 1000 * server_store[room].timeout, room, "hot");
-                    }
-                    else {
-                        server_store[room].timer = setTimeout(game_time_out, 10000, room, "hot");
-                    }
-
-                    if (server_store[room].cpu && server_store[room].cool.name == "cpu") {
-                        cpu(room, server_store[room].cpu.level, server_store[room].cpu.turn);
-                    }
-                }
-                setTimeout(game_start_timer, 500, msg.room_id);
-            }
-        }
-        else {
+    safeOn(socket, SOCKET_EVENTS.MATCH_START, function (msg) {
+        // 認証 → 存在確認 → 状態変更 の順を守る。
+        // 順序を入れ替えると、認証前に未検証の room_id で状態を参照することになる
+        if (!msg || msg.room_id != match_room_store[msg.key]) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
+            return;
+        }
+        if (!server_store[msg.room_id]) {
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームが存在しません");
+            return;
+        }
+        clearTimeout(server_store[msg.room_id].timer);
+
+        if (server_store[msg.room_id].cool.status && server_store[msg.room_id].hot.status) {
+            server_store[msg.room_id].match = false;
+
+            var game_start_timer = function (room) {
+                io.in(room).emit(SOCKET_EVENTS.NEW_BOARD, {
+                    "map_data": server_store[room].map_data,
+                    "cool_score": server_store[room].cool.score,
+                    "hot_score": server_store[room].hot.score,
+                    "turn": server_store[room].turn
+                });
+
+                server_store[room].cool.turn = true;
+
+                if (server_store[room].timeout) {
+                    server_store[room].timer = setTimeout(game_time_out, 1000 * server_store[room].timeout, room, "hot");
+                }
+                else {
+                    server_store[room].timer = setTimeout(game_time_out, 10000, room, "hot");
+                }
+
+                if (server_store[room].cpu && server_store[room].cool.name == "cpu") {
+                    cpu(room, server_store[room].cpu.level, server_store[room].cpu.turn);
+                }
+            }
+            setTimeout(game_start_timer, 500, msg.room_id);
         }
     });
 
-    socket.on(SOCKET_EVENTS.PLAYER_JOIN_MATCH, async function (msg) {
+    safeOn(socket, SOCKET_EVENTS.PLAYER_JOIN_MATCH, async function (msg) {
+        // room_id は以降で文字列として扱うため、型を先に確認する
+        if (typeof msg?.room_id !== 'string') {
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
+            return;
+        }
+
         if (!server_store[msg.room_id]) {
-            room_id_check = msg.room_id.split("?")[0];
+            var room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
             if(server_store[room_id_check]){
                 await copyMapByID(msg.room_id);//?以降を削除
@@ -1262,6 +1365,8 @@ io.on('connection', function (socket) {
             }
 
             var join_flag = false;
+            // 宣言を省くと暗黙のグローバルとなり、同時接続時に他の対戦と値を共有してしまう
+            var room_chara;
 
             if (msg.chara == "cool" && !server_store[msg.room_id].cool.status) {
                 server_store[msg.room_id].cool.status = true;
@@ -1308,7 +1413,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.RELEASE, function (msg) {
+    safeOn(socket, SOCKET_EVENTS.RELEASE, function (msg) {
         try {
             if (msg.room_id == match_room_store[msg.key]) {
                 if (!server_store[msg.room_id].release) {
@@ -1331,39 +1436,45 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.MOVE_PLAYER, function (msg) {
+    safeOn(socket, SOCKET_EVENTS.MOVE_PLAYER, function (msg) {
         if (store[socket.id]) {
             move_player(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on(SOCKET_EVENTS.GET_READY, function () {
+    safeOn(socket, SOCKET_EVENTS.GET_READY, function () {
         if (store[socket.id]) {
             get_ready(store[socket.id].room, store[socket.id].chara, socket.id)
         }
     });
 
-    socket.on(SOCKET_EVENTS.LOOK, function (msg) {
+    safeOn(socket, SOCKET_EVENTS.LOOK, function (msg) {
         if (store[socket.id]) {
             look(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on(SOCKET_EVENTS.SEARCH, function (msg) {
+    safeOn(socket, SOCKET_EVENTS.SEARCH, function (msg) {
         if (store[socket.id]) {
             search(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on(SOCKET_EVENTS.PUT_WALL, function (msg) {
+    safeOn(socket, SOCKET_EVENTS.PUT_WALL, function (msg) {
         if (store[socket.id]) {
             put_wall(store[socket.id].room, store[socket.id].chara, msg, socket.id);
         }
     });
 
-    socket.on(SOCKET_EVENTS.LOOKER_JOIN, async function (msg) {
+    safeOn(socket, SOCKET_EVENTS.LOOKER_JOIN, async function (msg) {
+        // 観戦対象のルームIDは文字列で渡される想定のため、型を先に確認する
+        if (typeof msg !== 'string') {
+            io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
+            return;
+        }
+
         if (!server_store[msg]) {
-            room_id_check = msg.split("?")[0];
+            var room_id_check = msg.split("?")[0];
             //コピーもとが存在するかチェック
             if(server_store[room_id_check]){
                 await copyMapByID(msg);//?以降を削除
@@ -1401,7 +1512,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.DISCONNECT, function () {
+    safeOn(socket, SOCKET_EVENTS.DISCONNECT, function () {
         if (store[socket.id] && server_store[store[socket.id].room]) {
             if (server_store[store[socket.id].room].cool.status && server_store[store[socket.id].room].hot.status && !server_store[store[socket.id].room].match) {
                 if (store[socket.id].chara == "cool") {
@@ -1446,7 +1557,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.LEAVE_ROOM, function () {
+    safeOn(socket, SOCKET_EVENTS.LEAVE_ROOM, function () {
         if (store[socket.id] && server_store[store[socket.id].room]) {
             if (server_store[store[socket.id].room].cool.status && server_store[store[socket.id].room].hot.status && !server_store[store[socket.id].room].match) {
                 if (store[socket.id].chara == "cool") {
@@ -1490,7 +1601,7 @@ io.on('connection', function (socket) {
         }
     });
 
-    socket.on(SOCKET_EVENTS.MATCH_END, function (msg) {
+    safeOn(socket, SOCKET_EVENTS.MATCH_END, function (msg) {
         if (msg.room_id == match_room_store[msg.key]) {
             if (match_room_store[socket.id]) {
                 delete match_room_store[socket.id];

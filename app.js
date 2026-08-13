@@ -2,8 +2,11 @@ var createError = require('http-errors');
 var express = require('express');
 var fs = require('fs');
 var path = require('path');
+var crypto = require('crypto');
 var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
+var helmet = require('helmet');
+var rateLimit = require('express-rate-limit');
 const logger = require('./bin/logger.js');
 
 var indexRouter = require('./routes/index');
@@ -24,6 +27,7 @@ var tutorial_data = require('./tool/tutorial_data_load');
 var bgm_data = require('./tool/bgm_data_load');
 var config_load = require('./tool/config_data_load');
 var deep_clone = require('./tool/deep_clone');
+var validate_room = require('./tool/validate_room');
 
 var chaser = require('./chaser/server.js');
 
@@ -39,9 +43,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.locals.appVersion = require('./package.json').version;
 
+// render.com は TLS を終端してリバースプロキシ経由で転送するため、
+// X-Forwarded-* を信頼しないとレート制限が全リクエストを同一クライアントと見なしてしまう
+app.set('trust proxy', 1);
+
+// セキュリティヘッダを付与する。
+// Blockly と gtag がインラインスクリプトを使うため CSP は現時点では無効にしている
+// (CSP の導入はインラインスクリプトの整理が必要なため別途対応)
+app.use(helmet({ contentSecurityPolicy: false }));
+
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// リクエストボディの上限を明示する (既定の 100kb 依存を避ける)
+app.use(express.json({ limit: '256kb' }));
+app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -86,10 +100,15 @@ app.get('/api/bgm', (req, res) => {
   res.json(bgm_list);
 });
 
+// 合言葉つきルームは "<ルームID>?<合言葉>" をキーにして保持されるため、
+// 一覧をそのまま返すと合言葉が第三者に読み取れてしまう。
+// これまでブラウザ側だけで行っていた除外をサーバー側でも行う
+const isPrivateRoomKey = (key) => key.includes('?');
+
 app.get('/api/game', async(req, res) => {
   await reloadServerData();
   if(req.query.room_id){
-    if(game_server[req.query.room_id]){
+    if(typeof req.query.room_id === 'string' && game_server[req.query.room_id]){
       res.json(game_server[req.query.room_id]);
     }
     else{
@@ -97,7 +116,13 @@ app.get('/api/game', async(req, res) => {
     }
   }
   else{
-    res.json(game_server);
+    const public_rooms = {};
+    for(const room_id in game_server){
+      if(!isPrivateRoomKey(room_id)){
+        public_rooms[room_id] = game_server[room_id];
+      }
+    }
+    res.json(public_rooms);
   }
 });
 
@@ -110,38 +135,55 @@ app.get('/api/join', async(req, res) => {
   res.json(join_list);
 });
 
-app.post('/api/upload-map', async (req, res) => {
-  const d = req.body;
-  const errors = [];
-  if (!d.name)                                                      errors.push('name が必要です');
-  if (!d.map_size_x || d.map_size_x < 5 || d.map_size_x > 30)     errors.push('map_size_x は 5〜30');
-  if (!d.map_size_y || d.map_size_y < 5 || d.map_size_y > 30)     errors.push('map_size_y は 5〜30');
-  if (!d.turn       || d.turn < 1       || d.turn > 500)           errors.push('turn は 1〜500');
-  if (d.map_data && d.map_data.length > 0) {
-    if (d.map_data.length !== d.map_size_y || d.map_data[0].length !== d.map_size_x)
-      errors.push('map_data の寸法が map_size と一致しない');
+// ルームコードを生成する。予測しにくい乱数を使い、既存ルームとの衝突も避ける
+const generateRoomCode = () => {
+  for (let i = 0; i < 10; i++) {
+    const shortCode = crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+    if (!game_server['upload_' + shortCode]) {
+      return shortCode;
+    }
   }
-  if (errors.length) return res.json({ ok: false, errors });
+  return null;
+};
 
-  const shortCode = Math.random().toString(36).slice(2, 6).toUpperCase();
-  const room_id   = 'upload_' + shortCode;
-  const roomData = {
-    name:          d.name,
-    room_id,
-    map_size_x:    d.map_size_x,
-    map_size_y:    d.map_size_y,
-    map_data:      d.map_data      || [],
-    auto_block:    d.auto_block    || 20,
-    auto_point:    d.auto_point    || 30,
-    auto_symmetry: d.auto_symmetry || false,
-    cool:          { status: false, turn: false },
-    hot:           { status: false, turn: false },
-    cpu:           { turn: "hot", level: 3 },
-    turn:          d.turn,
-  };
-  await server_data.create_new_map(roomData);
-  await chaser.reloadRoom(room_id);
-  res.json({ ok: true, room_id, shortCode });
+// アップロードは無認証で誰でも実行できるため、投稿頻度を制限する
+const uploadMapLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, errors: ['アップロードの回数が多すぎます。しばらく待ってから再度お試しください'] }
+});
+
+app.post('/api/upload-map', uploadMapLimiter, async (req, res, next) => {
+  try {
+    const result = validate_room.validateRoom(req.body);
+    if (!result.ok) return res.status(400).json({ ok: false, errors: result.errors });
+
+    await reloadServerData();
+    const shortCode = generateRoomCode();
+    if (!shortCode) {
+      return res.status(503).json({ ok: false, errors: ['ルームを作成できませんでした。しばらく待ってから再度お試しください'] });
+    }
+
+    const room_id = 'upload_' + shortCode;
+    const roomData = Object.assign({}, result.value, {
+      room_id,
+      cool: { status: false, turn: false },
+      hot:  { status: false, turn: false },
+      cpu:  { turn: "hot", level: 3 }
+    });
+
+    const created = await server_data.create_new_map(roomData);
+    if (!created) {
+      return res.status(503).json({ ok: false, errors: ['ルームの上限に達しています。しばらく待ってから再度お試しください'] });
+    }
+    await chaser.reloadRoom(room_id);
+    res.json({ ok: true, room_id, shortCode });
+  }
+  catch (e) {
+    next(e);
+  }
 });
 
 // catch 404 and forward to error handler

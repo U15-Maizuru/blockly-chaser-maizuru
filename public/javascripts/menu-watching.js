@@ -191,7 +191,7 @@ function server_info(id, get_list) {
     currentMode = mode;
     var effectiveId = (mode === 'vs') ? id.replace(/^auto_/, 'vs_') : id;
 
-    // upload_ プレフィックスはルームコード（4文字）のみ表示
+    // upload_ プレフィックスはルームコード（6文字）のみ表示
     server_info_id.textContent = effectiveId.startsWith('upload_')
       ? effectiveId.replace('upload_', '')
       : effectiveId;
@@ -283,7 +283,7 @@ window.addEventListener('load', function () {
   const codeInput = document.getElementById('room_code_input');
 
   function selectByCode() {
-    const code = codeInput.value.trim().split(/[\s―\-]/)[0].toUpperCase().slice(0, 4);
+    const code = codeInput.value.trim().split(/[\s―\-]/)[0].toUpperCase().slice(0, 6);
     if (!code) return;
     const room_id = 'upload_' + code;
     fetch('./../api/game?room_id=' + room_id)

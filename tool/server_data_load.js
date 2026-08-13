@@ -13,6 +13,15 @@ var join_list = [];
 
 var additional_game_server = [];
 
+// アップロードで作成できるルーム数の上限。
+// アップロードは無認証のため、上限がないとメモリを際限なく消費できてしまう
+const MAX_UPLOAD_ROOMS = 100;
+
+// アップロードで作成されたルームかどうか ("?" 付きは対戦ごとの一時コピーなので対象外)
+const is_upload_room = function (room_id) {
+    return typeof room_id === 'string' && room_id.startsWith('upload_') && !room_id.includes('?');
+};
+
 const init = async function () {
   var game_server_dir = path.join(__dirname, mode_path, '..', 'load_data', 'game_server_data');
   var loaded = json_dir_load.loadDirAsMap(game_server_dir, JSON.parse, (parsed) => parsed.room_id, 'game server data');
@@ -60,20 +69,31 @@ const copy_map_by_id = async function (id) {
   }
 }
 
+// 追加ルームを登録する。作成できた場合は true、上限超過や不正データの場合は false を返す
 const create_new_map = async function(json){
   try {
     var temp_game_server = typeof json === 'string' ? JSON.parse(json) : json;
     if(temp_game_server.room_id){
+        if (is_upload_room(temp_game_server.room_id)) {
+            var upload_count = additional_game_server.filter(map => is_upload_room(map.room_id)).length;
+            if (upload_count >= MAX_UPLOAD_ROOMS) {
+                logger.error('Upload room limit reached. Rejected room_id: ' + temp_game_server.room_id);
+                return false;
+            }
+        }
         temp_game_server.delete_time = Date.now() + 1000 * 60 * config.deleteRoomTime;
         game_server[temp_game_server.room_id] = temp_game_server;
         join_list.push([temp_game_server.name, temp_game_server.room_id]);
         additional_game_server.push(temp_game_server);
+        return true;
     } else {
-        logger.error('The format of the game server data is incorrect. Data: ' + json);
+        logger.error('The format of the game server data is incorrect.');
+        return false;
     }
   } catch(e) {
-    logger.error('Failed to read the game server data. Data: ' + json);
-  }  
+    logger.error('Failed to read the game server data.');
+    return false;
+  }
 };
 
 
@@ -81,10 +101,13 @@ const delete_map = async function(id){
   if(game_server[id] && game_server[id].delete_time){
     delete game_server[id];
     join_list = join_list.filter(item => item[1] !== id);
+    // additional_game_server からも取り除く。ここに残すと init() のたびに復活し、
+    // 削除済みルームがプロセス生存中ずっと蓄積してしまう
+    additional_game_server = additional_game_server.filter(map => map.room_id !== id);
   }
   else{
     console.log("Don't delete permanet map");
-  }  
+  }
 };
 
 
@@ -99,6 +122,17 @@ const create_map = function (key) {
 
   var selectable_list = [];
 
+  var tx = Math.floor((game_server[key].map_size_x - 1) / 2);
+  var ty = Math.floor((game_server[key].map_size_y - 1) / 2);
+
+  // cool の対角位置に hot を置くため、対称点が盤面内に収まる位置だけを候補にする。
+  // 偶数サイズのマップでは対称点が盤外になる組み合わせがあり、そのまま配置すると例外になる
+  var isMirrorInside = function (s_x, s_y) {
+    var m_x = tx + (tx - s_x);
+    var m_y = ty + (ty - s_y);
+    return m_x >= 0 && m_x < game_server[key].map_size_x && m_y >= 0 && m_y < game_server[key].map_size_y;
+  };
+
   for (var s_x = 0; s_x < Math.floor(game_server[key].map_size_x / 2) + 1; s_x++) {
     for (var s_y = 0; s_y < game_server[key].map_size_y; s_y++) {
       if (s_y == Math.floor(game_server[key].map_size_y / 2) - 1 && s_x == Math.floor(game_server[key].map_size_x / 2)) {
@@ -107,21 +141,24 @@ const create_map = function (key) {
       else if (s_x == Math.floor(game_server[key].map_size_x / 2) - 1 && s_y <= Math.floor(game_server[key].map_size_y / 2) + 1 && s_y >= Math.floor(game_server[key].map_size_y / 2) - 1) {
         continue;
       }
+      else if (!isMirrorInside(s_x, s_y)) {
+        continue;
+      }
       else {
         selectable_list.push([s_x, s_y]);
       }
     }
   }
 
-
+  if (!selectable_list.length) {
+    logger.error('Failed to place players. room_id: ' + key);
+    return;
+  }
 
   var cxy = Math.floor(Math.random() * selectable_list.length);
 
   var cx = selectable_list[cxy][0];
   var cy = selectable_list[cxy][1];
-
-  var tx = Math.floor((game_server[key].map_size_x - 1) / 2);
-  var ty = Math.floor((game_server[key].map_size_y - 1) / 2);
 
   var hx = tx + (tx - cx);
   var hy = ty + (ty - cy);
@@ -196,18 +233,24 @@ const create_map = function (key) {
 
   if (game_server[key].auto_symmetry) {
     for (var i = 0; i < game_server[key].auto_point / 2; i++) {
+      // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+      if (!selectable_list.length) break;
       pxy = Math.floor(Math.random() * selectable_list.length);
       px = selectable_list[pxy][0];
       py = selectable_list[pxy][1];
 
       game_server[key].map_data[py][px] = 2;
-      game_server[key].map_data[ty + (ty - py)][tx + (tx - px)] = 2;
+      if (isMirrorInside(px, py)) {
+        game_server[key].map_data[ty + (ty - py)][tx + (tx - px)] = 2;
+      }
 
       selectable_list.splice(pxy, 1);
     }
   }
   else {
     for (var i = 0; i < game_server[key].auto_point; i++) {
+      // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+      if (!selectable_list.length) break;
       pxy = Math.floor(Math.random() * selectable_list.length);
       px = selectable_list[pxy][0];
       py = selectable_list[pxy][1];
@@ -236,18 +279,24 @@ const create_map = function (key) {
 
   if (game_server[key].auto_symmetry) {
     for (var i = 0; i < game_server[key].auto_block / 2; i++) {
+      // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+      if (!selectable_list.length) break;
       bxy = Math.floor(Math.random() * selectable_list.length);
       bx = selectable_list[bxy][0];
       by = selectable_list[bxy][1];
 
       game_server[key].map_data[by][bx] = 1;
-      game_server[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 1;
+      if (isMirrorInside(bx, by)) {
+        game_server[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 1;
+      }
 
       selectable_list.splice(bxy, 1);
     }
   }
   else {
     for (var i = 0; i < game_server[key].auto_block; i++) {
+      // 配置先を使い果たしたら打ち切る (指定数がマス数を上回っても落ちないようにする)
+      if (!selectable_list.length) break;
       bxy = Math.floor(Math.random() * selectable_list.length);
       bx = selectable_list[bxy][0];
       by = selectable_list[bxy][1];
