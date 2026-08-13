@@ -1,6 +1,6 @@
 {
   "name": "BlocklyCHaser",
-  "version": "2.5.0+MZ",
+  "version": "2.5.1+MZ",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -14,9 +14,11 @@
     "debug": "~2.6.9",
     "ejs": "^3.1.10",
     "express": "^4.21.1",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
     "http-errors": "^2.0.0",
     "log4js": "^6.2.1",
-    "morgan": "~1.9.1",
+    "morgan": "^1.11.0",
     "socket.io": "^4.8.1"
   },
   "main": "electron.js",
