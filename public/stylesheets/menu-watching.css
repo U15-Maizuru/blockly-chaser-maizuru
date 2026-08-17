@@ -225,6 +225,11 @@
 
 .mode_btn {
     flex: 1;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 10px 0;
     font-size: 16px;
     font-weight: bold;
@@ -467,7 +472,7 @@ td img {
 
 #server_match_button {
     width: 100%;
-    height: 44px;
+    height: var(--bc-touch-min);
     font-size: 18px;
     font-weight: bold;
     color: #ffffff;
@@ -488,7 +493,7 @@ td img {
 
 #server_watch_button {
     width: 100%;
-    height: 44px;
+    height: var(--bc-touch-min);
     font-size: 18px;
     font-weight: bold;
     color: #ffffff;
@@ -510,7 +515,7 @@ td img {
 #server_token_input {
     width: 100%;
     box-sizing: border-box;
-    height: 40px;
+    height: var(--bc-touch-min);
     font-size: 16px;
     font-weight: bold;
     color: #215c57;
@@ -552,7 +557,11 @@ td img {
 }
 
 #btn_refresh_rooms {
-    padding: 3px 10px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--bc-touch-min);
+    padding: 3px 14px;
     font-size: 11px;
     font-weight: bold;
     color: #2faea1;
@@ -592,6 +601,7 @@ td img {
 
 #room_code_input {
     width: 160px;
+    height: var(--bc-touch-min);
     padding: 7px 12px;
     box-sizing: border-box;
     border: 2px solid #88d9ce;
@@ -611,7 +621,11 @@ td img {
 
 #open_editor_btn {
     flex: 1;
-    display: inline-block;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 8px 0;
     background: linear-gradient(135deg, #4dcfd8, #2faea1);
     color: #fff;
@@ -625,7 +639,11 @@ td img {
 
 #upload_map_label {
     flex: 1;
-    display: inline-block;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 8px 0;
     background: linear-gradient(135deg, #4dcfd8, #2faea1);
     color: #fff;
@@ -644,6 +662,6 @@ td img {
 }
 
 #chara_select_div { display: flex; gap: 8px; padding: 4px 14px 4px 4px; }
-.chara_select_btn { flex: 1; padding: 6px 0; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 10px; border: 2px solid #88d9ce; background: #e0f5f0; color: #215c57; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.chara_select_btn { flex: 1; box-sizing: border-box; display: flex; align-items: center; justify-content: center; min-height: var(--bc-touch-min); padding: 6px 0; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 10px; border: 2px solid #88d9ce; background: #e0f5f0; color: #215c57; transition: background 0.15s, color 0.15s, border-color 0.15s; }
 .chara_select_btn_cool_active { background: linear-gradient(135deg, var(--bc-color-primary-soft), var(--bc-color-primary)); color: #fff; border-color: transparent; }
 .chara_select_btn_hot_active  { background: linear-gradient(135deg, var(--bc-color-danger-soft), var(--bc-color-danger)); color: #fff; border-color: transparent; }
