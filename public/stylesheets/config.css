@@ -73,8 +73,8 @@
     position: absolute;
     right: 20px;
     top: 20px;
-    width: 34px;
-    height: 34px;
+    width: var(--bc-touch-min);
+    height: var(--bc-touch-min);
     background: #4ab8a6;
     border-radius: 18px;
     box-shadow: 0 10px 24px rgba(74, 184, 166, 0.22);
@@ -86,7 +86,7 @@
     content: "×";
     display: block;
     text-align: center;
-    line-height: 34px;
+    line-height: var(--bc-touch-min);
     font-size: 20px;
 }
 
