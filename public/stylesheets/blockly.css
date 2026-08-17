@@ -361,7 +361,7 @@ label[for="file_load"] {
   margin: auto;
   margin-top: 10%;
   text-align: left;
-  border: solid 2px #5d5d5d;
+  border: solid 2px var(--bc-color-chrome-grey);
   padding: 2px 8px;
   border-radius: 15px;
 }
@@ -371,7 +371,7 @@ label[for="file_load"] {
   margin: auto;
   margin-top: 10%;
   text-align: left;
-  border: solid 2px #5d5d5d;
+  border: solid 2px var(--bc-color-chrome-grey);
   padding: 2px 8px;
   border-radius: 15px;
 }
@@ -381,7 +381,7 @@ label[for="file_load"] {
   margin: auto;
   margin-top: 10%;
   text-align: left;
-  border: solid 2px #5d5d5d;
+  border: solid 2px var(--bc-color-chrome-grey);
   padding: 2px 8px;
   border-radius: 15px;
 
@@ -444,7 +444,7 @@ label[for="file_load"] {
   position: relative;
   width: calc(40% - 20px);
   margin: 0px 8px;
-  border: solid 2px #0d8eff;
+  border: solid 2px var(--bc-color-primary);
   border-radius: 10px;
 }
 
@@ -456,7 +456,7 @@ label[for="file_load"] {
   padding-right: 5px;
   font-size: 14px;
   overflow: hidden;
-  background: #5d5d5d;
+  background: var(--bc-color-chrome-grey);
   color: #FFF;
   border-radius: 8px 8px 0 0;
 }
@@ -469,10 +469,10 @@ label[for="file_load"] {
   left: 0px;
   width: 20px;
   height: 20px;
-  background: #0e8eff;
+  background: var(--bc-color-primary);
   color: #FFF;
-  border-right: solid 18px #0e8eff;
-  border-left: solid 5px #0e8eff;
+  border-right: solid 18px var(--bc-color-primary);
+  border-left: solid 5px var(--bc-color-primary);
   border-radius: 8px 15px 15px 0px;
 }
 
@@ -498,7 +498,7 @@ label[for="file_load"] {
   margin-bottom: 0px;
   padding-top: 2px;
   color: #FFF;
-  background: #5d5d5d;
+  background: var(--bc-color-chrome-grey);
   border-radius: 10px 10px 0 0;
 }
 
@@ -514,7 +514,7 @@ label[for="file_load"] {
   position: relative;
   width: calc(40% - 20px);
   margin: 0px 8px;
-  border: solid 2px #ff2222;
+  border: solid 2px var(--bc-color-danger);
   border-radius: 10px;
 }
 
@@ -526,7 +526,7 @@ label[for="file_load"] {
   white-space: nowrap;
   font-size: 14px;
   overflow: hidden;
-  background: #5d5d5d;
+  background: var(--bc-color-chrome-grey);
   color: #FFF;
   border-radius: 8px 8px 0 0;
 }
@@ -539,10 +539,10 @@ label[for="file_load"] {
   left: 0px;
   width: 20px;
   height: 20px;
-  background: #ff2222;
+  background: var(--bc-color-danger);
   color: #FFF;
-  border-right: solid 15px #ff2222;
-  border-left: solid 8px #ff2222;
+  border-right: solid 15px var(--bc-color-danger);
+  border-left: solid 8px var(--bc-color-danger);
   border-radius: 8px 15px 15px 0px;
 }
 

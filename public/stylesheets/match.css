@@ -81,7 +81,7 @@
     left: calc(50% - 190px);
     width: 380px;
     height: 160px;
-    background: #6f6f6f;
+    background: var(--bc-color-chrome-grey);
     border-radius: 100px;
     border: solid 2px #fff;
     font-size: 35px;
@@ -195,7 +195,7 @@
     left: calc(50% - 200px);
     width: 180px;
     height: 60px;
-    background: #5d5d5d;
+    background: var(--bc-color-chrome-grey);
     border-radius: 10px;
     border: solid 2px #fff;
 }
@@ -206,7 +206,7 @@
     left: calc(50% + 20px);
     width: 180px;
     height: 60px;
-    background: #5d5d5d;
+    background: var(--bc-color-chrome-grey);
     border-radius: 10px;
     border: solid 2px #fff;
 }
