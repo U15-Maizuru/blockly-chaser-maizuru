@@ -1,0 +1,25 @@
+<%
+/*
+ * 共有ヘッダーパーシャル。旧来9画面に手書き複製されていた .header ブロックを集約する。
+ * locals:
+ *   backHref    - 戻るボタンのリンク先。未指定なら戻るボタン自体を表示しない（トップ画面用）
+ *   titleSpan   - h1内の小見出し（page_title_span）。未指定なら表示しない
+ *   titleHtml   - h1の本文（信頼済みHTML文字列として出力）
+ *   actionsHtml - 右側の control_button 内に出力する信頼済みHTML文字列
+ */
+-%>
+<div class="header">
+<% if (typeof backHref !== 'undefined' && backHref) { -%>
+  <div class="back_page">
+    <div class="back_button"><a href="<%= backHref %>"></a></div>
+  </div>
+<% } -%>
+  <div class="control_area">
+    <div class="page_title">
+      <h1><% if (typeof titleSpan !== 'undefined' && titleSpan) { -%><span class="page_title_span"><%- titleSpan %></span><% } -%><%- titleHtml %></h1>
+    </div>
+    <div class="control_button">
+      <%- actionsHtml %>
+    </div>
+  </div>
+</div>

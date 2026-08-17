@@ -3,26 +3,19 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
   <title>Blockly CHaser</title>
   <link rel="icon" href="/images/favicon.ico">
+  <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
-  <%- include('./common/config-init') %>
 </head>
 
 <body>
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-    <div class="header">
-      <div class="control_area">
-        <div class="page_title">
-          <h1><span class="page_title_span">メニュー</span><%- title %></h1>
-        </div>
-        <div class="control_button">
-          <button id="configButton" title="<%- LNG[" CONFIG"] %>"></button>
-        </div>
-      </div>
-    </div>
+    <% const headerActionsHtml = `<button id="configButton" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}"></button>`; %>
+    <%- include('./common/header', { titleSpan: 'メニュー', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
     <div class="content">
 
@@ -35,7 +28,7 @@
                 <%- LNG["TUTORIAL_INFO"] %>
               </div>
               <div class="menu_tutorial_title">
-                チュートリアル
+                <%- LNG["TUTORIAL_TITLE"] %>
               </div>
               <div class="menu_tutorial_title_en">
                 Tutorial
@@ -65,7 +58,7 @@
                 <%- LNG["PROGRAMMING_INFO"] %>
               </div>
               <div class="menu_programming_title">
-                プログラミング
+                <%- LNG["PROGRAMMING_TITLE"] %>
               </div>
               <div class="menu_programming_title_en">
                 Programming
@@ -75,10 +68,10 @@
                   <div class="menu_programming_basic">
                     <a href="/menu-programming"></a>
                     <div class="menu_programming_basic_info">
-                      指揮官への入り口
+                      <%- LNG["PROGRAMMING_BASIC_INFO"] %>
                     </div>
                     <div class="menu_programming_basic_title">
-                      初級編
+                      <%- LNG["PROGRAMMING_BASIC_TITLE"] %>
                     </div>
                     <div class="menu_programming_basic_title_en">
                       Basic
@@ -89,10 +82,10 @@
                   <div class="menu_programming_exp">
                     <a href="/menu-programming-exp"></a>
                     <div class="menu_programming_exp_info">
-                      更に向こうへ!!
+                      <%- LNG["PROGRAMMING_EXP_INFO"] %>
                     </div>
                     <div class="menu_programming_exp_title">
-                      上級編
+                      <%- LNG["PROGRAMMING_EXP_TITLE"] %>
                     </div>
                     <div class="menu_programming_exp_title_en">
                       Expert

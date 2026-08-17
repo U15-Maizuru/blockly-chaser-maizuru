@@ -3,8 +3,10 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
   <title>CHaser Watching</title>
   <link rel="icon" href="/images/favicon.ico">
+  <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
   <link rel='stylesheet' href='/stylesheets/game-board.css' />
@@ -17,28 +19,15 @@
   <script src="/javascripts/socket_events.js"></script>
   <script src="/javascripts/game_board.js"></script>
   <script src="/javascripts/watching.js"></script>
-
-
 </head>
 
 <body>
-  <div class="header">
-
-    <div class="back_page">
-      <div class="back_button"><a href="./menu-match"></a></div>
-    </div>
-    <div class="control_area">
-      <div class="page_title">
-        <h1><span class="page_title_span">観戦</span>
-          <div id="server_name"></div>
-        </h1>
-      </div>
-      <div class="control_button">
-        <button id="fullscreenButton" onclick="reqFullscreen()" class="notext" title="最大化"></button>
-      </div>
-    </div>
-
-  </div>
+  <%- include('./common/config', {LNG: C_LNG}) %>
+  <%
+    const headerActionsHtml = '<button id="fullscreenButton" onclick="reqFullscreen()" class="notext" title="最大化" aria-label="最大化"></button>' +
+      '<button id="configButton" title="設定" aria-label="設定"></button>';
+  %>
+  <%- include('./common/header', { backHref: './menu-match', titleSpan: '観戦', titleHtml: '<div id="server_name"></div>', actionsHtml: headerActionsHtml }) %>
   <div id="game_area">
     <div id="ready_player"></div>
     <div id="game_board"></div>

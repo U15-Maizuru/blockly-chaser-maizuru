@@ -5,11 +5,11 @@ body {
 }
 
 body {
-  background: radial-gradient(circle at top, #e9fbf9 0%, #d0f1f7 30%, #b5ecf1 70%, #ffffff 100%);
+  background: radial-gradient(circle at top, var(--bc-color-bg-gradient-start) 0%, var(--bc-color-bg-gradient-mid1) 30%, var(--bc-color-bg-gradient-mid2) 70%, var(--bc-color-bg-gradient-end) 100%);
   background-attachment: fixed;
-  font-family: 'Yu Gothic', 'メイリオ', 'Hiragino Kaku Gothic Pro', 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--bc-font-family);
   margin: 0;
-  color: #2f2f2f;
+  color: var(--bc-color-text);
 }
 
 .header {
@@ -317,7 +317,7 @@ body {
   font-size: 15px;
   font-weight: bold;
   width: 100%;
-  background: #00a0e6;
+  background: var(--bc-color-primary);
   border-radius: 14px 14px 0 0;
   color: #FFF;
   text-align: center;
@@ -333,8 +333,8 @@ body {
   font-weight: bold;
   text-align: center;
   color: #FFF;
-  background: #00a0e6;
-  border: solid 1px #00a0e6;
+  background: var(--bc-color-primary);
+  border: solid 1px var(--bc-color-primary);
   cursor: pointer;
 }
 
@@ -347,9 +347,9 @@ body {
   font-size: 15px;
   font-weight: bold;
   text-align: center;
-  color: #00a0e6;
+  color: var(--bc-color-primary);
   background: #ffffff;
-  border: solid 1px #00a0e6;
+  border: solid 1px var(--bc-color-primary);
   cursor: pointer;
 }
 
