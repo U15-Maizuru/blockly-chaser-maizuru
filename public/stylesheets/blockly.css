@@ -291,29 +291,10 @@ button {
 
 
 /*
- * アイコンのみ・ホバーツールチップのみのボタンは、初見の子供には
- * 何のボタンか伝わりにくいため、アイコン＋常時表示のテキストラベルにする。
- * タッチターゲットも --bc-touch-min（44px）を満たすよう高さを確保する。
+ * .bc-btn-labeled のベース定義は public/stylesheets/config.css にある。
+ * config.css は全画面で読み込まれる head-assets.ejs 経由の唯一のファイルのため、
+ * ここ（2画面にしかロードされない blockly.css）には置かない。
  */
-.bc-btn-labeled {
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  width: auto;
-  height: auto;
-  min-height: var(--bc-touch-min);
-  margin: 3px 3px;
-  padding: 6px 10px 6px 32px;
-  background-repeat: no-repeat;
-  background-position: 8px center;
-  background-size: 20px;
-  border-radius: var(--bc-radius-sm);
-  font-size: 13px;
-  font-weight: bold;
-  color: #fff;
-  white-space: nowrap;
-  cursor: pointer;
-}
 
 #runButton {
   border: 2px solid #ffffff;
@@ -355,23 +336,6 @@ button {
   background-color: #2faea1;
   background-image: url(../media/downloadPython.png);
   box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
-}
-
-/*
- * config.css の #configButton（アイコンのみ・固定42x36px）はID同士で
- * 詳細度が同じため、このツールバー行ではラベル付きレイアウトを
- * 明示的に上書きする（幅/高さ/アイコン位置はここで確定させる）。
- */
-#configButton {
-  width: auto;
-  height: auto;
-  min-height: var(--bc-touch-min);
-  background-position: 8px center;
-  background-size: 20px;
-  border: 2px solid #ffffff;
-  background-color: #4ab8a6;
-  background-image: url(../media/config.png);
-  box-shadow: 0px 1px 2px 1px rgba(74, 184, 166, 0.24);
 }
 
 .Button_hidden {

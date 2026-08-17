@@ -19,6 +19,7 @@
   --bc-color-surface: #ffffff;
   --bc-color-text: #2f2f2f;
   --bc-color-text-muted: #6b6b6b;
+  --bc-color-chrome-grey: #5d5d5d;    /* 旧UIの中立グレーchrome（チーム色ではない） */
 
   /* --- spacing (4px刻み) --- */
   --bc-space-1: 4px;

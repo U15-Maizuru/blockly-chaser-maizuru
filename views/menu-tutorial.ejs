@@ -20,7 +20,7 @@
 
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-  <% const headerActionsHtml = `<button id="configButton" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}"></button>`; %>
+  <% const headerActionsHtml = `<button id="configButton" class="bc-btn-labeled" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}">${LNG["CONFIG"]}</button>`; %>
   <%- include('./common/header', { backHref: '../', titleSpan: 'チュートリアル', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
   <div id="scale_root">

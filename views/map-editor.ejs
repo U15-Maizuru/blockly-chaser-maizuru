@@ -15,7 +15,7 @@
 <body>
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-  <% const headerActionsHtml = '<button id="configButton" title="設定" aria-label="設定"></button>'; %>
+  <% const headerActionsHtml = '<button id="configButton" class="bc-btn-labeled" title="設定" aria-label="設定">設定</button>'; %>
   <%- include('./common/header', { backHref: '/menu-match', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
   <div id="editor_root">

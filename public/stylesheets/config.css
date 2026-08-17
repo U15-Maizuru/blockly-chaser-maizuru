@@ -223,19 +223,37 @@ button.disabled {
     display: none;
 }
 
-button.notext {
-    font-size: 10%;
+/*
+ * アイコンのみ・ホバーツールチップのみのボタンは、初見の子供には
+ * 何のボタンか伝わりにくいため、アイコン＋常時表示のテキストラベルにする。
+ * タッチターゲットも --bc-touch-min（44px）を満たすよう高さを確保する。
+ * config.css は head-assets.ejs 経由で全画面に読み込まれるため、
+ * このクラスの本拠地としてここに置く（画面固有のCSSには置かない）。
+ */
+.bc-btn-labeled {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    min-height: var(--bc-touch-min);
+    margin: 3px 3px;
+    padding: 6px 10px 6px 32px;
+    background-repeat: no-repeat;
+    background-position: 8px center;
+    background-size: 20px;
+    border-radius: var(--bc-radius-sm);
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    cursor: pointer;
 }
 
 #configButton {
     border: 2px solid rgba(255, 255, 255, 0.8);
     background-color: #4ab8a6;
     background-image: url(../media/config.png);
-    background-repeat: no-repeat;
-    background-size: 22px;
-    background-position: center center;
-    width: 42px;
-    height: 36px;
     border-radius: 10px;
     box-shadow: 0 6px 18px rgba(74, 184, 166, 0.24);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
