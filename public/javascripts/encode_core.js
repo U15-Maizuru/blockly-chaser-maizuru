@@ -565,7 +565,7 @@ function initEncodeRuntime(options) {
       }
     }
 
-    // 現在のBlocklyワークスペースをPythonコードに変換し、Python練習ページ(/python-practice)に
+    // 現在のBlocklyワークスペースをPythonコードに変換し、Python練習ページ(/python-programming)に
     // 引き継ぐ。ワークスペースが未完成(ブロックが無い/Python未対応ブロックを含む/どのブロックも
     // 実行文につながっていない)で変換できない場合は警告を表示して遷移を中止する。
     Code.convertToPythonPractice = async function () {
@@ -632,7 +632,7 @@ function initEncodeRuntime(options) {
         } else {
           localStorage.removeItem('pending_python_practice_map');
         }
-        window.location.href = '/python-practice';
+        window.location.href = '/python-programming';
       });
     };
 
