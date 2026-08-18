@@ -395,6 +395,9 @@ function initEncodeRuntime(options) {
               if (outputArea) {
                 outputArea.value += '\n\n<< Error ' + e + '>>';
               }
+              if (options.onError) {
+                options.onError(e);
+              }
               resetInterpreter();
               resetVar();
               resetStepUi(false);
@@ -510,8 +513,9 @@ function initEncodeRuntime(options) {
     }
 
 
-    Code.downloadPython = function () {
+    Code.downloadPython = async function () {
       var pythonTextarea = document.getElementById('content_python');
+      await ChaserTransliterator.warmCache(Code.workspace);
       var pythonText = python.pythonGenerator.workspaceToCode(Code.workspace);
 
       var userAgent = window.navigator.userAgent.toLowerCase();
@@ -560,6 +564,77 @@ function initEncodeRuntime(options) {
         });
       }
     }
+
+    // 現在のBlocklyワークスペースをPythonコードに変換し、Python練習ページ(/python-practice)に
+    // 引き継ぐ。ワークスペースが未完成(ブロックが無い/Python未対応ブロックを含む/どのブロックも
+    // 実行文につながっていない)で変換できない場合は警告を表示して遷移を中止する。
+    Code.convertToPythonPractice = async function () {
+      Code.stopJS();
+
+      if (Code.workspace.getAllBlocks(false).length === 0) {
+        Blockly.dialog.alert("ブロックが1つもありません。プログラムを作成してから変換してください。");
+        return;
+      }
+
+      if (!Code.checkAllGeneratorFunctionsDefined(python.pythonGenerator)) {
+        // checkAllGeneratorFunctionsDefined側で警告済み
+        return;
+      }
+
+      await ChaserTransliterator.warmCache(Code.workspace);
+      var pythonCode = python.pythonGenerator.workspaceToCode(Code.workspace);
+      if (!pythonCode || !pythonCode.trim()) {
+        Blockly.dialog.alert("実行可能なプログラムが見つかりません。ブロックが正しくつながっているか確認してください。");
+        return;
+      }
+
+      // ワークスペースにserver_joinブロックが複数存在する場合(過去に試行錯誤して
+      // 使われなくなったブロックが残っている等)、[0]は生成順で不定なものを拾ってしまう。
+      // main_loop_content(本体)が実際に繋がっているブロックを優先して選ぶ。
+      var serverJoinBlocks = Code.workspace.getBlocksByType('server_join', false);
+      var serverJoinBlock = serverJoinBlocks.find(function (b) {
+        return b.getInputTargetBlock('main_loop_content') !== null;
+      }) || serverJoinBlocks[0];
+      var roomId = serverJoinBlock ? serverJoinBlock.getFieldValue('map_id') : null;
+      var mapPromise = roomId
+        ? fetch('./../api/game?room_id=' + encodeURIComponent(roomId))
+            .then(function (res) { return res.json(); })
+            .then(function (json) {
+              if (!json) return null;
+              if (json.map) return json.map;
+              // 固定マップを持たない手続き生成ルーム(ランダム/対称マップ)は、そのルームの
+              // 生成パラメータ(auto_block/auto_point/auto_symmetry)から同等のマップをその場で
+              // 生成して渡す。MAP_RANDOM_GENはpython-practice.ejsの「ランダム生成」ボタンと
+              // 同じ実装を共有する。
+              if (typeof MAP_RANDOM_GEN === 'undefined' || typeof MAP_FORMAT === 'undefined') return null;
+              if (!Number.isInteger(json.map_size_x) || !Number.isInteger(json.map_size_y)) return null;
+              var generated = MAP_RANDOM_GEN.generateRandomMap({
+                sizeX: json.map_size_x,
+                sizeY: json.map_size_y,
+                blockNum: json.auto_block,
+                itemNum: json.auto_point,
+                turnMax: json.turn,
+                mirror: !!json.auto_symmetry
+              });
+              generated.name = json.name;
+              return MAP_FORMAT.serializeMap(generated);
+            })
+            .catch(function () { return null; })
+        : Promise.resolve(null);
+
+      mapPromise.then(function (map) {
+        localStorage.setItem('pending_python_practice_code', pythonCode);
+        if (map) {
+          // localStorageは文字列しか保存できないため、mapオブジェクトはJSON文字列にする
+          // (受け取り側のpython-map-editor.jsのsetValue()もJSON文字列を受け取る契約なので
+          // そのまま渡せる)。
+          localStorage.setItem('pending_python_practice_map', JSON.stringify(map));
+        } else {
+          localStorage.removeItem('pending_python_practice_map');
+        }
+        window.location.href = '/python-practice';
+      });
+    };
 
 
     function readSingleFile(e) {
