@@ -6,6 +6,8 @@
 // 文字列や配列などをそのまま比較演算子に渡すと NaN 比較となり、
 // 大小比較がすべて false になって範囲チェックをすり抜けるため。
 
+const map_format = require('../public/javascripts/map_format.js');
+
 // マップサイズの許容範囲
 const MAP_SIZE_MIN = 5;
 const MAP_SIZE_MAX = 30;
@@ -17,9 +19,10 @@ const TURN_MAX = 500;
 // ルーム名の最大文字数
 const NAME_MAX_LENGTH = 32;
 
-// map_data のセルが取りうる値 (0:空 1:ブロック 2:ポイント 3:cool 4:hot)
-const CELL_MIN = 0;
-const CELL_MAX = 4;
+// legend の値として許可するマス種別名 (床/ブロック/アイテムのみ)。
+// プレイヤー位置は cool/hot で別管理するため、legend に cool/hot 相当の種別を
+// 定義しているアップロードは不正データとして拒否する。
+const CELL_TYPE_ALLOWED = new Set(['floor', 'block', 'item']);
 
 // 制御文字 (改行・タブ含む) を除去する。ログ汚染と表示崩れの防止
 function sanitizeName(value) {
@@ -56,17 +59,130 @@ function validateRoom(input) {
         }
     }
 
-    // map_size_x / map_size_y
-    if (!isIntInRange(input.map_size_x, MAP_SIZE_MIN, MAP_SIZE_MAX)) {
-        errors.push('map_size_x は ' + MAP_SIZE_MIN + '〜' + MAP_SIZE_MAX + ' の整数');
-    }
-    if (!isIntInRange(input.map_size_y, MAP_SIZE_MIN, MAP_SIZE_MAX)) {
-        errors.push('map_size_y は ' + MAP_SIZE_MIN + '〜' + MAP_SIZE_MAX + ' の整数');
+    // auto_symmetry
+    if (input.auto_symmetry !== undefined && typeof input.auto_symmetry !== 'boolean') {
+        errors.push('auto_symmetry は true / false で指定してください');
     }
 
-    // turn
-    if (!isIntInRange(input.turn, TURN_MIN, TURN_MAX)) {
-        errors.push('turn は ' + TURN_MIN + '〜' + TURN_MAX + ' の整数');
+    // map (行文字列グリッドJSON) が指定されていれば具体的なグリッドを持つマップ、
+    // 指定がなければ map_size_x/map_size_y/turn + auto_block/auto_point によるサーバー側自動生成。
+    const hasMap = input.map !== null && typeof input.map === 'object' && !Array.isArray(input.map);
+
+    let sizeX, sizeY, turnMax, mapOut = null;
+
+    if (hasMap) {
+        const map = input.map;
+
+        sizeX = map.width;
+        sizeY = map.height;
+        turnMax = map.turnMax;
+
+        if (!isIntInRange(sizeX, MAP_SIZE_MIN, MAP_SIZE_MAX)) {
+            errors.push('map の width は ' + MAP_SIZE_MIN + '〜' + MAP_SIZE_MAX + ' の整数');
+        }
+        if (!isIntInRange(sizeY, MAP_SIZE_MIN, MAP_SIZE_MAX)) {
+            errors.push('map の height は ' + MAP_SIZE_MIN + '〜' + MAP_SIZE_MAX + ' の整数');
+        }
+        if (!isIntInRange(turnMax, TURN_MIN, TURN_MAX)) {
+            errors.push('map の turnMax は ' + TURN_MIN + '〜' + TURN_MAX + ' の整数');
+        }
+
+        // legend: 省略可(省略時は既定の . # * を使う)。指定する場合は1文字キー -> floor/block/item のみ。
+        const legend = (map.legend === undefined) ? map_format.DEFAULT_LEGEND : map.legend;
+        let legendValid = legend !== null && typeof legend === 'object' && !Array.isArray(legend);
+        if (legendValid) {
+            for (const sym in legend) {
+                if (typeof sym !== 'string' || sym.length !== 1 || !CELL_TYPE_ALLOWED.has(legend[sym])) {
+                    legendValid = false;
+                    break;
+                }
+            }
+        }
+        if (!legendValid) {
+            errors.push('map の legend は「1文字 -> floor/block/item」の形式で指定してください');
+        }
+
+        // rows: legendValid の場合のみ意味のある検証ができる
+        if (legendValid && !errors.length) {
+            if (!Array.isArray(map.rows) || map.rows.length !== sizeY) {
+                errors.push('map の rows の行数が height と一致しません');
+            }
+            else {
+                let rowError = false;
+                for (let y = 0; y < map.rows.length && !rowError; y++) {
+                    const rowStr = map.rows[y];
+                    if (typeof rowStr !== 'string' || rowStr.length !== sizeX) {
+                        errors.push('map の rows の行の文字数が width と一致しません');
+                        rowError = true;
+                        break;
+                    }
+                    for (let x = 0; x < rowStr.length; x++) {
+                        if (!(rowStr[x] in legend)) {
+                            errors.push('map の rows に legend で定義されていない文字が含まれています');
+                            rowError = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!errors.length) {
+            const parsed = map_format.parseMap(map);
+
+            const inBounds = function (pos) {
+                return !!pos && isIntInRange(pos.x, 0, sizeX - 1) && isIntInRange(pos.y, 0, sizeY - 1);
+            };
+            // 範囲外のまま床判定に進むと rows への添字アクセスがクラッシュするため、
+            // 範囲内であることを確認できた場合のみ床判定を行う。
+            const isOnFloor = function (pos) {
+                return inBounds(pos) && legend[map.rows[pos.y][pos.x]] === 'floor';
+            };
+
+            if (map.cool !== undefined) {
+                if (!inBounds(parsed.coolPos)) {
+                    errors.push('map の cool が盤面の範囲外です');
+                } else if (!isOnFloor(parsed.coolPos)) {
+                    errors.push('map の cool が床以外のマス(壁・アイテム)の上にあります');
+                }
+            }
+            if (map.hot !== undefined) {
+                if (!inBounds(parsed.hotPos)) {
+                    errors.push('map の hot が盤面の範囲外です');
+                } else if (!isOnFloor(parsed.hotPos)) {
+                    errors.push('map の hot が床以外のマス(壁・アイテム)の上にあります');
+                }
+            }
+            if (parsed.coolPos && parsed.hotPos && parsed.coolPos.x === parsed.hotPos.x && parsed.coolPos.y === parsed.hotPos.y) {
+                errors.push('map の cool と hot が同じマスになっています');
+            }
+
+            if (!errors.length) {
+                mapOut = map_format.serializeMap({
+                    name: name,
+                    sizeX: sizeX,
+                    sizeY: sizeY,
+                    turnMax: turnMax,
+                    cells: parsed.cells,
+                    coolPos: parsed.coolPos,
+                    hotPos: parsed.hotPos
+                });
+            }
+        }
+    }
+    else {
+        if (!isIntInRange(input.map_size_x, MAP_SIZE_MIN, MAP_SIZE_MAX)) {
+            errors.push('map_size_x は ' + MAP_SIZE_MIN + '〜' + MAP_SIZE_MAX + ' の整数');
+        }
+        if (!isIntInRange(input.map_size_y, MAP_SIZE_MIN, MAP_SIZE_MAX)) {
+            errors.push('map_size_y は ' + MAP_SIZE_MIN + '〜' + MAP_SIZE_MAX + ' の整数');
+        }
+        if (!isIntInRange(input.turn, TURN_MIN, TURN_MAX)) {
+            errors.push('turn は ' + TURN_MIN + '〜' + TURN_MAX + ' の整数');
+        }
+        sizeX = input.map_size_x;
+        sizeY = input.map_size_y;
+        turnMax = input.turn;
     }
 
     // ここまでで寸法が確定していない場合、これ以降の検証は意味を成さないため打ち切る
@@ -74,56 +190,14 @@ function validateRoom(input) {
         return { ok: false, errors: errors };
     }
 
-    const sizeX = input.map_size_x;
-    const sizeY = input.map_size_y;
     const cellCount = sizeX * sizeY;
 
-    // auto_symmetry
-    if (input.auto_symmetry !== undefined && typeof input.auto_symmetry !== 'boolean') {
-        errors.push('auto_symmetry は true / false で指定してください');
-    }
-
-    // map_data (省略時は空配列 = サーバー側で自動生成)
-    let mapData = [];
-    if (input.map_data !== undefined && input.map_data !== null) {
-        if (!Array.isArray(input.map_data)) {
-            errors.push('map_data は配列で指定してください');
-        }
-        else if (input.map_data.length > 0) {
-            if (input.map_data.length !== sizeY) {
-                errors.push('map_data の行数が map_size_y と一致しません');
-            }
-            else {
-                // 全行を検証する。先頭行だけの確認では行ごとの長さ不一致を見逃す
-                let rowError = false;
-                for (let y = 0; y < input.map_data.length && !rowError; y++) {
-                    const row = input.map_data[y];
-                    if (!Array.isArray(row) || row.length !== sizeX) {
-                        errors.push('map_data の列数が map_size_x と一致しません');
-                        rowError = true;
-                        break;
-                    }
-                    for (let x = 0; x < row.length; x++) {
-                        if (!isIntInRange(row[x], CELL_MIN, CELL_MAX)) {
-                            errors.push('map_data には ' + CELL_MIN + '〜' + CELL_MAX + ' の整数のみ指定できます');
-                            rowError = true;
-                            break;
-                        }
-                    }
-                }
-                if (!rowError) {
-                    mapData = input.map_data;
-                }
-            }
-        }
-    }
-
     // auto_block / auto_point (未指定なら既定値)。
-    // map_data を渡さなかった場合のみサーバー側で自動生成が走るため、
+    // map を渡さなかった場合のみサーバー側で自動生成が走るため、
     // そのときだけマス数を上限とする。マス数を超える指定は生成時に配置先を使い果たす。
     const autoBlock = (input.auto_block === undefined || input.auto_block === null) ? 20 : input.auto_block;
     const autoPoint = (input.auto_point === undefined || input.auto_point === null) ? 30 : input.auto_point;
-    const autoMax = mapData.length ? Number.MAX_SAFE_INTEGER : cellCount;
+    const autoMax = hasMap ? Number.MAX_SAFE_INTEGER : cellCount;
 
     if (!isIntInRange(autoBlock, 0, autoMax)) {
         errors.push('auto_block は 0〜' + autoMax + ' の整数');
@@ -138,19 +212,23 @@ function validateRoom(input) {
 
     // 検証を通った項目だけを組み直して返す。入力オブジェクトをそのまま使うと
     // 未知のキー (内部状態を上書きしうるもの) が混入するため、明示的に列挙する
-    return {
-        ok: true,
-        value: {
-            name: name,
-            map_size_x: sizeX,
-            map_size_y: sizeY,
-            map_data: mapData,
-            auto_block: autoBlock,
-            auto_point: autoPoint,
-            auto_symmetry: input.auto_symmetry === true,
-            turn: input.turn
-        }
+    const value = {
+        name: name,
+        auto_block: autoBlock,
+        auto_point: autoPoint,
+        auto_symmetry: input.auto_symmetry === true
     };
+    if (hasMap) {
+        value.map = mapOut;
+    }
+    else {
+        value.map_size_x = sizeX;
+        value.map_size_y = sizeY;
+        value.map_data = [];
+        value.turn = turnMax;
+    }
+
+    return { ok: true, value: value };
 }
 
 module.exports = {

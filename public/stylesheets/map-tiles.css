@@ -1,0 +1,13 @@
+/* 対戦モード(map-editor.css)・Python版(python-programming.css)の両マップエディタで
+   共有するタイル画像定義。背景色・アウトラインなど各画面固有の装飾は各CSSファイル側に残す。 */
+
+.map-edit-cell {
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.map-edit-cell.floor   { background-image: url(/images/field.png); }
+.map-edit-cell.block   { background-image: url(/images/wall.png);  }
+.map-edit-cell.item    { background-image: url(/images/hart.png);  }
+.map-edit-cell.player0 { background-image: url(/images/cool.png);  }
+.map-edit-cell.player1 { background-image: url(/images/hot.png);   }
