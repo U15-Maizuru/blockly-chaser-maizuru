@@ -5,6 +5,27 @@ const config_load = require('../tool/config_data_load');
 const { create } = require('domain');
 const config = require('../config/config.js');
 const json_dir_load = require('../tool/json_dir_load');
+const map_format = require('../public/javascripts/map_format.js');
+
+// map (行文字列グリッドJSON) を持つエントリを、既存コードが期待する
+// map_data(2D配列)/map_size_x/map_size_y/turn/cool.x,y/hot.x,y の形状に展開する。
+// map を持たないエントリ(map_data:[]の手続き生成ルーム)はそのまま素通しする。
+const materialize_map = function (entry) {
+  if (!entry.map) return entry;
+
+  var parsed = map_format.parseMap(entry.map);
+  entry.map_size_x = parsed.sizeX;
+  entry.map_size_y = parsed.sizeY;
+  entry.turn = parsed.turnMax;
+  entry.map_data = map_format.bakeMapData(parsed.cells, parsed.coolPos, parsed.hotPos);
+
+  var coolXY = parsed.coolPos ? { x: parsed.coolPos.x, y: parsed.coolPos.y } : { x: -1, y: -1 };
+  var hotXY = parsed.hotPos ? { x: parsed.hotPos.x, y: parsed.hotPos.y } : { x: -1, y: -1 };
+  entry.cool = Object.assign({}, entry.cool, coolXY);
+  entry.hot = Object.assign({}, entry.hot, hotXY);
+
+  return entry;
+};
 
 var mode_path = config_load.electron_conf_load();
 
@@ -26,7 +47,7 @@ const init = async function () {
   var game_server_dir = path.join(__dirname, mode_path, '..', 'load_data', 'game_server_data');
   var loaded = json_dir_load.loadDirAsMap(game_server_dir, JSON.parse, (parsed) => parsed.room_id, 'game server data');
   for (var room_id in loaded) {
-    var temp_game_server = loaded[room_id];
+    var temp_game_server = materialize_map(loaded[room_id]);
     game_server[room_id] = temp_game_server;
     if (!temp_game_server.cpu){
       join_list.push(["VS: " + temp_game_server.name, temp_game_server.room_id]);
@@ -82,6 +103,7 @@ const create_new_map = async function(json){
             }
         }
         temp_game_server.delete_time = Date.now() + 1000 * 60 * config.deleteRoomTime;
+        materialize_map(temp_game_server);
         game_server[temp_game_server.room_id] = temp_game_server;
         join_list.push([temp_game_server.name, temp_game_server.room_id]);
         additional_game_server.push(temp_game_server);
@@ -170,8 +192,8 @@ const create_map = function (key) {
   game_server[key].hot.x = hx;
   game_server[key].hot.y = hy;
 
-  game_server[key].map_data[cy][cx] = 3;
-  game_server[key].map_data[hy][hx] = 4;
+  game_server[key].map_data[cy][cx] = 4;
+  game_server[key].map_data[hy][hx] = 5;
 
 
   if (game_server[key].auto_symmetry) {
@@ -210,7 +232,7 @@ const create_map = function (key) {
         game_server[key].auto_block -= 1;
       }
     }
-    game_server[key].map_data[ty][tx] = 2;
+    game_server[key].map_data[ty][tx] = 3;
     game_server[key].auto_point -= 1;
   }
   else {
@@ -239,9 +261,9 @@ const create_map = function (key) {
       px = selectable_list[pxy][0];
       py = selectable_list[pxy][1];
 
-      game_server[key].map_data[py][px] = 2;
+      game_server[key].map_data[py][px] = 3;
       if (isMirrorInside(px, py)) {
-        game_server[key].map_data[ty + (ty - py)][tx + (tx - px)] = 2;
+        game_server[key].map_data[ty + (ty - py)][tx + (tx - px)] = 3;
       }
 
       selectable_list.splice(pxy, 1);
@@ -255,7 +277,7 @@ const create_map = function (key) {
       px = selectable_list[pxy][0];
       py = selectable_list[pxy][1];
 
-      game_server[key].map_data[py][px] = 2;
+      game_server[key].map_data[py][px] = 3;
 
       selectable_list.splice(pxy, 1);
     }
@@ -285,9 +307,9 @@ const create_map = function (key) {
       bx = selectable_list[bxy][0];
       by = selectable_list[bxy][1];
 
-      game_server[key].map_data[by][bx] = 1;
+      game_server[key].map_data[by][bx] = 2;
       if (isMirrorInside(bx, by)) {
-        game_server[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 1;
+        game_server[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 2;
       }
 
       selectable_list.splice(bxy, 1);
@@ -301,7 +323,7 @@ const create_map = function (key) {
       bx = selectable_list[bxy][0];
       by = selectable_list[bxy][1];
 
-      game_server[key].map_data[by][bx] = 1;
+      game_server[key].map_data[by][bx] = 2;
 
       selectable_list.splice(bxy, 1);
     }
@@ -330,7 +352,7 @@ const player_spon = function (key) {
   server_store[key].cool.x = s_x;
   server_store[key].cool.y = s_y;
 
-  server_store[key].map_data[s_y][s_x] = 3;
+  server_store[key].map_data[s_y][s_x] = 4;
 
 
   if (server_store[key].auto_symmetry) {
@@ -358,7 +380,7 @@ const player_spon = function (key) {
     server_store[key].hot.y = s_y;
   }
 
-  server_store[key].map_data[s_y][s_x] = 4;
+  server_store[key].map_data[s_y][s_x] = 5;
 }
 
 const load = function (room = false) {

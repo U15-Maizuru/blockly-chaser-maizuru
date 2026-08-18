@@ -64,66 +64,11 @@ function makeTable(msg, y, effect, tableId) {
         c.parentNode.removeChild(c);
     }
 
-    var rows = [];
-    var table = document.createElement("table");
-    table.setAttribute("id", "game_board_table");
-
-    c = document.getElementById("game_board_table");
-    if (c) {
-        c.parentNode.removeChild(c);
-    }
-
     var _y = (450 - (4 * y)) / y;
-    _y = _y.toString();
 
-    var cx = false, cy = false, hx = false, hy = false;
-
-    for (i = 0; i < data.length; i++) {
-        rows.push(table.insertRow(-1));
-        for (j = 0; j < data[0].length; j++) {
-            cell = rows[i].insertCell(-1);
-
-            if (data[i][j] == 0) {
-                cell.classList.add("field_img");
-            }
-            else if (data[i][j] == 1) {
-                cell.classList.add("wall_img");
-            }
-            else if (data[i][j] == 2) {
-                cell.classList.add("hart_img");
-            }
-            else if (data[i][j] == 3) {
-                cell.classList.add("cool_img");
-                cx = j;
-                cy = i;
-            }
-            else if (data[i][j] == 4) {
-                cell.classList.add("hot_img");
-                hx = j;
-                hy = i;
-            }
-            else if (data[i][j] == 34) {
-                cell.classList.add("ch_img");
-                cx = j;
-                cy = i;
-                hx = j;
-                hy = i;
-            }
-            else if (data[i][j] == 43) {
-                cell.classList.add("hc_img");
-                cx = j;
-                cy = i;
-                hx = j;
-                hy = i;
-            }
-
-            //cell.appendChild(document.createTextNode(data[i][j]));
-
-            cell.style.height = _y + "px";
-            cell.style.width = _y + "px";
-
-        }
-    }
+    var built = GAME_DISPLAY.renderBoard(tableId, data, { cellSize: _y });
+    var table = built.table;
+    var cx = built.cx, cy = built.cy, hx = built.hx, hy = built.hy;
 
     var x_range = [];
     var y_range = [];
@@ -194,73 +139,14 @@ function makeTable(msg, y, effect, tableId) {
         }
     }
 
-    var odiv = document.createElement("div");
-    odiv.setAttribute("id", "game_info_div");
-
-    c = document.getElementById("game_info_div");
-    if (c) {
-        c.parentNode.removeChild(c);
-    }
-
-
-    var cdiv = document.createElement("div");
-    cdiv.setAttribute("id", "cool_info_div");
-
-    var cndiv = document.createElement("div");
-    cndiv.setAttribute("id", "cool_name");
-    var newContent = document.createTextNode(c_name);
-    cndiv.appendChild(newContent);
-
-    var csdiv = document.createElement("div");
-    csdiv.setAttribute("id", "cool_score");
-    newContent = document.createTextNode(msg.cool_score);
-    csdiv.appendChild(newContent);
-
-    cdiv.appendChild(cndiv);
-    cdiv.appendChild(csdiv);
-
-
-    var turndiv = document.createElement("div");
-    turndiv.setAttribute("id", "turn_div");
-
-    var tturn = document.createElement("div");
-    tturn.setAttribute("id", "turn_title");
-    newContent = document.createTextNode("残りターン数");
-    tturn.appendChild(newContent);
-
-    var nturn = document.createElement("div");
-    nturn.setAttribute("id", "turn_n");
-    newContent = document.createTextNode(msg.turn);
-    nturn.appendChild(newContent);
-
-    turndiv.appendChild(tturn);
-    turndiv.appendChild(nturn);
-
-
-    var hdiv = document.createElement("div");
-    hdiv.setAttribute("id", "hot_info_div");
-
-    var hndiv = document.createElement("div");
-    hndiv.setAttribute("id", "hot_name");
-    var newContent = document.createTextNode(h_name);
-    hndiv.appendChild(newContent);
-
-    var hsdiv = document.createElement("div");
-    hsdiv.setAttribute("id", "hot_score");
-    newContent = document.createTextNode(msg.hot_score);
-    hsdiv.appendChild(newContent);
-
-    hdiv.appendChild(hndiv);
-    hdiv.appendChild(hsdiv);
-
-
-    odiv.appendChild(cdiv);
-    odiv.appendChild(turndiv);
-    odiv.appendChild(hdiv);
-
-
-    document.getElementById(tableId).appendChild(table);
-    document.getElementById("game_info").appendChild(odiv);
+    GAME_DISPLAY.renderInfoPanel("game_info", {
+        turn: msg.turn,
+        coolName: c_name,
+        coolScore: msg.cool_score,
+        hotName: h_name,
+        hotScore: msg.hot_score,
+        itemCount: built.itemCount
+    });
 }
 
 var Sound_Volume = 0.5;

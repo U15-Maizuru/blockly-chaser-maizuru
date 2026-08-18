@@ -55,6 +55,22 @@
     outline: none;
 }
 
+#btn_resize {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #88d9ce;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #215c57;
+    cursor: pointer;
+}
+
 /* ─── メイン：グリッド（左）＋コントロール（右） ─── */
 #editor_main {
     flex: 1;
@@ -67,8 +83,9 @@
 
 /* ─── グリッド：高さ・幅どちらかが制約になる大きさで自動調整 ─── */
 /*
- * 高さ制約: (100vh - 220px) / 17  ← header60 + settings48 + padding32 + gap10 + gridPad20 + border50
- * 幅制約:   (100vw - 610px) / 15  ← areaPad64 + gap24 + controls420(border-box) + gridPad20 + border46 + 36
+ * --cols/--rows は map_grid_ui.js の render() が実際のマップサイズに合わせて設定する。
+ * 高さ制約: (100vh - 220px) / rows  ← header60 + settings48 + padding32 + gap10 + gridPad20 + border50
+ * 幅制約:   (100vw - 610px) / cols  ← areaPad64 + gap24 + controls420(border-box) + gridPad20 + border46 + 36
  *   ※ controls は box-sizing:border-box で padding 込み 420px
  */
 #editor_grid_wrap {
@@ -82,25 +99,16 @@
 }
 
 #editor_grid {
-    border-collapse: separate;
-    border-spacing: 1px;
+    --map-cell-size: min(calc((100vh - 220px) / var(--rows, 17)), calc((100vw - 610px) / var(--cols, 15)));
+    display: grid;
+    gap: 1px;
 }
 
-#editor_grid td {
-    width:  min(calc((100vh - 220px) / 17), calc((100vw - 610px) / 15));
-    height: min(calc((100vh - 220px) / 17), calc((100vw - 610px) / 15));
-    padding: 0;
+#editor_grid .map-edit-cell {
     border: 1px solid rgba(100, 200, 190, 0.3);
     cursor: crosshair;
-    background-size: cover;
-    background-repeat: no-repeat;
+    box-sizing: border-box;
 }
-
-#editor_grid .field_img { background-image: url(/images/field.png); }
-#editor_grid .wall_img  { background-image: url(/images/wall.png);  }
-#editor_grid .hart_img  { background-image: url(/images/hart.png);  }
-#editor_grid .cool_img  { background-image: url(/images/cool.png);  }
-#editor_grid .hot_img   { background-image: url(/images/hot.png);   }
 
 /* ─── コントロールパネル（右カラム・固定幅） ─── */
 #editor_controls {
@@ -128,9 +136,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
     min-height: var(--bc-touch-min);
-    padding: 10px 0;
-    font-size: 13px;
+    padding: 8px 2px;
+    font-size: 11px;
+    line-height: 1.2;
     font-weight: bold;
     color: #215c57;
     background: rgba(255, 255, 255, 0.9);
@@ -198,7 +208,8 @@
     font-size: 13px;
 }
 
-#btn_clear {
+#btn_clear,
+#btn_random {
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;

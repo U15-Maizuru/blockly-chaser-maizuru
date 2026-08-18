@@ -28,8 +28,9 @@ var server_store = JSON.parse(JSON.stringify(game_server));
 var room_info = {};
 
 // map_data 上でのキャラクター種別の数値表現（自陣営 / 相手陣営）
-const CHARA_NUM = { "cool": 3, "hot": 4 };
-const CHARA_NUM_DIFF = { "cool": 4, "hot": 3 };
+// Python-CHaser-Web 準拠の数値体系: floor=0, block=2, item=3, cool=4, hot=5
+const CHARA_NUM = { "cool": 4, "hot": 5 };
+const CHARA_NUM_DIFF = { "cool": 5, "hot": 4 };
 
 //create_map
 function create_map(key) {
@@ -91,8 +92,8 @@ function create_map(key) {
     server_store[key].hot.x = hx;
     server_store[key].hot.y = hy;
 
-    server_store[key].map_data[cy][cx] = 3;
-    server_store[key].map_data[hy][hx] = 4;
+    server_store[key].map_data[cy][cx] = CHARA_NUM.cool;
+    server_store[key].map_data[hy][hx] = CHARA_NUM.hot;
 
 
     if (server_store[key].auto_symmetry) {
@@ -131,7 +132,7 @@ function create_map(key) {
                 server_store[key].auto_block -= 1;
             }
         }
-        server_store[key].map_data[ty][tx] = 2;
+        server_store[key].map_data[ty][tx] = 3;
         server_store[key].auto_point -= 1;
     }
     else {
@@ -160,9 +161,9 @@ function create_map(key) {
             px = selectable_list[pxy][0];
             py = selectable_list[pxy][1];
 
-            server_store[key].map_data[py][px] = 2;
+            server_store[key].map_data[py][px] = 3;
             if (isMirrorInside(px, py)) {
-                server_store[key].map_data[ty + (ty - py)][tx + (tx - px)] = 2;
+                server_store[key].map_data[ty + (ty - py)][tx + (tx - px)] = 3;
             }
 
             selectable_list.splice(pxy, 1);
@@ -176,7 +177,7 @@ function create_map(key) {
             px = selectable_list[pxy][0];
             py = selectable_list[pxy][1];
 
-            server_store[key].map_data[py][px] = 2;
+            server_store[key].map_data[py][px] = 3;
 
             selectable_list.splice(pxy, 1);
         }
@@ -206,9 +207,9 @@ function create_map(key) {
             bx = selectable_list[bxy][0];
             by = selectable_list[bxy][1];
 
-            server_store[key].map_data[by][bx] = 1;
+            server_store[key].map_data[by][bx] = 2;
             if (isMirrorInside(bx, by)) {
-                server_store[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 1;
+                server_store[key].map_data[ty + (ty - by)][tx + (tx - bx)] = 2;
             }
 
             selectable_list.splice(bxy, 1);
@@ -222,7 +223,7 @@ function create_map(key) {
             bx = selectable_list[bxy][0];
             by = selectable_list[bxy][1];
 
-            server_store[key].map_data[by][bx] = 1;
+            server_store[key].map_data[by][bx] = 2;
 
             selectable_list.splice(bxy, 1);
         }
@@ -262,7 +263,7 @@ function player_spon(key) {
     server_store[key].cool.x = s_x;
     server_store[key].cool.y = s_y;
 
-    server_store[key].map_data[s_y][s_x] = 3;
+    server_store[key].map_data[s_y][s_x] = CHARA_NUM.cool;
 
 
     if (server_store[key].auto_symmetry) {
@@ -290,7 +291,7 @@ function player_spon(key) {
         server_store[key].hot.y = s_y;
     }
 
-    server_store[key].map_data[s_y][s_x] = 4;
+    server_store[key].map_data[s_y][s_x] = CHARA_NUM.hot;
 }
 
 
@@ -354,11 +355,11 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
                 var rhx = server_store[room].hot.x;
                 var rhy = server_store[room].hot.y;
 
-                if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3 && server_store[room].map_data[rhy][rhx] != 4) {
+                if (server_store[room].map_data[rcy][rcx] != 45 && server_store[room].map_data[rcy][rcx] != CHARA_NUM.cool && server_store[room].map_data[rhy][rhx] != CHARA_NUM.hot) {
                     winner = "draw";
                     winner_info = "アタックにより";
                 }
-                else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rcy][rcx] != 3) {
+                else if (server_store[room].map_data[rcy][rcx] != 45 && server_store[room].map_data[rcy][rcx] != CHARA_NUM.cool) {
                     winner = "hot";
                     if (winner_info) {
                         winner_info = "アタックにより";
@@ -367,7 +368,7 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
                         winner_info = "ブロック衝突により";
                     }
                 }
-                else if (server_store[room].map_data[rcy][rcx] != 34 && server_store[room].map_data[rhy][rhx] != 4) {
+                else if (server_store[room].map_data[rcy][rcx] != 45 && server_store[room].map_data[rhy][rhx] != CHARA_NUM.hot) {
                     winner = "cool";
                     if (winner_info) {
                         winner_info = "アタックにより";
@@ -378,14 +379,15 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
                 }
                 else {
                     var c_t, c_b, c_r, c_l, h_t, h_b, h_r, h_l;
+                    var WALL = 2; // 範囲外は壁扱いにするためのセンチネル (Block のコードと同じ)
 
                     if (rcx - 1 < 0) {
-                        c_l = 1;
+                        c_l = WALL;
                         c_r = server_store[room].map_data[rcy][rcx + 1];
                     }
                     else if (rcx + 1 > server_store[room].map_size_x - 1) {
                         c_l = server_store[room].map_data[rcy][rcx - 1];
-                        c_r = 1;
+                        c_r = WALL;
                     }
                     else {
                         c_l = server_store[room].map_data[rcy][rcx - 1];
@@ -393,12 +395,12 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
                     }
 
                     if (rcy - 1 < 0) {
-                        c_t = 1;
+                        c_t = WALL;
                         c_b = server_store[room].map_data[rcy + 1][rcx];
                     }
                     else if (rcy + 1 > server_store[room].map_size_y - 1) {
                         c_t = server_store[room].map_data[rcy - 1][rcx];
-                        c_b = 1;
+                        c_b = WALL;
                     }
                     else {
                         c_t = server_store[room].map_data[rcy - 1][rcx];
@@ -407,12 +409,12 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
 
 
                     if (rhx - 1 < 0) {
-                        h_l = 1;
+                        h_l = WALL;
                         h_r = server_store[room].map_data[rhy][rhx + 1];
                     }
                     else if (rhx + 1 > server_store[room].map_size_x - 1) {
                         h_l = server_store[room].map_data[rhy][rhx - 1];
-                        h_r = 1;
+                        h_r = WALL;
                     }
                     else {
                         h_l = server_store[room].map_data[rhy][rhx - 1];
@@ -420,12 +422,12 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
                     }
 
                     if (rhy - 1 < 0) {
-                        h_t = 1;
+                        h_t = WALL;
                         h_b = server_store[room].map_data[rhy + 1][rhx];
                     }
                     else if (rhy + 1 > server_store[room].map_size_y - 1) {
                         h_t = server_store[room].map_data[rhy - 1][rhx];
-                        h_b = 1;
+                        h_b = WALL;
                     }
                     else {
                         h_t = server_store[room].map_data[rhy - 1][rhx];
@@ -433,17 +435,17 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
                     }
 
 
-                    if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1) {
+                    if (c_t == WALL && c_b == WALL && c_r == WALL && c_l == WALL) {
                         winner = "hot";
                         winner_info = "ブロック閉じ込めにより";
                     }
 
-                    if (h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
+                    if (h_t == WALL && h_b == WALL && h_r == WALL && h_l == WALL) {
                         winner = "cool";
                         winner_info = "ブロック閉じ込めにより";
                     }
 
-                    if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1 && h_t == 1 && h_b == 1 && h_r == 1 && h_l == 1) {
+                    if (c_t == WALL && c_b == WALL && c_r == WALL && c_l == WALL && h_t == WALL && h_b == WALL && h_r == WALL && h_l == WALL) {
                         winner = "draw";
                         winner_info = "ブロック閉じ込めにより";
                     }
@@ -521,84 +523,14 @@ function get_ready(room, chara, id = false) {
         return;
     }
     if (server_store[room][chara].turn && server_store[room][chara].getready) {
-        var my_map_data = [];
         var tmp_map_data = Array.from(server_store[room].map_data);
         var now_x = server_store[room][chara].x;
         var now_y = server_store[room][chara].y;
         var load_map_size_x = server_store[room].map_size_x;
         var load_map_size_y = server_store[room].map_size_y;
 
+        var my_map_data = scanCells(tmp_map_data, now_x, now_y, [-1, 0, 1], [-1, 0, 1], load_map_size_x, load_map_size_y, CHARA_NUM[chara], CHARA_NUM_DIFF[chara]);
 
-        for (var y of [-1, 0, 1]) {
-            if (0 > (now_y + y) || (load_map_size_y - 1) < (now_y + y)) {
-                for (var x of [-1, 0, 1]) {
-                    my_map_data.push(2);
-                }
-            }
-            else {
-                for (var x of [-1, 0, 1]) {
-                    if (0 > (now_x + x) || (load_map_size_x - 1) < (now_x + x)) {
-                        my_map_data.push(2);
-                    }
-                    else {
-                        if (tmp_map_data[now_y][now_x] == 3) {
-                            if (tmp_map_data[now_y + y][now_x + x] == 3) {
-                                my_map_data.push(0);
-                            }
-                            else if (tmp_map_data[now_y + y][now_x + x] == 4) {
-                                my_map_data.push(1);
-                            }
-                            else {
-                                if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                                    my_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                                }
-                                else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                                    my_map_data.push(2);
-                                }
-                                else {
-                                    my_map_data.push(3);
-                                }
-                            }
-                        }
-                        else if (tmp_map_data[now_y][now_x] == 4) {
-                            if (tmp_map_data[now_y + y][now_x + x] == 3) {
-                                my_map_data.push(1);
-                            }
-                            else if (tmp_map_data[now_y + y][now_x + x] == 4) {
-                                my_map_data.push(0);
-                            }
-                            else {
-                                if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                                    my_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                                }
-                                else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                                    my_map_data.push(2);
-                                }
-                                else {
-                                    my_map_data.push(3);
-                                }
-                            }
-                        }
-                        else {
-                            if (tmp_map_data[now_y + y][now_x + x] == 43 || tmp_map_data[now_y + y][now_x + x] == 34) {
-                                my_map_data.push(1);
-                            }
-                            else {
-                                if (tmp_map_data[now_y + y][now_x + x] == 0) {
-                                    my_map_data.push(tmp_map_data[now_y + y][now_x + x]);
-                                }
-                                else if (tmp_map_data[now_y + y][now_x + x] == 1) {
-                                    my_map_data.push(2);
-                                }
-                                else {
-                                    my_map_data.push(3);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
         if (id) {
             io.to(id).emit(SOCKET_EVENTS.GET_READY_REC, {
                 "rec_data": my_map_data
@@ -638,7 +570,7 @@ function move_player(room, chara, msg, id = false) {
 
         var move_map_data = [];
 
-        if (server_store[room].map_data[y][x] == 34) {
+        if (server_store[room].map_data[y][x] == 45) {
             server_store[room].map_data[y][x] = CHARA_NUM_DIFF[chara];
         }
         else {
@@ -678,26 +610,26 @@ function move_player(room, chara, msg, id = false) {
             if (server_store[room].map_data[y][x] == 0) {
                 server_store[room].map_data[y][x] = CHARA_NUM[chara];
             }
-            else if (server_store[room].map_data[y][x] == 2) {
+            else if (server_store[room].map_data[y][x] == 3) {
                 server_store[room].map_data[y][x] = CHARA_NUM[chara];
                 server_store[room][chara].score += 1;
 
                 if (msg === "top") {
-                    server_store[room].map_data[y + 1][x] = 1;
+                    server_store[room].map_data[y + 1][x] = 2;
                 }
                 else if (msg === "bottom") {
-                    server_store[room].map_data[y - 1][x] = 1;
+                    server_store[room].map_data[y - 1][x] = 2;
                 }
                 else if (msg === "left") {
-                    server_store[room].map_data[y][x + 1] = 1;
+                    server_store[room].map_data[y][x + 1] = 2;
                 }
                 else {
-                    server_store[room].map_data[y][x - 1] = 1;
+                    server_store[room].map_data[y][x - 1] = 2;
                 }
 
             }
             else if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
-                server_store[room].map_data[y][x] = 34;
+                server_store[room].map_data[y][x] = 45;
             }
 
             var tmp_map_data = Array.from(server_store[room].map_data);
@@ -875,7 +807,7 @@ function put_wall(room, chara, msg, id = false) {
             if (server_store[room].map_data[y][x] == CHARA_NUM_DIFF[chara]) {
                 player_put_chara = true;
             }
-            server_store[room].map_data[y][x] = 1;
+            server_store[room].map_data[y][x] = 2;
         }
 
         var tmp_map_data = Array.from(server_store[room].map_data);
