@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
+  <title>Python CHaser Match</title>
+  <link rel="icon" href="/images/favicon.ico">
+  <link rel='stylesheet' href='/stylesheets/tokens.css' />
+  <link rel='stylesheet' href='/stylesheets/match-player.css' />
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/javascripts/socket_events.js"></script>
+  <script src="/javascripts/game_display.js"></script>
+</head>
+
+<body>
+  <div class="uploadButton" id="uploadWidget">
+    <div class="uploadButton_text">ファイルを選択</div>
+    <input id="py_input" type="file" accept=".py"
+      onchange="uv.style.display='inline-block'; uv.value=this.value;" />
+    <input type="text" id="uv" class="uploadValue" disabled />
+  </div>
+  <div id="statusLine" class="status_line"></div>
+
+  <!-- CodeMirrorのバインド先として必要だが、対戦モードでは常に非表示 -->
+  <div id="editor-player" class="none_content">
+    <textarea id="editor"></textarea>
+  </div>
+
+  <script src="/javascripts/vendor/codemirror/lib/codemirror.js"></script>
+  <script src="/javascripts/vendor/codemirror/mode/python/python.js"></script>
+  <script src="/javascripts/vendor/codemirror/addon/edit/matchbrackets.js"></script>
+  <script src="/javascripts/vendor/pyodide/pyodide.js"></script>
+  <script src="/javascripts/python/python-editor-core.js"></script>
+  <script src="/javascripts/python/py-bridge.js"></script>
+  <script src="/javascripts/python/runner-shared.js"></script>
+  <script src="/javascripts/python/net-runner.js"></script>
+  <script>
+    // アンビエントなルームコンテキスト(URLクエリ)。B-1'参照:
+    // Client(port,name,host)の呼び出しは一切書き換えず、port/hostは実際の
+    // 接続先としては使わない。どの部屋に参加するかはこのページのURLが
+    // 既に把握している。
+    var query_list = {};
+    location.search.replace('?', '').split('&').forEach(function (kv) {
+      var parts = kv.split('=');
+      if (parts.length === 2) query_list[parts[0]] = decodeURIComponent(parts[1]);
+    });
+
+    var socket = io();
+
+    // Blockly側(match-player.ejs)の「Pythonファイルをアップロード」から引き継いだ
+    // コードがあれば、デフォルトテンプレートの代わりにそれを読み込む(一度使ったら削除)。
+    var pendingCodeKey = 'pending_python_code_' + query_list.room_id + '_' + query_list.chara;
+    var pendingCode = localStorage.getItem(pendingCodeKey);
+    if (pendingCode) localStorage.removeItem(pendingCodeKey);
+
+    var statusLine = document.getElementById('statusLine');
+    function setStatus(text) {
+      if (statusLine) statusLine.textContent = text;
+    }
+
+    var editorCore = PYTHON_EDITOR_CORE.initPythonEditor({
+      hasOpponentTab: false,
+      hasMapTab: false,
+      defaultPlayerCode: pendingCode || NET_RUNNER.DEFAULT_PLAYER_CODE
+    });
+
+    var runner = NET_RUNNER.createNetRunner(editorCore, {
+      socket: socket,
+      joinEvent: SOCKET_EVENTS.PLAYER_JOIN_MATCH,
+      buildJoinPayload: function () {
+        return {
+          room_id: (query_list.room_id && query_list.room_token)
+            ? query_list.room_id + '?' + query_list.room_token
+            : query_list.room_id,
+          name: query_list.name || 'Python',
+          chara: query_list.chara,
+          key: query_list.key
+        };
+      },
+      onJoinedRoom: function () {
+        setStatus('準備完了。試合開始をお待ちください');
+      },
+      onGameOver: function (info) {
+        setStatus(info && info.error ? ('エラー: ' + info.error) : '試合終了');
+      },
+      onRunError: function (err) {
+        setStatus('エラー: ' + (err && err.message ? err.message : String(err)));
+      }
+    });
+
+    // ファイルを選ぶと、Blockly版の「アップロード＝即実行」と同様に
+    // 裏で自動的に実行(参加)を開始する。「実行」ボタンは対戦モードには存在しない。
+    document.getElementById('py_input').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.py')) {
+        setStatus('Pythonファイル(.py)を選択してください');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        editorCore.playerEditor.setValue(e.target.result.toString());
+        setStatus('準備中...');
+        runner.run();
+      };
+      reader.readAsText(file);
+    });
+
+    if (pendingCode) {
+      setStatus('準備中...');
+      runner.run();
+    } else {
+      setStatus('Pythonファイルをアップロードしてください');
+    }
+  </script>
+</body>
+
+</html>
