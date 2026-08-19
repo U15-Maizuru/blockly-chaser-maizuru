@@ -435,30 +435,11 @@ Code.init = function () {
   blocklimit = "";
 
   Code.workspace = Blockly.inject('content_blocks',
-    {
-      grid:
-      {
-        spacing: 25,
-        length: 3,
-        colour: '#ccc',
-        snap: true
-      },
-      media: '/media/',
+    Object.assign({}, BLOCKLY_INJECT_OPTIONS_BASE, {
       maxBlocks: blocklimit,
       toolbox: toolboxXml,
-      trashcan: true,
-      sounds: BlockSound,
-      zoom:
-      {
-        controls: true,
-        wheel: false
-      },
-      move: {
-        scrollbars: true,
-        drag: true,
-        wheel: true
-      }
-    });
+      sounds: BlockSound
+    }));
 
   Code.patchBlocklyScreenToWorkspaceCoordinates_();
   Code.patchScaledPointerEvents_();
@@ -553,6 +534,8 @@ Code.discard = function () {
 // Load the Code demo's language strings.
 document.write('<script src="/javascripts/msg/' + Code.LANG + '.js"></script>\n');
 // Load Blockly's language strings.
-document.write('<script src="/javascripts/blockly/msg/' + Code.LANG + '.js"></script>\n');
+// ja-k (ひらがな表記) は本アプリ独自のバリアントで、Blockly本体のロケールファイルは存在しないため ja を流用する。
+var blocklyMsgLang = (Code.LANG === 'ja-k') ? 'ja' : Code.LANG;
+document.write('<script src="/javascripts/blockly/msg/' + blocklyMsgLang + '.js"></script>\n');
 
 window.addEventListener('load', Code.init);

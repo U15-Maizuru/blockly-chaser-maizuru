@@ -3,13 +3,13 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
   <title>CHaser Tutorial Menu</title>
   <link rel="icon" href="/images/favicon.ico">
+  <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
   <link rel='stylesheet' href='/stylesheets/menu-tutorial.css' />
-
-  <%- include('./common/config-init') %>
 
   <script src="/javascripts/jquery-3.4.1.min.js"></script>
   <script>const lng_list = <%- JSON.stringify(LNG) %>;</script>
@@ -20,21 +20,8 @@
 
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-  <div class="header">
-
-    <div class="back_page">
-      <div class="back_button"><a href="../"></a></div>
-    </div>
-    <div class="control_area">
-      <div class="page_title">
-        <h1><span class="page_title_span">チュートリアル</span><%- title %></h1>
-      </div>
-      <div class="control_button">
-        <button id="configButton" title="<%- LNG[" CONFIG"] %>"></button>
-      </div>
-    </div>
-
-  </div>
+  <% const headerActionsHtml = `<button id="configButton" class="bc-btn-labeled" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}">${LNG["CONFIG"]}</button>`; %>
+  <%- include('./common/header', { backHref: '../', titleSpan: 'チュートリアル', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
   <div id="scale_root">
     <div id="menu_area">

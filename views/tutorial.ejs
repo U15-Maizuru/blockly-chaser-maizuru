@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
   <meta name="google" value="notranslate">
   <title>
     CHaser Tutorial
@@ -32,16 +33,20 @@
 
   <script src="/javascripts/howler.min.js"></script>
 
+  <script src="/javascripts/blockly_inject_options.js"></script>
   <script src="/javascripts/code.js"></script>
   <script src="/javascripts/tutorial_board.js"></script>
 
 
+  <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/blockly.css' />
   <link rel='stylesheet' href='/stylesheets/tutorial.css' />
   <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 
 <body>
+  <%- include('./common/config', {LNG: C_LNG}) %>
+
   <div id="overlay">
     <div id="result_area">
       <div id="result_message_title" class="result_title">ステージクリア！</div>
@@ -53,27 +58,22 @@
     </div>
   </div>
 
-  <div class="header">
-    <div class="back_page">
-      <div class="back_button"><a href="/menu-tutorial"></a></div>
-    </div>
-    <div class="control_area">
-      <div class="page_title">
-        <h1><span class="page_title_span">チュートリアル</span><%- title %></h1>
-      </div>
-      <div class="control_button">
-        <button id="runButton" class="notext" title="実行"></button>
-        <button id="reloadButton" class="notext Button_hidden" title="リセット"></button>
-        <button id="stopButton" class="notext" title="停止"></button>
-        <button id="trashButton" class="notext" title="ブロックをすべて削除"></button>
-        <button id="downloadButton" class="notext" title="保存"></button>
-        <button id="downloadPythonButton" class="notext" title="Pythonで保存"></button>
-        <label for="file_load">
-          <input type="file" accept="application/zip,.blch,.json,.xml" id="file_load" style="display:none;">
-        </label>
-      </div>
-    </div>
-  </div>
+  <%
+    const headerActionsHtml = `
+      <button id="runButton" class="bc-btn-labeled" title="実行" aria-label="実行">実行</button>
+      <button id="reloadButton" class="bc-btn-labeled Button_hidden" title="リセット" aria-label="リセット">リセット</button>
+      <button id="stopButton" class="bc-btn-labeled" title="停止" aria-label="停止">停止</button>
+      <button id="trashButton" class="bc-btn-labeled" title="ブロックをすべて削除" aria-label="ブロックをすべて削除">削除</button>
+      <button id="downloadButton" class="bc-btn-labeled" title="保存" aria-label="保存">保存</button>
+      <button id="downloadPythonButton" class="bc-btn-labeled" title="Pythonで保存" aria-label="Pythonで保存">Python保存</button>
+      <label for="file_load" class="bc-btn-labeled" title="開く" aria-label="開く">
+        開く
+        <input type="file" accept="application/zip,.blch,.json,.xml" id="file_load" style="display:none;">
+      </label>
+      <button id="configButton" class="bc-btn-labeled" title="設定" aria-label="設定">設定</button>
+    `;
+  %>
+  <%- include('./common/header', { backHref: '/menu-tutorial', titleSpan: 'チュートリアル', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
   <div id="scale_root">
     <div id="main_area">
