@@ -1,6 +1,12 @@
 {
     "TUTORIAL_INFO":"まずは練習♪ 基本を学ぼう！",
+    "TUTORIAL_TITLE":"チュートリアル",
     "PROGRAMMING_INFO":"君だけの戦略を作りだそう！",
+    "PROGRAMMING_TITLE":"プログラミング",
+    "PROGRAMMING_BASIC_INFO":"指揮官への入り口",
+    "PROGRAMMING_BASIC_TITLE":"初級編",
+    "PROGRAMMING_EXP_INFO":"更に向こうへ!!",
+    "PROGRAMMING_EXP_TITLE":"上級編",
     "WATCHIING_INFO":"友達の試合を見てみよう！",
     "WATCHIING_TITLE":"観 戦",
     "MATCH_INFO":"友達と試合をしてみよう！",

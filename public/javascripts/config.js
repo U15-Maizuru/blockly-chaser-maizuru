@@ -145,12 +145,23 @@ else {
 
 
 
+// キーボード操作向け：Enter/Spaceでクリックと同じ挙動にする
+function bindKeyboardActivate(el) {
+    el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            el.click();
+        }
+    });
+}
+
 var config_close = document.getElementById('config_close');
 var config_overlay_off = function () {
     document.getElementById('config').classList.remove("overlay_on");
 }
 config_close.addEventListener('click', config_overlay_off, true);
 config_close.addEventListener('touchend', config_overlay_off, true);
+bindKeyboardActivate(config_close);
 
 
 var config_close_back = document.getElementById('config');
@@ -218,6 +229,7 @@ var option_reset = function () {
 }
 option_data_reset.addEventListener('click', option_reset, true);
 option_data_reset.addEventListener('touchend', option_reset, true);
+bindKeyboardActivate(option_data_reset);
 
 
 var tutorial_data_reset = document.getElementById('tutorial_data_reset');
@@ -238,6 +250,7 @@ var tutorial_reset = function () {
 }
 tutorial_data_reset.addEventListener('click', tutorial_reset, true);
 tutorial_data_reset.addEventListener('touchend', tutorial_reset, true);
+bindKeyboardActivate(tutorial_data_reset);
 
 
 var programming_data_reset = document.getElementById('programming_data_reset');
@@ -248,6 +261,7 @@ var programming_reset = function () {
 }
 programming_data_reset.addEventListener('click', programming_reset, true);
 programming_data_reset.addEventListener('touchend', programming_reset, true);
+bindKeyboardActivate(programming_data_reset);
 
 
 //sound_status

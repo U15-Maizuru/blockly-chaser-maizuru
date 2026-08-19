@@ -1,5 +1,5 @@
 body {
-  background: radial-gradient(circle at top left, #e9fbf9 0%, #d0f1f7 35%, #b5ecf1 65%, #ffffff 100%);
+  background: radial-gradient(circle at top left, var(--bc-color-bg-gradient-start) 0%, var(--bc-color-bg-gradient-mid1) 35%, var(--bc-color-bg-gradient-mid2) 65%, var(--bc-color-bg-gradient-end) 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;

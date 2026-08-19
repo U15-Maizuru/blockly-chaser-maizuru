@@ -32,6 +32,9 @@ function renderCards(list, container, get_list) {
     const server_div = document.createElement('div');
     server_div.classList.add(server.room_id);
     server_div.classList.add("watching_server_div");
+    server_div.tabIndex = 0;
+    server_div.setAttribute('role', 'button');
+    server_div.setAttribute('aria-label', server.name.replace("room_onetime_", ""));
 
     const server_name = document.createElement('div');
     server_name.classList.add("server_name");
@@ -47,6 +50,14 @@ function renderCards(list, container, get_list) {
       server_info(serverId, get_list);
       e.stopPropagation();
     };
+
+    // キーボード操作向け：Enter/Spaceでクリックと同じ挙動（選択）にする
+    server_div.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        this.click();
+      }
+    });
 
     one_server_div.appendChild(server_div);
     rowDiv.appendChild(one_server_div);

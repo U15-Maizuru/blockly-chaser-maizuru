@@ -33,7 +33,7 @@
     font-weight: bold;
     color: #ffffff;
     padding: 15px;
-    background: #00a0e6;
+    background: var(--bc-color-primary);
 }
 
 .result_message {

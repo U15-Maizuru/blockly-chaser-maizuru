@@ -1,6 +1,12 @@
 {
     "TUTORIAL_INFO":"まずはれんしゅう♪",
+    "TUTORIAL_TITLE":"チュートリアル",
     "PROGRAMMING_INFO":"きみだけのせんりゃくをつくろう！",
+    "PROGRAMMING_TITLE":"プログラミング",
+    "PROGRAMMING_BASIC_INFO":"しきかんへのいりぐち",
+    "PROGRAMMING_BASIC_TITLE":"しょきゅうへん",
+    "PROGRAMMING_EXP_INFO":"もっとむこうへ!!",
+    "PROGRAMMING_EXP_TITLE":"じょうきゅうへん",
     "WATCHIING_INFO":"ともだちのしあいをみてみよう！",
     "WATCHIING_TITLE":"かんせん",
     "MATCH_INFO":"ともだちとしあいをしてみよう！",

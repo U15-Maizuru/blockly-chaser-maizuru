@@ -63,6 +63,9 @@ function createStageCard(stage, stageList) {
   const stageDiv = document.createElement('div');
   stageDiv.classList.add('stage_div');
   stageDiv.dataset.stageId = stage.stage_id;
+  stageDiv.tabIndex = 0;
+  stageDiv.setAttribute('role', 'button');
+  stageDiv.setAttribute('aria-label', stage.name);
 
   if (stage.level) {
     const stageLevel = document.createElement('div');
@@ -107,6 +110,14 @@ function createStageCard(stage, stageList) {
       window.location.href = '/tutorial?stage=' + encodeURIComponent(this.dataset.stageId);
     }
     e.stopPropagation();
+  });
+
+  // キーボード操作向け：Enter/Spaceでクリックと同じ挙動（選択）にする
+  stageDiv.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      this.click();
+    }
   });
 
   // タブレット向け：ダブルタップ(短時間に2回のタッチ)でステージ開始
