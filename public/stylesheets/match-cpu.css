@@ -4,6 +4,12 @@ body {
     height: 100%;
     padding: 0;
     margin: 0;
+    /*
+     * このページは match.ejs の cool/hot 準備エリアに透明背景のiframeとして
+     * 埋め込まれるため、style.css は読み込まない（背景グラデーションが
+     * 親の色付き背景を覆ってしまうため）。フォントだけ親画面と揃える。
+     */
+    font-family: var(--bc-font-family);
 }
 
 h1 {

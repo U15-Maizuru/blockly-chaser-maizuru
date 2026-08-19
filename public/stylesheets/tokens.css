@@ -1,0 +1,49 @@
+/*
+ * デザイントークン（CSSカスタムプロパティ）
+ * 各CSSファイルに散在していたハードコード値を段階的にここへ集約する。
+ * 値そのものは既存デザイン（パステル系テーマ）から抽出したもので、
+ * このファイル追加単体では見た目は変化しない。
+ */
+:root {
+  /* --- color --- */
+  --bc-color-bg-gradient-start: #e9fbf9;
+  --bc-color-bg-gradient-mid1: #d0f1f7;
+  --bc-color-bg-gradient-mid2: #b5ecf1;
+  --bc-color-bg-gradient-end: #ffffff;
+
+  --bc-color-primary: #00a0e6;       /* cool/blue チーム、実行系ボタンの基調色 */
+  --bc-color-primary-soft: #4dcfd8;
+  --bc-color-danger: #ff2b1e;        /* hot/red チーム */
+  --bc-color-danger-soft: #ff9a56;
+
+  --bc-color-surface: #ffffff;
+  --bc-color-text: #2f2f2f;
+  --bc-color-text-muted: #6b6b6b;
+  --bc-color-chrome-grey: #5d5d5d;    /* 旧UIの中立グレーchrome（チーム色ではない） */
+
+  /* --- spacing (4px刻み) --- */
+  --bc-space-1: 4px;
+  --bc-space-2: 8px;
+  --bc-space-3: 12px;
+  --bc-space-4: 16px;
+  --bc-space-5: 24px;
+  --bc-space-6: 32px;
+
+  /* --- radius --- */
+  --bc-radius-sm: 8px;
+  --bc-radius-md: 18px;
+  --bc-radius-pill: 999px;
+
+  /* --- shadow --- */
+  --bc-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --bc-shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.16);
+
+  /* --- font --- */
+  --bc-font-family: 'Yu Gothic', 'メイリオ', 'Hiragino Kaku Gothic Pro', 'Helvetica Neue', Arial, sans-serif;
+  --bc-font-size-base: 16px;
+  --bc-font-size-lg: 20px;
+  --bc-font-size-button: 18px;
+
+  /* --- touch target --- */
+  --bc-touch-min: 44px;
+}
