@@ -7,6 +7,40 @@
 var app = require('../app');
 var debug = require('debug')('study:server');
 var http = require('http');
+var logger = require('./logger.js');
+
+/**
+ * 最終防衛線。
+ * 想定外の例外でプロセスが落ちると、進行中の対戦がすべて中断してしまう。
+ * ここで捕捉して記録し、サーバーは動かし続ける。
+ */
+
+process.on('uncaughtException', function (err) {
+  logger.error('uncaughtException: ' + (err && err.stack ? err.stack : err));
+  console.error('uncaughtException:', err);
+});
+
+process.on('unhandledRejection', function (reason) {
+  logger.error('unhandledRejection: ' + (reason && reason.stack ? reason.stack : reason));
+  console.error('unhandledRejection:', reason);
+});
+
+/**
+ * 公開サーバーで認証キーが既定値のままになっていないか確認する。
+ * config/config.js の既定値は公開リポジトリに含まれるため、
+ * 本番では環境変数 COMMON_KEY で必ず上書きする必要がある。
+ *
+ * 警告に留めて起動は止めない (大会中に設定ミスでサービスが上がらないほうが痛い)。
+ * logger ではなく console を使うのは、log4js の出力先が ephemeral なファイルで
+ * render のダッシュボードから読めないため。ログストリームが拾うのは stdout / stderr。
+ */
+
+if (process.env.NODE_ENV === 'production' && !process.env.COMMON_KEY) {
+  console.warn(
+    '[警告] COMMON_KEY が未設定のため config/config.js の既定値が使われます。' +
+    'この値は公開リポジトリに含まれるので、render の環境変数に設定してください。'
+  );
+}
 
 /**
  * Get port from environment and store in Express.
