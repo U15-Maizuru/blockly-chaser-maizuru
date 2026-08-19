@@ -5,13 +5,13 @@
   <%- include('common/gtag.js') %>
 
   <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
   <title><%= htmlTitle %></title>
   <link rel="icon" href="/images/favicon.ico">
+  <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
   <link rel='stylesheet' href='/stylesheets/menu-programming.css' />
-
-  <%- include('./common/config-init') %>
 
     <script>window.PROGRAMMING_PATH = "<%= programmingPath %>";</script>
     <script src="/javascripts/jquery-3.4.1.min.js"></script>
@@ -23,21 +23,8 @@
 <body>
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-    <div class="header">
-
-      <div class="back_page">
-        <div class="back_button"><a href="../"></a></div>
-      </div>
-      <div class="control_area">
-        <div class="page_title">
-          <h1><span class="page_title_span">プログラミング</span><%- title %></h1>
-        </div>
-        <div class="control_button">
-          <button id="configButton" title="<%- LNG[" CONFIG"] %>"></button>
-        </div>
-      </div>
-
-    </div>
+    <% const headerActionsHtml = `<button id="configButton" class="bc-btn-labeled" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}">${LNG["CONFIG"]}</button>`; %>
+    <%- include('./common/header', { backHref: '../', titleSpan: 'プログラミング', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
     <div class="content">
       <div class="select_data">

@@ -669,6 +669,18 @@ else {
   localStorage["DEBUG_MODE"] == "off"
 }
 
+// キーボード操作向け：Enter/Spaceでクリックと同じ挙動にする
+function makeA11yButton(div) {
+  div.tabIndex = 0;
+  div.setAttribute('role', 'button');
+  div.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      div.click();
+    }
+  });
+}
+
 function self_prompt(message, callback) {
   var input_text = "";
   var pdiv = document.createElement("div");
@@ -704,6 +716,7 @@ function self_prompt(message, callback) {
   }
   podiv.addEventListener('click', input_text_ok, true);
   podiv.addEventListener('touchend', input_text_ok, true);
+  makeA11yButton(podiv);
 
   var pcdiv = document.createElement("div");
   pcdiv.setAttribute("id", "input_text_cancel");
@@ -719,6 +732,7 @@ function self_prompt(message, callback) {
   }
   pcdiv.addEventListener('click', input_text_cancel, true);
   pcdiv.addEventListener('touchend', input_text_cancel, true);
+  makeA11yButton(pcdiv);
 
   pddiv.appendChild(podiv);
   pddiv.appendChild(pcdiv);
@@ -763,6 +777,7 @@ function self_prompt_b(message, callback) {
   }
   podiv.addEventListener('click', input_text_ok, true);
   podiv.addEventListener('touchend', input_text_ok, true);
+  makeA11yButton(podiv);
 
   var pcdiv = document.createElement("div");
   pcdiv.setAttribute("id", "input_text_cancel");
@@ -778,6 +793,7 @@ function self_prompt_b(message, callback) {
   }
   pcdiv.addEventListener('click', input_text_cancel, true);
   pcdiv.addEventListener('touchend', input_text_cancel, true);
+  makeA11yButton(pcdiv);
 
   pddiv.appendChild(podiv);
   pddiv.appendChild(pcdiv);

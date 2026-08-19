@@ -5,8 +5,10 @@
   <%- include('common/gtag.js') %>
 
   <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
   <title>CHaser Match</title>
   <link rel="icon" href="/images/favicon.ico">
+  <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
   <link rel='stylesheet' href='/stylesheets/game-board.css' />
@@ -20,28 +22,15 @@
   <script src="/javascripts/socket_events.js"></script>
   <script src="/javascripts/match.js"></script>
   <script src="/javascripts/game_board.js"></script>
-
-
 </head>
 
 <body>
-  <div class="header">
-
-    <div class="back_page">
-      <div class="back_button"><a href="./menu-match"></a></div>
-    </div>
-    <div class="control_area">
-      <div class="page_title">
-        <h1><span class="page_title_span">対戦</span>
-          <div id="server_name"></div>
-        </h1>
-      </div>
-      <div class="control_button">
-        <button id="fullscreenButton" onclick="reqFullscreen('contents_area')" class="notext" title="最大化"></button>
-      </div>
-    </div>
-
-  </div>
+  <%- include('./common/config', {LNG: C_LNG}) %>
+  <%
+    const headerActionsHtml = '<button id="fullscreenButton" onclick="reqFullscreen(\'contents_area\')" class="bc-btn-labeled" title="最大化" aria-label="最大化">最大化</button>' +
+      '<button id="configButton" class="bc-btn-labeled" title="設定" aria-label="設定">設定</button>';
+  %>
+  <%- include('./common/header', { backHref: './menu-match', titleSpan: '対戦', titleHtml: '<div id="server_name"></div>', actionsHtml: headerActionsHtml }) %>
   <div id="contents_area">
     <div id="ready_area">
       <div id="cool_ready_title">cool</div>

@@ -124,6 +124,11 @@
 
 .tool_btn {
     flex: 1;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 10px 0;
     font-size: 13px;
     font-weight: bold;
@@ -149,6 +154,11 @@
 
 .sym_btn {
     flex: 1;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 9px 0;
     font-size: 13px;
     font-weight: bold;
@@ -174,7 +184,11 @@
 }
 
 #btn_load {
-    display: inline-block;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 9px 18px;
     background: linear-gradient(135deg, #88d9ce, #4dbfb8);
     color: #fff;
@@ -185,6 +199,11 @@
 }
 
 #btn_clear {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 9px 18px;
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid #88d9ce;
@@ -204,6 +223,11 @@
 }
 
 #btn_create {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 12px 24px;
     background: linear-gradient(135deg, #ff9a56, #ff7d45);
     color: #fff;
@@ -216,6 +240,11 @@
 }
 
 #btn_download {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--bc-touch-min);
     padding: 12px 20px;
     background: linear-gradient(135deg, #4dcfd8, #2faea1);
     color: #fff;
