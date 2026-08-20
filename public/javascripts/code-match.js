@@ -187,7 +187,7 @@ Code.tabClick = function (clickedName) {
 /**
  * Populate the currently selected pane with content generated from the blocks.
  */
-Code.renderContent = function () {
+Code.renderContent = async function () {
   var content = document.getElementById('content_' + Code.selected);
   // Initialize the pane.
   if (content.id == 'content_xml') {
@@ -197,15 +197,15 @@ Code.renderContent = function () {
     xmlTextarea.value = xmlText;
     xmlTextarea.focus();
   } else if (content.id == 'content_javascript') {
-    Code.attemptCodeGeneration(javascript.javascriptGenerator);
+    await Code.attemptCodeGeneration(javascript.javascriptGenerator);
   } else if (content.id == 'content_python') {
-    Code.attemptCodeGeneration(python.pythonGenerator);
+    await Code.attemptCodeGeneration(python.pythonGenerator);
   } else if (content.id == 'content_php') {
-    Code.attemptCodeGeneration(Blockly.PHP);
+    await Code.attemptCodeGeneration(Blockly.PHP);
   } else if (content.id == 'content_dart') {
-    Code.attemptCodeGeneration(Blockly.Dart);
+    await Code.attemptCodeGeneration(Blockly.Dart);
   } else if (content.id == 'content_lua') {
-    Code.attemptCodeGeneration(Blockly.Lua);
+    await Code.attemptCodeGeneration(Blockly.Lua);
   }
   if (typeof PR == 'object') {
     PR.prettyPrint();
@@ -216,10 +216,11 @@ Code.renderContent = function () {
  * Attempt to generate the code and display it in the UI, pretty printed.
  * @param generator {!Blockly.Generator} The generator to use.
  */
-Code.attemptCodeGeneration = function (generator) {
+Code.attemptCodeGeneration = async function (generator) {
   var content = document.getElementById('content_' + Code.selected);
   content.textContent = '';
   if (Code.checkAllGeneratorFunctionsDefined(generator)) {
+    await ChaserTransliterator.warmCache(Code.workspace);
     var code = generator.workspaceToCode(Code.workspace);
     content.textContent = code;
     // Remove the 'prettyprinted' class, so that Prettify will recalculate.

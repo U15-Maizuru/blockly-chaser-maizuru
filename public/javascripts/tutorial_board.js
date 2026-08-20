@@ -10,7 +10,7 @@ function makeTable(tableId, effect = false) {
         stage_data["map_data"]
             [stage_data["cool_y"]]
             [stage_data["cool_x"]]
-             = 3;
+             = 4;
     }
 
     if (stage_data["spon_hot"]) {
@@ -21,7 +21,7 @@ function makeTable(tableId, effect = false) {
         stage_data["map_data"]
             [stage_data["hot_y"]]
             [stage_data["hot_x"]]
-             = 4;
+             = 5;
     }
 
     if (stage_data["spon_block"]) {
@@ -31,7 +31,7 @@ function makeTable(tableId, effect = false) {
             stage_data["map_data"]
                 [stage_data["spon_block_pos"][random][i][0]]
                 [stage_data["spon_block_pos"][random][i][1]]
-                  = 1;
+                  = 2;
         }
     }
 
@@ -42,7 +42,7 @@ function makeTable(tableId, effect = false) {
             stage_data["map_data"]
                 [stage_data["spon_item_pos"][random][i][0]]
                 [stage_data["spon_item_pos"][random][i][1]]
-                  = 2;
+                  = 3;
         }
     }
 
@@ -80,30 +80,30 @@ function makeTable(tableId, effect = false) {
             if (data[i][j] == 0) {
                 cell.classList.add("field_img");
             }
-            else if (data[i][j] == 1) {
+            else if (data[i][j] == 2) {
                 cell.classList.add("wall_img");
             }
-            else if (data[i][j] == 2) {
+            else if (data[i][j] == 3) {
                 cell.classList.add("hart_img");
             }
-            else if (data[i][j] == 3) {
+            else if (data[i][j] == 4) {
                 cell.classList.add("cool_img");
                 cx = j;
                 cy = i;
             }
-            else if (data[i][j] == 4) {
+            else if (data[i][j] == 5) {
                 cell.classList.add("hot_img");
                 hx = j;
                 hy = i;
             }
-            else if (data[i][j] == 34) {
+            else if (data[i][j] == 45) {
                 cell.classList.add("ch_img");
                 cx = j;
                 cy = i;
                 hx = j;
                 hy = i;
             }
-            else if (data[i][j] == 43) {
+            else if (data[i][j] == 54) {
                 cell.classList.add("hc_img");
                 cx = j;
                 cy = i;
@@ -309,7 +309,7 @@ function stage_result(status = false) {
         stage_data["turn"] -= 1;
     }
 
-    if (stage_data["mode"] == "puthot" && stage_data["map_data"][stage_data["hot_y"]][stage_data["hot_x"]] == 1) {
+    if (stage_data["mode"] == "puthot" && stage_data["map_data"][stage_data["hot_y"]][stage_data["hot_x"]] == 2) {
         result_flag = true;
     }
 
@@ -329,12 +329,16 @@ function stage_result(status = false) {
     var px = stage_data["cool_x"];
     var py = stage_data["cool_y"];
 
-    var ch = 1;
-    ch = ch * (0 <= py - 1 ? stage_data["map_data"][py - 1][px] : 1)
-    ch = ch * (y > py + 1 ? stage_data["map_data"][py + 1][px] : 1)
-    ch = ch * (0 <= px - 1 ? stage_data["map_data"][py][px - 1] : 1)
-    ch = ch * (x > px + 1 ? stage_data["map_data"][py][px + 1] : 1)
-    if (ch == 1 && !result_flag) {
+    // 上下左右すべてがブロック(2)かどうかを判定する。範囲外は壁扱い(WALL)とする。
+    // (旧実装は乗算の結果が1になるかで判定していたが、BLOCK値が1から2に変わったため
+    // 乗算では判定できない。明示的な論理ANDに置き換える)
+    var WALL = 2;
+    var boxed =
+        (0 <= py - 1 ? stage_data["map_data"][py - 1][px] : WALL) === WALL &&
+        (y > py + 1 ? stage_data["map_data"][py + 1][px] : WALL) === WALL &&
+        (0 <= px - 1 ? stage_data["map_data"][py][px - 1] : WALL) === WALL &&
+        (x > px + 1 ? stage_data["map_data"][py][px + 1] : WALL) === WALL;
+    if (boxed && !result_flag) {
         Code.stopJS();
         return
     }
@@ -423,7 +427,7 @@ function get_map_data(chara, mode, direction = false) {
     var load_map_size_y = stage_data["map_size_y"];
 
     var chara = "cool";
-    var chara_num_diff = { "cool": 4, "hot": 3 };
+    var chara_num_diff = { "cool": 5, "hot": 4 };
 
     if (mode == "search") {
         if (direction == "top") {
@@ -469,14 +473,14 @@ function get_map_data(chara, mode, direction = false) {
                 return_map_data.push(2);
             }
             else {
-                if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 34) {
+                if (tmp_map_data[now_y + y][now_x + x] == chara_num_diff[chara] || tmp_map_data[now_y + y][now_x + x] == 45) {
                     return_map_data.push(1);
                 }
                 else {
-                    if (tmp_map_data[now_y + y][now_x + x] == 2) {
+                    if (tmp_map_data[now_y + y][now_x + x] == 3) {
                         return_map_data.push(3);
                     }
-                    else if (tmp_map_data[now_y + y][now_x + x] == 1) {
+                    else if (tmp_map_data[now_y + y][now_x + x] == 2) {
                         return_map_data.push(2);
                     }
                     else {
@@ -527,8 +531,8 @@ function move_player(direction, chara = "cool") {
         move_x = 1;
     }
 
-    if (mapdata[py][px] == 34 || mapdata[py][px] == 43) {
-        mapdata[py][px] = chara == "cool" ? 4 : 3;
+    if (mapdata[py][px] == 45 || mapdata[py][px] == 54) {
+        mapdata[py][px] = chara == "cool" ? 5 : 4;
     }
     else {
         mapdata[py][px] = 0;
@@ -536,24 +540,24 @@ function move_player(direction, chara = "cool") {
 
     if (0 <= px + move_x && px + move_x < x && 0 <= py + move_y && py + move_y < y) {
 
-        if (mapdata[py + move_y][px + move_x] == 1) {
+        if (mapdata[py + move_y][px + move_x] == 2) {
             makeTable("game_board");
             Code.stopJS();
         }
         else {
-            if (mapdata[py + move_y][px + move_x] == 2) {
-                mapdata[py][px] = 1;
+            if (mapdata[py + move_y][px + move_x] == 3) {
+                mapdata[py][px] = 2;
                 hart_score += chara == "cool" ? 1 : 0;
             }
 
-            if (mapdata[py + move_y][px + move_x] == 4) {
-                mapdata[py + move_y][px + move_x] = 34;
+            if (mapdata[py + move_y][px + move_x] == 5) {
+                mapdata[py + move_y][px + move_x] = 45;
             }
-            else if (mapdata[py + move_y][px + move_x] == 3) {
-                mapdata[py + move_y][px + move_x] = 34;
+            else if (mapdata[py + move_y][px + move_x] == 4) {
+                mapdata[py + move_y][px + move_x] = 45;
             }
             else {
-                mapdata[py + move_y][px + move_x] = chara == "cool" ? 3 : 4;
+                mapdata[py + move_y][px + move_x] = chara == "cool" ? 4 : 5;
             }
 
             stage_data[chara + "_x"] = stage_data[chara + "_x"] + move_x;
@@ -628,37 +632,38 @@ function put_wall(direction, chara = "cool") {
     }
 
     if (put_check) {
-        stage_data["map_data"][py][px] = 1;
+        stage_data["map_data"][py][px] = 2;
 
         var px = stage_data[chara + "_x"];
         var py = stage_data[chara + "_y"];
 
+        var WALL = 2;
         var c_t, c_b, c_r, c_l;
         if (0 <= py - 1) {
             c_t = stage_data["map_data"][py - 1][px];
         }
         else {
-            c_t = 1;
+            c_t = WALL;
         }
         if (y > py + 1) {
             c_b = stage_data["map_data"][py + 1][px];
         }
         else {
-            c_b = 1;
+            c_b = WALL;
         }
         if (0 <= px - 1) {
             c_l = stage_data["map_data"][py][px - 1];
         }
         else {
-            c_l = 1;
+            c_l = WALL;
         }
         if (x > px + 1) {
             c_r = stage_data["map_data"][py][px + 1];
         }
         else {
-            c_r = 1;
+            c_r = WALL;
         }
-        if (c_t == 1 && c_b == 1 && c_r == 1 && c_l == 1) {
+        if (c_t == WALL && c_b == WALL && c_r == WALL && c_l == WALL) {
             makeTable("game_board");
             Code.stopJS();
             return
