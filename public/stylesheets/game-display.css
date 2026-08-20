@@ -1,0 +1,215 @@
+/*
+ * 盤面テーブル(#game_board_table)とスコアパネル(#game_info_div)の共有CSS。
+ * public/javascripts/game_display.js が組み立てるDOM専用のスタイルで、
+ * views/programming.ejs(Blockly版)とPython版4画面の両方から読み込まれる。
+ * カード外枠(.game_area/#game_area)自体のサイズは各画面固有のCSSで定義する
+ * (Blockly版の.game_areaは固定540px、Python版はflexコンテンツに合わせた
+ * 可変サイズなど、画面ごとにレイアウトの前提が異なるため)。
+ * 視界の霧(*_dark_img)は観戦/リプレイ専用のgame_board.js側の演出のため、
+ * ここには含めない。
+ */
+
+table {
+  border-collapse: separate;
+  border-spacing: 1px;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  font-size: 0px;
+}
+
+td {
+  padding: 0;
+  border: solid 2px #6c6c6c;
+  vertical-align: top;
+  background-size: contain;
+}
+
+td img {
+  width: 100%;
+}
+
+.field_img {
+  background-image: url(/images/field.png);
+}
+
+.wall_img {
+  background-image: url(/images/wall.png);
+}
+
+.hart_img {
+  background-image: url(/images/hart.png);
+}
+
+.cool_img {
+  background-image: url(/images/cool.png);
+}
+
+.hot_img {
+  background-image: url(/images/hot.png);
+}
+
+.ch_img {
+  background-image: url(/images/ch.png);
+}
+
+.hc_img {
+  background-image: url(/images/hc.png);
+}
+
+/*
+ * turn(17%)+cool(33%)+hot(33%)+hart(17%)=100%で1行に収まる比率にしている。
+ * 元は turn/hart=20%, cool/hot=40% (合計120%) で4項目目(hart)が2段目に
+ * 折り返してしまっていたため、比率を詰めて1行に収めた。turn/hartは
+ * ラベル文言(「残りアイテム数」等)が入るため15%だと文字が隠れてしまい、
+ * 17%+font-size 11pxに調整している。
+ */
+#game_info_div {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 18px;
+  font-weight: bold;
+  color: #1c1c1c;
+}
+
+#cool_info_div {
+  display: block;
+  position: relative;
+  width: calc(33% - 20px);
+  margin: 0 8px;
+  border: solid 2px var(--bc-color-primary);
+  border-radius: 10px;
+}
+
+#cool_name {
+  height: 20px;
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 50px;
+  padding-right: 5px;
+  font-size: 14px;
+  overflow: hidden;
+  background: var(--bc-color-chrome-grey);
+  color: #fff;
+  border-radius: 8px 8px 0 0;
+}
+
+#cool_name:before {
+  content: "cool";
+  position: absolute;
+  text-align: left;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background: var(--bc-color-primary);
+  color: #fff;
+  border-right: solid 18px var(--bc-color-primary);
+  border-left: solid 5px var(--bc-color-primary);
+  border-radius: 8px 15px 15px 0;
+}
+
+#cool_score:after {
+  content: "point";
+  font-size: 11px;
+  border-left: solid #fff;
+}
+
+#hot_info_div {
+  display: block;
+  position: relative;
+  width: calc(33% - 20px);
+  margin: 0 8px;
+  border: solid 2px var(--bc-color-danger);
+  border-radius: 10px;
+}
+
+#hot_name {
+  height: 20px;
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 50px;
+  padding-right: 5px;
+  font-size: 14px;
+  overflow: hidden;
+  background: var(--bc-color-chrome-grey);
+  color: #fff;
+  border-radius: 8px 8px 0 0;
+}
+
+#hot_name:before {
+  content: "hot";
+  position: absolute;
+  text-align: left;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background: var(--bc-color-danger);
+  color: #fff;
+  border-right: solid 15px var(--bc-color-danger);
+  border-left: solid 8px var(--bc-color-danger);
+  border-radius: 8px 15px 15px 0;
+}
+
+#hot_score:after {
+  content: "point";
+  font-size: 11px;
+  border-left: solid #fff;
+}
+
+#turn_div {
+  display: block;
+  width: 17%;
+  background: linear-gradient(90deg, rgba(14, 142, 255, 1) 0%, rgba(255, 34, 34, 1) 100%);
+  border-radius: 10px;
+}
+
+#turn_title {
+  font-size: 11px;
+  margin: 2px;
+  height: 18px;
+  margin-bottom: 0px;
+  padding-top: 2px;
+  color: #fff;
+  background: var(--bc-color-chrome-grey);
+  border-radius: 10px 10px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#turn_n {
+  margin: 2px;
+  margin-top: 0;
+  background: #fff;
+  border-radius: 0 0 10px 10px;
+}
+
+#hart_div {
+  display: block;
+  width: 17%;
+  background: linear-gradient(90deg, rgba(14, 142, 255, 1) 0%, rgba(255, 34, 34, 1) 100%);
+  border-radius: 10px;
+}
+
+#hart_title {
+  font-size: 11px;
+  margin: 2px;
+  height: 18px;
+  margin-bottom: 0px;
+  padding-top: 2px;
+  color: #fff;
+  background: var(--bc-color-chrome-grey);
+  border-radius: 10px 10px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#hart_n {
+  margin: 2px;
+  margin-top: 0;
+  background: #fff;
+  border-radius: 0 0 10px 10px;
+}

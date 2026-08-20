@@ -18,6 +18,9 @@ router.get('/player', async function(req, res, next) {
             if (cpuChara && cpuChara === req.query.chara) {
                 res.render('match-cpu');
             }
+            else if (req.query.lang === 'python') {
+                res.render('match-player-python');
+            }
             else {
                 res.render('match-player');
             }
