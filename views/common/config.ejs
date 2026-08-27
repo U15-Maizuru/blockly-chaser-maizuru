@@ -110,6 +110,18 @@
           <span><%- LNG["LOOP_SPAN"] %></span>
         </div>
 
+        <div class="config_item">
+          <div class="config_item_title">Blockly → Python 変換</div>
+          <div id="python_convert_dropzone" class="python_convert_dropzone" tabindex="0" role="button"
+            aria-label="ファイルを選択、またはドラッグ&ドロップしてPythonに変換">
+            <p class="python_convert_dropzone_text">クリックしてファイルを選択<br>または、ここにファイルをドラッグ&ドロップ</p>
+            <input type="file" accept="application/zip,.blch,.json,.xml" id="python_convert_file_input"
+              style="display:none;">
+          </div>
+          <p id="python_convert_status" class="python_convert_status"></p>
+          <span>保存済みのプログラムファイル（.blch / .json / .xml）をPythonコードに変換してダウンロードします。</span>
+        </div>
+
       </div>
       <input id="config_tab_04" type="radio" name="CONFIG_TAB" class="config_tab_switch" /><label
         class="config_tab_label config_tab_right" for="config_tab_04">アプリについて</label>
@@ -130,3 +142,4 @@
   </div>
 </div>
 <script src="/javascripts/config.js"></script>
+<script src="/javascripts/config_python_convert.js"></script>
