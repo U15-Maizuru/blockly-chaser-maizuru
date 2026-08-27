@@ -1,0 +1,325 @@
+/*
+ * Pythonプログラミングモード共通スタイル。tokens.css のデザイントークンを用いて、
+ * match-player.ejs / match.ejs とトーンを揃える。Python-CHaser-Web独自の
+ * 濃色インラインテーマは使わない（B-5参照）。CodeMirror自体のシンタックス
+ * ハイライト配色（vendor/codemirror/theme/monokai.css）はそのまま流用する。
+ */
+
+#python_root {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  background: var(--bc-color-surface);
+  font-family: var(--bc-font-family);
+  color: var(--bc-color-text);
+}
+
+#python_container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* --- 左カラム: エディタ + コンソール --- */
+#python_left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e0e0e0;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* タブの見た目はBlockly版 .tab_area/.blockly_menu (blockly.css) に揃える。 */
+.python-editor-tabs {
+  display: flex;
+  align-items: flex-end;
+  background: #dddddd;
+  padding-top: 6px;
+}
+
+.python-editor-tabs button {
+  background: var(--bc-color-primary);
+  color: #fff;
+  border: solid 1px #b1b1b1;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  box-shadow: none;
+  margin: 0 0 0 6px;
+  padding: 2px 16px;
+  height: 30px;
+  cursor: pointer;
+  font-family: var(--bc-font-family);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.python-editor-tabs button:hover {
+  color: #000;
+  background-color: #eee;
+}
+
+.python-editor-tabs button.active {
+  color: #000;
+  background: #fff;
+  border-bottom-color: #fff;
+}
+
+.python-editor-tabs .active-editor-label {
+  margin-left: auto;
+  align-self: center;
+  padding-right: var(--bc-space-3);
+  color: var(--bc-color-text-muted);
+  font-size: 13px;
+}
+
+.editor-pane {
+  flex-grow: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-pane.hidden {
+  display: none;
+}
+
+.CodeMirror {
+  height: 100%;
+  font-size: 15px;
+}
+
+/*
+ * 実行/停止/ダウンロード/アップロードボタンの見た目(アイコン・色)は
+ * Blockly版の#runButton等(blockly.css)と揃え、bc-btn-labeled(config.css)を
+ * 土台にIDごとの背景画像・色を割り当てる。モード③はヘッダーへ移動済み
+ * だが、モード①(match-player-python.ejs)はBlockly版match-player.ejsに
+ * ヘッダーが無いことに合わせ、このボタン列をそのままの位置で使い続ける。
+ */
+.python-button-group {
+  display: flex;
+  align-items: center;
+  gap: var(--bc-space-2);
+  padding: var(--bc-space-3);
+  background: #f4f4f4;
+  border-top: 1px solid #e0e0e0;
+}
+
+.python-button-group .active-editor-label {
+  margin-left: auto;
+  color: var(--bc-color-text-muted);
+  font-size: 13px;
+}
+
+#python-run-button {
+  border: 2px solid #ffffff;
+  background-color: #5ad7c2;
+  background-image: url(../media/run.png);
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
+}
+
+#python-stop-button {
+  border: 2px solid #ffffff;
+  background-color: #2faea1;
+  background-image: url(../media/stop.png);
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
+}
+
+#download-button {
+  border: 2px solid #ffffff;
+  background-color: #2faea1;
+  background-image: url(../media/download.png);
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
+}
+
+#upload-button {
+  border: 2px solid #ffffff;
+  background-color: #2faea1;
+  background-image: url(../media/load.png);
+  box-shadow: 0px 1px 2px 1px rgba(67, 189, 173, 0.24);
+}
+
+/*
+ * Blockly版は.right_area内で.game_area(盤面)の下に.console_areaを
+ * 縦に並べている(programming.ejs)。Python版もそれに揃え、コンソールは
+ * 右カラム側、盤面カードの下に配置する(左カラムのエディタ側ではない)。
+ */
+#console-output {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: var(--bc-space-3);
+  flex: 1 1 auto;
+  min-height: 80px;
+  overflow-y: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  border-radius: var(--bc-radius-sm);
+  white-space: pre-wrap;
+}
+
+/* --- 右カラム: 盤面表示 --- */
+#python_right {
+  flex: 0 0 38%;
+  background: var(--bc-color-bg-gradient-end);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bc-space-3);
+  padding: var(--bc-space-4);
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/*
+ * 盤面カード外枠のサイズはPython独自(#python_right内でflexコンテンツに合わせて
+ * 縮む必要があるため)。中身(#game_board/#game_info)のスタイルはBlockly版と
+ * 完全共通のpublic/stylesheets/game-display.cssに一本化した(ここには置かない)。
+ * DOM自体もpublic/javascripts/game_display.js(Blockly版game_server_client.jsと共通)
+ * が組み立てる。
+ */
+#game_area {
+  flex: 0 0 auto;
+  /*
+   * Blockly版.game_area(blockly.css)は540px固定で、実行前(盤面が空)でも
+   * カードの枠自体は最初から確保されている。Python版は盤面サイズが可変な
+   * ため固定はせず、Blockly版と同じ540pxをmin-heightにして「実行前は
+   * 枠だけ確保、実行するとBlockly版と同じ位置に盤面が現れる」挙動を揃える
+   * (実行前にコンソール欄が詰まって表示され、実行後に枠が広がって
+   * ズレる、という問題を防ぐ)。
+   */
+  min-height: 565px;
+  background: #f3fffb;
+  border-radius: 12px;
+  border: solid 1px #c1c1c1;
+  padding: var(--bc-space-4);
+  box-sizing: border-box;
+  /*
+   * Blockly版.game_area(blockly.css)のtext-align:centerと同じ。
+   * #turn_n/#hart_n/#cool_score/#hot_scoreはこの継承でセンタリングされる
+   * (#cool_name/#hot_nameは個別にtext-align:leftで上書き済みなので
+   * 左寄せのまま変わらない)。
+   */
+  text-align: center;
+}
+
+/* Python版は動的なセルサイズ計算を行わないため、固定20pxをCSSで指定する。 */
+#game_board_table td {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- マップタブ（モード③専用） --- */
+.map-tab-hint {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bc-space-2);
+  padding: var(--bc-space-2) var(--bc-space-3);
+  background: #f4f4f4;
+  border-bottom: 1px solid #e0e0e0;
+  color: var(--bc-color-text-muted);
+  font-size: 13px;
+}
+
+.map-tab-hint button {
+  flex-shrink: 0;
+  background: var(--bc-color-primary-soft);
+  color: #fff;
+  border: none;
+  padding: var(--bc-space-1) var(--bc-space-3);
+  cursor: pointer;
+  border-radius: var(--bc-radius-sm);
+  font-size: 13px;
+}
+
+.map-use-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--bc-space-1);
+  color: var(--bc-color-text);
+  cursor: pointer;
+}
+
+.map-editor-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bc-space-3);
+  padding: var(--bc-space-2) var(--bc-space-3);
+  background: #f4f4f4;
+  border-bottom: 1px solid #e0e0e0;
+  color: var(--bc-color-text);
+  font-size: 13px;
+}
+
+.map-editor-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: var(--bc-space-1);
+}
+
+.map-editor-toolbar input[type="number"] {
+  width: 55px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.map-editor-toolbar button {
+  background: #e0e0e0;
+  color: var(--bc-color-text);
+  border: none;
+  padding: var(--bc-space-1) var(--bc-space-3);
+  cursor: pointer;
+  border-radius: var(--bc-radius-sm);
+  font-size: 13px;
+}
+
+.map-tool-group,
+.map-sym-group {
+  display: flex;
+  gap: 4px;
+}
+
+.map-tool-button.active,
+.map-sym-button.active {
+  background: var(--bc-color-primary);
+  color: #fff;
+}
+
+#map-editor-grid-wrap {
+  flex-grow: 1;
+  overflow: auto;
+  padding: var(--bc-space-3);
+  background: #fafafa;
+}
+
+#map-editor-grid {
+  display: grid;
+  gap: 1px;
+  width: max-content;
+}
+
+.map-edit-cell {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* タイル画像(background-image)は map-tiles.css に共通定義。ここでは背景色・アウトラインのみ。 */
+.map-edit-cell.floor { background-color: #eafaf5; }
+.map-edit-cell.block { background-color: var(--bc-color-chrome-grey); }
+.map-edit-cell.item { background-color: var(--bc-color-danger-soft); }
+.map-edit-cell.player0 { background-color: var(--bc-color-primary); outline: 2px solid var(--bc-color-primary); outline-offset: -2px; }
+.map-edit-cell.player1 { background-color: var(--bc-color-danger); outline: 2px solid var(--bc-color-danger); outline-offset: -2px; }
+
+.map-edit-cell:hover {
+  outline: 2px solid var(--bc-color-primary);
+  outline-offset: -2px;
+}
+
+/* --- アップロード用の隠しinput --- */
+#file-input {
+  display: none;
+}

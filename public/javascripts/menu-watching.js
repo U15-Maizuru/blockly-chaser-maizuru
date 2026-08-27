@@ -80,12 +80,12 @@ function server_info(id, get_list) {
     for (j = 0; j < data[0].length; j++) {
       cell = rows[i].insertCell(-1);
       if (data[i][j] == 0)       { cell.classList.add("field_img"); }
-      else if (data[i][j] == 1)  { cell.classList.add("wall_img"); }
-      else if (data[i][j] == 2)  { cell.classList.add("hart_img"); }
-      else if (data[i][j] == 3)  { cell.classList.add("cool_img"); }
-      else if (data[i][j] == 4)  { cell.classList.add("hot_img"); }
-      else if (data[i][j] == 34) { cell.classList.add("ch_img"); }
-      else if (data[i][j] == 43) { cell.classList.add("hc_img"); }
+      else if (data[i][j] == 2)  { cell.classList.add("wall_img"); }
+      else if (data[i][j] == 3)  { cell.classList.add("hart_img"); }
+      else if (data[i][j] == 4)  { cell.classList.add("cool_img"); }
+      else if (data[i][j] == 5)  { cell.classList.add("hot_img"); }
+      else if (data[i][j] == 45) { cell.classList.add("ch_img"); }
+      else if (data[i][j] == 54) { cell.classList.add("hc_img"); }
     }
   }
 

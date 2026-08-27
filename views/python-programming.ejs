@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
+  <title>Python CHaser</title>
+  <link rel="icon" href="/images/favicon.ico">
+  <%- include('./common/head-assets') %>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/menu.css' />
+  <link rel='stylesheet' href='/javascripts/vendor/codemirror/lib/codemirror.css' />
+  <link rel='stylesheet' href='/javascripts/vendor/codemirror/theme/monokai.css' />
+  <link rel='stylesheet' href='/stylesheets/map-tiles.css' />
+  <link rel='stylesheet' href='/stylesheets/game-display.css' />
+  <link rel='stylesheet' href='/stylesheets/python-programming.css' />
+  <script src="/javascripts/game_display.js"></script>
+</head>
+
+<body>
+  <%- include('./common/config', {LNG: C_LNG}) %>
+
+  <%
+    const headerActionsHtml = `
+      <button id="python-run-button" class="bc-btn-labeled" title="実行" aria-label="実行">実行</button>
+      <button id="python-stop-button" class="bc-btn-labeled" title="停止" aria-label="停止">停止</button>
+      <button id="download-button" class="bc-btn-labeled" title="ダウンロード" aria-label="ダウンロード">ダウンロード</button>
+      <button id="upload-button" class="bc-btn-labeled" title="アップロード" aria-label="アップロード">アップロード</button>
+      <input type="file" id="file-input" accept=".py">
+      <button id="configButton" class="bc-btn-labeled" title="設定" aria-label="設定">設定</button>
+    `;
+  %>
+  <%- include('./common/header', { backHref: '/', titleHtml: 'Python', actionsHtml: headerActionsHtml }) %>
+
+  <div id="python_root">
+    <div id="python_container">
+
+      <div id="python_left">
+        <div class="python-editor-tabs">
+          <button id="tab-player" class="active">プレイヤー</button>
+          <button id="tab-opponent">対戦AI</button>
+          <button id="tab-map">マップ</button>
+          <span class="active-editor-label" id="active-editor-label">編集中: プレイヤー</span>
+        </div>
+
+        <div id="editor-player" class="editor-pane">
+          <textarea id="editor"></textarea>
+        </div>
+        <div id="editor-opponent" class="editor-pane hidden">
+          <textarea id="editor-opponent-textarea"></textarea>
+        </div>
+        <div id="editor-map" class="editor-pane hidden">
+          <div class="map-tab-hint">
+            <label class="map-use-toggle">
+              <input type="checkbox" id="map-use-custom">
+              このマップを対戦で使用する（オフの場合は毎回ランダム生成）
+            </label>
+            <button id="generate-random-map-button" type="button">ランダムマップを生成</button>
+            <button id="clear-map-button" type="button">クリア</button>
+          </div>
+          <div class="map-editor-toolbar">
+            <label>幅<input type="number" id="map-size-x" min="5" max="30" value="15"></label>
+            <label>高さ<input type="number" id="map-size-y" min="5" max="30" value="17"></label>
+            <button id="map-resize-button" type="button">サイズ変更</button>
+            <label>ターン数<input type="number" id="map-turn-max" min="1" max="999" value="150"></label>
+            <div class="map-tool-group" id="map-tool-group">
+              <button class="map-tool-button active" data-tool="floor" type="button">床</button>
+              <button class="map-tool-button" data-tool="block" type="button">ブロック</button>
+              <button class="map-tool-button" data-tool="item" type="button">アイテム</button>
+              <button class="map-tool-button" data-tool="cool" type="button">プレイヤ(Cool)</button>
+              <button class="map-tool-button" data-tool="hot" type="button">対戦AI(Hot)</button>
+            </div>
+            <div class="map-sym-group" id="map-sym-group">
+              <button class="map-sym-button active" data-mode="none" type="button">通常</button>
+              <button class="map-sym-button" data-mode="mirror" type="button">ミラー</button>
+              <button class="map-sym-button" data-mode="rotate" type="button">回転対称</button>
+            </div>
+          </div>
+          <div id="map-editor-grid-wrap">
+            <div id="map-editor-grid"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="python_right">
+        <div id="game_area">
+          <div id="game_board"></div>
+          <div id="game_info"></div>
+        </div>
+        <div id="console-output"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/javascripts/vendor/codemirror/lib/codemirror.js"></script>
+  <script src="/javascripts/vendor/codemirror/mode/python/python.js"></script>
+  <script src="/javascripts/vendor/codemirror/keymap/sublime.js"></script>
+  <script src="/javascripts/vendor/codemirror/addon/edit/matchbrackets.js"></script>
+  <script src="/javascripts/vendor/pyodide/pyodide.js"></script>
+  <script src="/javascripts/map_format.js"></script>
+  <script src="/javascripts/map_grid_ui.js"></script>
+  <script src="/javascripts/map_random_gen.js"></script>
+  <script src="/javascripts/python/python-editor-core.js"></script>
+  <script src="/javascripts/python/python-map-editor.js"></script>
+  <script src="/javascripts/python/runner-shared.js"></script>
+  <script src="/javascripts/python/local-runner.js"></script>
+  <script>
+    var mapEditorAdapter = PYTHON_MAP_EDITOR.createLocalMapEditor();
+
+    var editorCore = PYTHON_EDITOR_CORE.initPythonEditor({
+      hasOpponentTab: true,
+      hasMapTab: true,
+      mapEditorAdapter: mapEditorAdapter,
+      defaultPlayerCode: LOCAL_RUNNER.DEFAULT_PLAYER_CODE,
+      defaultOpponentCode: LOCAL_RUNNER.DEFAULT_OPPONENT_CODE
+    });
+
+    var runner = LOCAL_RUNNER.createLocalRunner(editorCore, mapEditorAdapter);
+
+    // プログラミングモード(初級編/上級編)の「Pythonで編集」ボタンから
+    // 変換されたコード・ルームのマップを一度だけ受け取る。
+    (function () {
+      var pendingCode = localStorage.getItem('pending_python_practice_code');
+      if (pendingCode !== null) {
+        localStorage.removeItem('pending_python_practice_code');
+        editorCore.playerEditor.setValue(pendingCode);
+      }
+      var pendingMap = localStorage.getItem('pending_python_practice_map');
+      if (pendingMap !== null) {
+        localStorage.removeItem('pending_python_practice_map');
+        mapEditorAdapter.setValue(pendingMap);
+      }
+    })();
+
+    mapEditorAdapter.onGenerateRandomMap = function () {
+      var currentGrid = mapEditorAdapter.getMapGrid();
+      var turnInput = document.getElementById('map-turn-max');
+      var turnMax = (turnInput && parseInt(turnInput.value, 10)) || currentGrid.turnMax;
+      var generated = MAP_RANDOM_GEN.generateRandomMap({
+        sizeX: currentGrid.sizeX, sizeY: currentGrid.sizeY, turnMax: turnMax
+      });
+      var mapObj = MAP_FORMAT.serializeMap(generated);
+      mapEditorAdapter.setValue(JSON.stringify(mapObj));
+    };
+
+    document.getElementById('python-run-button').addEventListener('click', function () {
+      runner.run();
+    });
+    document.getElementById('python-stop-button').addEventListener('click', function () {
+      runner.stop();
+      editorCore.writeToConsole('\n<< 停止しました >>');
+    });
+  </script>
+</body>
+
+</html>

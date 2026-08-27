@@ -19,4 +19,9 @@ initEncodeRuntime({
   enableFileIO: false,
   enableDataLoad: false,
   enableDebugTabToggle: false,
+  onError: function (e) {
+    if (typeof setStatus === 'function') {
+      setStatus('エラー: ' + (e && e.message ? e.message : String(e)));
+    }
+  },
 });

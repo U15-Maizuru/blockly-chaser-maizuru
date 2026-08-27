@@ -423,3 +423,57 @@ input[type=range]::-moz-range-thumb {
 .about_area::-webkit-scrollbar {
     display: none;
 }
+
+.python_convert_dropzone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+    min-height: 100px;
+    margin: 8px 0;
+    padding: 16px;
+    border: 2px dashed rgba(93, 183, 172, 0.4);
+    border-radius: 18px;
+    background: #f4fcfb;
+    color: #1f5e55;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.python_convert_dropzone:hover,
+.python_convert_dropzone:focus-visible {
+    background: rgba(93, 183, 172, 0.12);
+    border-color: rgba(93, 183, 172, 0.7);
+}
+
+.python_convert_dropzone.is-dragover {
+    background: rgba(74, 184, 166, 0.2);
+    border-color: #4ab8a6;
+}
+
+.python_convert_dropzone_text {
+    margin: 0;
+    pointer-events: none;
+}
+
+.python_convert_status {
+    min-height: 1.2em;
+    margin: 6px 0 0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.python_convert_status--info {
+    color: #1f5e55;
+}
+
+.python_convert_status--success {
+    color: #2f9c6a;
+}
+
+.python_convert_status--error {
+    color: #e02b2b;
+}

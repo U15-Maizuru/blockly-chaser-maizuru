@@ -11,6 +11,7 @@
   <%- include('./common/head-assets') %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/menu.css' />
+  <link rel='stylesheet' href='/stylesheets/map-tiles.css' />
   <link rel='stylesheet' href='/stylesheets/map-editor.css' />
 </head>
 
@@ -30,20 +31,27 @@
         <label class="setting_label">ターン数
           <input id="map_turn" type="number" min="1" max="500" value="100">
         </label>
+        <label class="setting_label">幅
+          <input id="map_size_x" type="number" min="5" max="30" value="15">
+        </label>
+        <label class="setting_label">高さ
+          <input id="map_size_y" type="number" min="5" max="30" value="17">
+        </label>
+        <button id="btn_resize">サイズ変更</button>
       </div>
 
       <div id="editor_main">
         <div id="editor_grid_wrap">
-          <table id="editor_grid"></table>
+          <div id="editor_grid"></div>
         </div>
 
         <div id="editor_controls">
           <div id="editor_toolbar">
-            <button class="tool_btn" data-value="0">なし</button>
-            <button class="tool_btn" data-value="1">ブロック</button>
-            <button class="tool_btn" data-value="2">アイテム</button>
-            <button class="tool_btn" data-value="3">COOL</button>
-            <button class="tool_btn" data-value="4">HOT</button>
+            <button class="tool_btn tool_btn_active" data-tool="floor">床</button>
+            <button class="tool_btn" data-tool="block">ブロック</button>
+            <button class="tool_btn" data-tool="item">アイテム</button>
+            <button class="tool_btn" data-tool="cool">プレイヤ(Cool)</button>
+            <button class="tool_btn" data-tool="hot">対戦AI(Hot)</button>
           </div>
 
           <div id="editor_symmetry">
@@ -55,6 +63,7 @@
           <div id="editor_file_bar">
             <label for="load_map_file" id="btn_load">マップを読み込む</label>
             <input type="file" id="load_map_file" accept=".json" style="display:none">
+            <button id="btn_random">ランダムマップ生成</button>
             <button id="btn_clear">クリア</button>
           </div>
 
@@ -69,6 +78,9 @@
     </div>
   </div>
 
+  <script src="/javascripts/map_format.js"></script>
+  <script src="/javascripts/map_grid_ui.js"></script>
+  <script src="/javascripts/map_random_gen.js"></script>
   <script src="/javascripts/map-editor.js"></script>
 </body>
 

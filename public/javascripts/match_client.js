@@ -51,6 +51,9 @@ socket.on(SOCKET_EVENTS.GAME_RESULT, function (msg) {
 
 socket.on(SOCKET_EVENTS.ERROR, function (msg) {
     Code.stopJS();
+    if (typeof setStatus === 'function') {
+        setStatus('エラー: ' + msg);
+    }
 });
 
 

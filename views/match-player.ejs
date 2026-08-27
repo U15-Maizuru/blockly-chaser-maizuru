@@ -19,6 +19,11 @@
 
   <script src="/javascripts/blockly/generators/javascript_compressed.js"></script>
   <script src="/javascripts/generators/javascript_chaser.js"></script>
+  <script src="/javascripts/blockly/generators/python_compressed.js"></script>
+  <script src="/javascripts/vendor/kuroshiro/kuroshiro.min.js"></script>
+  <script src="/javascripts/vendor/kuroshiro/kuroshiro-analyzer-kuromoji.min.js"></script>
+  <script src="/javascripts/generators/name_transliterator.js"></script>
+  <script src="/javascripts/generators/python_chaser.js"></script>
 
   <script src="/javascripts/acorn_interpreter.js"></script>
 
@@ -34,25 +39,47 @@
 <body>
   <div class="uploadButton">
     <div class="uploadButton_text">ファイルを選択</div>
-      <input id="xml_input" type="file" accept="application/zip,.blch,.json,.xml" onchange="uv.style.display='inline-block'; uv.value = this.value;" />
+      <input id="xml_input" type="file" accept="application/zip,.blch,.json,.xml,.py" onchange="uv.style.display='inline-block'; uv.value = this.value;" />
     <input type="text" id="uv" class="uploadValue" disabled />
   </div>
   <div id="releaseButton" class="release_off">開放</div>
+  <div id="statusLine" class="status_line"></div>
   <div id="content_blocks" class="none_content"></div>
 
   <script src="/javascripts/fflate.js"></script>
   <script>
+    var statusLineEl = document.getElementById('statusLine');
+    function setStatus(text) {
+      if (statusLineEl) statusLineEl.textContent = text;
+    }
+
     document.getElementById("xml_input").addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
 
       Code.stopJS();
-      
+      setStatus('');
+
       const fileName = file.name.toLowerCase();
       const reader = new FileReader();
-      
+
+      // Pythonファイルとして読み込む場合: このページ自身をlang=pythonへ
+      // 遷移させ、match-player-python.ejs 側の既存のpending-code読み込み
+      // ロジック(localStorageキー: pending_python_code_<room_id>_<chara>)に
+      // そのまま接続する。
+      if (fileName.endsWith(".py")) {
+        reader.onload = function (e) {
+          var pythonCode = e.target.result.toString();
+          var storageKey = 'pending_python_code_' + query_list.room_id + '_' + query_list.chara;
+          localStorage.setItem(storageKey, pythonCode);
+          var url = new URL(window.location.href);
+          url.searchParams.set('lang', 'python');
+          window.location.href = url.toString();
+        };
+        reader.readAsText(file);
+      }
       // XMLファイルとして読み込む場合
-      if (fileName.endsWith(".xml")) {
+      else if (fileName.endsWith(".xml")) {
         reader.onload = function (e) {
           const xmlText = e.target.result.toString();
           try {
@@ -193,7 +220,6 @@
         releaseButton.textContent = "開放中"
       }
     }
-
   </script>
   <script src="/javascripts/encode_core.js"></script>
   <script src="/javascripts/encode_match.js"></script>
