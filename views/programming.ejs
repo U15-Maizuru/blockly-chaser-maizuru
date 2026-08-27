@@ -21,6 +21,9 @@
   <script src="/javascripts/generators/javascript_chaser.js"></script>
 
   <script src="/javascripts/blockly/generators/python_compressed.js"></script>
+  <script src="/javascripts/vendor/kuroshiro/kuroshiro.min.js"></script>
+  <script src="/javascripts/vendor/kuroshiro/kuroshiro-analyzer-kuromoji.min.js"></script>
+  <script src="/javascripts/generators/name_transliterator.js"></script>
   <script src="/javascripts/generators/python_chaser.js"></script>
 
   <script src="/javascripts/acorn_interpreter.js"></script>
@@ -30,11 +33,13 @@
   <script src="/javascripts/blockly_inject_options.js"></script>
   <script src="/javascripts/code.js"></script>
   <script src="/javascripts/socket_events.js"></script>
+  <script src="/javascripts/game_display.js"></script>
   <script src="/javascripts/game_server_client.js"></script>
 
 
 
   <%- include('./common/head-assets') %>
+  <link rel='stylesheet' href='/stylesheets/game-display.css' />
   <% if (expMode) { %>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/blockly.css' />
@@ -53,6 +58,7 @@
       <button id="trashButton" class="bc-btn-labeled" title="${LNG["TRASH"]}" aria-label="${LNG["TRASH"]}">${LNG["TRASH"]}</button>
       <button id="downloadButton" class="bc-btn-labeled" title="${LNG["SAVE"]}" aria-label="${LNG["SAVE"]}">${LNG["SAVE"]}</button>
       <button id="downloadPythonButton" class="bc-btn-labeled" title="Pythonで保存" aria-label="Pythonで保存">Python保存</button>
+      <button id="convertToPythonButton" class="bc-btn-labeled" title="現在のブロックをPythonコードに変換し、Python練習ページで続けて編集します" aria-label="Pythonで続けて編集">Pythonで編集</button>
       <label for="file_load" class="bc-btn-labeled" title="${LNG["LOAD"]}" aria-label="${LNG["LOAD"]}">
         ${LNG["LOAD"]}
         <input type="file" accept="application/zip,.blch,.json,.xml" id="file_load" style="display:none;">
@@ -98,6 +104,8 @@
 
   <script src="/javascripts/fflate.js"></script>
   <script>const APP_VERSION = "<%= appVersion %>";</script>
+  <script src="/javascripts/map_format.js"></script>
+  <script src="/javascripts/map_random_gen.js"></script>
   <script src="/javascripts/encode_core.js"></script>
   <script src="/javascripts/encode.js"></script>
   <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">

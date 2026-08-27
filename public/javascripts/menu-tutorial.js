@@ -255,17 +255,17 @@ function stage_info_create(id, stageList) {
 
       if (value === 0) {
         cell.classList.add('field_img');
-      } else if (value === 1) {
-        cell.classList.add('wall_img');
       } else if (value === 2) {
-        cell.classList.add('hart_img');
+        cell.classList.add('wall_img');
       } else if (value === 3) {
-        cell.classList.add('cool_img');
+        cell.classList.add('hart_img');
       } else if (value === 4) {
+        cell.classList.add('cool_img');
+      } else if (value === 5) {
         cell.classList.add('hot_img');
-      } else if (value === 34) {
+      } else if (value === 45) {
         cell.classList.add('ch_img');
-      } else if (value === 43) {
+      } else if (value === 54) {
         cell.classList.add('hc_img');
       }
     }

@@ -495,8 +495,9 @@ Code.download = function () {
 }
 
 
-Code.downloadPython = function () {
+Code.downloadPython = async function () {
   var pythonTextarea = document.getElementById('content_python');
+  await ChaserTransliterator.warmCache(Code.workspace);
   var pythonText = python.pythonGenerator.workspaceToCode(Code.workspace);
 
   var userAgent = window.navigator.userAgent.toLowerCase();
