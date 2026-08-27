@@ -21,6 +21,7 @@ var menuMatchRouter = require('./routes/menu-match');
 var matchRouter = require('./routes/match');
 var watchingRouter = require('./routes/watching');
 var mapEditorRouter = require('./routes/map-editor');
+var pythonPracticeRouter = require('./routes/python-programming');
 
 var server_data = require('./tool/server_data_load');
 var tutorial_data = require('./tool/tutorial_data_load');
@@ -76,6 +77,7 @@ app.use('/menu-match',menuMatchRouter);
 app.use('/match', matchRouter);
 app.use('/watching',watchingRouter);
 app.use('/map-editor', mapEditorRouter);
+app.use('/python-programming', pythonPracticeRouter);
 
 
 
