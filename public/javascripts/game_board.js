@@ -135,18 +135,18 @@ function makeTable(msg, x, y, effect, tableId) {
 
     for (i = 0; i < data.length; i++) {
         for (j = 0; j < data[0].length; j++) {
-            if (data[i][j] == 2) {
+            if (data[i][j] == 3) {
                 item_num += 1;
             }
-            else if (data[i][j] == 3) {
+            else if (data[i][j] == 4) {
                 cx = j;
                 cy = i;
             }
-            else if (data[i][j] == 4) {
+            else if (data[i][j] == 5) {
                 hx = j;
                 hy = i;
             }
-            else if ((data[i][j] == 34) || (data[i][j] == 43)) {
+            else if ((data[i][j] == 45) || (data[i][j] == 54)) {
                 cx = j;
                 cy = i;
                 hx = j;
@@ -165,22 +165,22 @@ function makeTable(msg, x, y, effect, tableId) {
                 if (data[i][j] == 0) {
                     cell.classList.add("field_img");
                 }
-                else if (data[i][j] == 1) {
+                else if (data[i][j] == 2) {
                     cell.classList.add("wall_img");
                 }
-                else if (data[i][j] == 2) {
+                else if (data[i][j] == 3) {
                     cell.classList.add("hart_img");
                 }
-                else if (data[i][j] == 3) {
+                else if (data[i][j] == 4) {
                     cell.classList.add("cool_img");
                 }
-                else if (data[i][j] == 4) {
+                else if (data[i][j] == 5) {
                     cell.classList.add("hot_img");
                 }
-                else if (data[i][j] == 34) {
+                else if (data[i][j] == 45) {
                     cell.classList.add("ch_img");
                 }
-                else if (data[i][j] == 43) {
+                else if (data[i][j] == 54) {
                     cell.classList.add("hc_img");
                 }
             }
@@ -188,22 +188,22 @@ function makeTable(msg, x, y, effect, tableId) {
                 if (data[i][j] == 0) {
                     cell.classList.add("field_dark_img");
                 }
-                else if (data[i][j] == 1) {
+                else if (data[i][j] == 2) {
                     cell.classList.add("wall_dark_img");
                 }
-                else if (data[i][j] == 2) {
+                else if (data[i][j] == 3) {
                     cell.classList.add("hart_dark_img");
                 }
-                else if (data[i][j] == 3) {
+                else if (data[i][j] == 4) {
                     cell.classList.add("cool_dark_img");
                 }
-                else if (data[i][j] == 4) {
+                else if (data[i][j] == 5) {
                     cell.classList.add("hot_dark_img");
                 }
-                else if (data[i][j] == 34) {
+                else if (data[i][j] == 45) {
                     cell.classList.add("ch_dark_img");
                 }
-                else if (data[i][j] == 43) {
+                else if (data[i][j] == 54) {
                     cell.classList.add("hc_dark_img");
                 }
             }
@@ -263,16 +263,16 @@ function makeTable(msg, x, y, effect, tableId) {
                     if (data[vy][vx] == 0) {
                         table.rows[vy].cells[vx].setAttribute("class", "field_img");
                     }
-                    else if (data[vy][vx] == 1) {
+                    else if (data[vy][vx] == 2) {
                         table.rows[vy].cells[vx].setAttribute("class", "wall_img");
                     }
-                    else if (data[vy][vx] == 2) {
+                    else if (data[vy][vx] == 3) {
                         table.rows[vy].cells[vx].setAttribute("class", "hart_img");
                     }
-                    else if (data[vy][vx] == 3) {
+                    else if (data[vy][vx] == 4) {
                         table.rows[vy].cells[vx].setAttribute("class", "cool_img");
                     }
-                    else if (data[vy][vx] == 4) {
+                    else if (data[vy][vx] == 5) {
                         table.rows[vy].cells[vx].setAttribute("class", "hot_img");
                     }
                 }

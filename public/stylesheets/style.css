@@ -130,7 +130,7 @@ body {
 }
 
 .main {
-  width: 760px;
+  width: 920px;
   display: flex;
   margin: 50px auto;
   gap: 18px;
@@ -142,7 +142,7 @@ body {
 }
 
 .right {
-  width: 400px;
+  width: 560px;
   min-height: 330px;
 }
 
@@ -166,7 +166,7 @@ body {
 
 .wrapper_c {
   height: 120px;
-  width: 155px;
+  width: 145px;
   float: left;
   margin: 30px 15px 0;
 }
@@ -174,7 +174,8 @@ body {
 .menu_tutorial,
 .menu_watching,
 .menu_programming_basic,
-.menu_programming_exp {
+.menu_programming_exp,
+.menu_programming_python {
   height: 120px;
   border-radius: 24px;
   overflow: hidden;
@@ -186,7 +187,8 @@ body {
 .menu_tutorial:hover,
 .menu_watching:hover,
 .menu_programming_basic:hover,
-.menu_programming_exp:hover {
+.menu_programming_exp:hover,
+.menu_programming_python:hover {
   transform: translateY(-2px);
   box-shadow: 0 24px 42px rgba(0, 0, 0, 0.16);
 }
@@ -198,7 +200,8 @@ body {
 .menu_tutorial a,
 .menu_watching a,
 .menu_programming_basic a,
-.menu_programming_exp a {
+.menu_programming_exp a,
+.menu_programming_python a {
   position: absolute;
   top: 0;
   left: 0;
@@ -210,7 +213,8 @@ body {
 .menu_watching_info,
 .menu_programming_info,
 .menu_programming_basic_info,
-.menu_programming_exp_info {
+.menu_programming_exp_info,
+.menu_programming_python_info {
   text-align: center;
   font-size: 12px;
   font-weight: bold;
@@ -233,7 +237,8 @@ body {
 .menu_watching_title,
 .menu_programming_title,
 .menu_programming_basic_title,
-.menu_programming_exp_title {
+.menu_programming_exp_title,
+.menu_programming_python_title {
   color: #FFF;
   text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.22);
   padding: 10px 10px 0;
@@ -246,7 +251,8 @@ body {
 .menu_watching_title_en,
 .menu_programming_title_en,
 .menu_programming_basic_title_en,
-.menu_programming_exp_title_en {
+.menu_programming_exp_title_en,
+.menu_programming_python_title_en {
   color: #FFF;
   text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.22);
   text-align: center;
@@ -285,6 +291,10 @@ body {
 
 .menu_programming_exp {
   background: linear-gradient(135deg, #7ce0b4, #3fbf9a);
+}
+
+.menu_programming_python {
+  background: linear-gradient(135deg, #f2d675, #e0a940);
 }
 
 #input_text_area {
