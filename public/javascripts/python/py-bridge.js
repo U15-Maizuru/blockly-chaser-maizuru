@@ -118,12 +118,22 @@
         //         { stopped: false, continueLoop: true/false } (do_turnが正常終了)
         function driveTurn(gen) {
             var sendValue;
+            var yieldedAny = false;
             function step() {
                 if (gameOver) return Promise.resolve({ stopped: true });
                 var result = gen.next(sendValue);
                 if (result.done) {
+                    // 正常なターンは必ずget_ready()由来で最低1回yieldする。
+                    // 0回のまま終了するのは、ネストした関数内の行動呼び出しが
+                    // transformer.pyで検出できないパターン(辞書経由の呼び出し等)で
+                    // yield from化されず、サーバーに何も送信されなかった異常系。
+                    // 何もフィードバックせず10秒タイムアウトを待つよりはましなので警告する。
+                    if (!yieldedAny && typeof writeToConsole === 'function') {
+                        writeToConsole('警告: このターンで行動がサーバーに送信されませんでした。ネストした関数の中でwalk/put等を呼んでいる場合、対戦モードでは正しく動かないことがあります。');
+                    }
                     return Promise.resolve({ stopped: false, continueLoop: !!result.value });
                 }
+                yieldedAny = true;
                 var code = result.value;
                 return sendAction(code).then(function (recData) {
                     sendValue = recData;
