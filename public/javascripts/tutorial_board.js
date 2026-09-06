@@ -67,43 +67,49 @@ function makeTable(tableId, effect = false) {
         c.parentNode.removeChild(c);
     }
 
-    var _y = (450 - (4 * y)) / y;
+    var table_rows = data.length + 2;
+    var table_cols = data[0].length + 2;
+
+    var _y = (450 - (4 * table_rows)) / table_rows;
     _y = _y.toString();
 
     var cx = false, cy = false, hx = false, hy = false;
 
-    for (i = 0; i < data.length; i++) {
+    for (i = 0; i < table_rows; i++) {
         rows.push(table.insertRow(-1));
-        for (j = 0; j < data[0].length; j++) {
+        for (j = 0; j < table_cols; j++) {
             cell = rows[i].insertCell(-1);
 
-            if (data[i][j] == 0) {
-                cell.classList.add("field_img");
-            }
-            else if (data[i][j] == 2) {
+            if (i == 0 || i == table_rows - 1 || j == 0 || j == table_cols - 1) {
                 cell.classList.add("wall_img");
             }
-            else if (data[i][j] == 3) {
+            else if (data[i - 1][j - 1] == 0) {
+                cell.classList.add("field_img");
+            }
+            else if (data[i - 1][j - 1] == 2) {
+                cell.classList.add("wall_img");
+            }
+            else if (data[i - 1][j - 1] == 3) {
                 cell.classList.add("hart_img");
             }
-            else if (data[i][j] == 4) {
+            else if (data[i - 1][j - 1] == 4) {
                 cell.classList.add("cool_img");
                 cx = j;
                 cy = i;
             }
-            else if (data[i][j] == 5) {
+            else if (data[i - 1][j - 1] == 5) {
                 cell.classList.add("hot_img");
                 hx = j;
                 hy = i;
             }
-            else if (data[i][j] == 45) {
+            else if (data[i - 1][j - 1] == 45) {
                 cell.classList.add("ch_img");
                 cx = j;
                 cy = i;
                 hx = j;
                 hy = i;
             }
-            else if (data[i][j] == 54) {
+            else if (data[i - 1][j - 1] == 54) {
                 cell.classList.add("hc_img");
                 cx = j;
                 cy = i;
@@ -157,12 +163,12 @@ function makeTable(tableId, effect = false) {
         for (var y of y_range) {
             for (var x of x_range) {
                 if (effect.p == "cool" && cx) {
-                    if (!(0 > (cx + x) || data[0].length - 1 < (cx + x) || 0 > (cy + y) || data.length - 1 < (cy + y))) {
+                    if (!(0 > (cx + x) || table_cols - 1 < (cx + x) || 0 > (cy + y) || table_rows - 1 < (cy + y))) {
                         table.rows[cy + y].cells[cx + x].style.border = "2px solid rgba(3, 3, 244, 1.0)";
                     }
                 }
                 else if (effect.p == "hot" && hx) {
-                    if (!(0 > (hx + x) || data[0].length - 1 < (hx + x) || 0 > (hy + y) || data.length - 1 < (hy + y))) {
+                    if (!(0 > (hx + x) || table_cols - 1 < (hx + x) || 0 > (hy + y) || table_rows - 1 < (hy + y))) {
                         table.rows[hy + y].cells[hx + x].style.border = "2px solid rgba(3, 3, 244, 1.0)";
                     }
                 }
@@ -176,12 +182,12 @@ function makeTable(tableId, effect = false) {
             for (var y of y_range) {
                 for (var x of x_range) {
                     if (effect.p == "hot" && hx) {
-                        if (!(0 > (hx + x) || data[0].length - 1 < (hx + x) || 0 > (hy + y) || data.length - 1 < (hy + y))) {
+                        if (!(0 > (hx + x) || table_cols - 1 < (hx + x) || 0 > (hy + y) || table_rows - 1 < (hy + y))) {
                             table.rows[hy + y].cells[hx + x].style.border = "2px solid rgba(3, 244, 3, 1.0)";
                         }
                     }
                     else if (effect.p == "cool" && cx) {
-                        if (!(0 > (cx + x) || data[0].length - 1 < (cx + x) || 0 > (cy + y) || data.length - 1 < (cy + y))) {
+                        if (!(0 > (cx + x) || table_cols - 1 < (cx + x) || 0 > (cy + y) || table_rows - 1 < (cy + y))) {
                             table.rows[cy + y].cells[cx + x].style.border = "2px solid rgba(3, 244, 3, 1.0)";
                         }
                     }
