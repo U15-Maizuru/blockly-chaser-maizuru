@@ -1,7 +1,7 @@
 {
     "name": "ステージ 4-4",
     "stage_id": "tutorial_153",
-    "info": "自滅を回避しよう",
+    "info": "自縛を回避しよう",
     "level": 6,
     "mode": "gethart",
     "get_hart_value": 7,
