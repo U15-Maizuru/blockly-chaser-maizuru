@@ -1,7 +1,7 @@
 {
     "name": "ステージ 3-3",
     "stage_id": "tutorial_112",
-    "info": "アイテムをだどってみよう",
+    "info": "アイテムをたどってみよう",
     "level": 4,
     "mode": "gethart",
     "get_hart_value": 28,

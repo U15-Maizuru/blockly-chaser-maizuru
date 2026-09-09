@@ -329,7 +329,7 @@ function stage_result(status = false) {
         }
     }
 
-    // 自滅チェック
+    // 自縛チェック
     var x = stage_data["map_size_x"];
     var y = stage_data["map_size_y"];
     var px = stage_data["cool_x"];
