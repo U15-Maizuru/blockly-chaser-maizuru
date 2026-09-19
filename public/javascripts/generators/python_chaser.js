@@ -54,7 +54,7 @@ python.pythonGenerator.forBlock['server_join'] = function (block) {
 
     + '        parser.add_argument(\'-p\', \'--port\', default=2010)\n'
     + '        parser.add_argument(\'-n\', \'--name\', default=\'sample\')\n'
-    + '        parser.add_argument(\'-i\', \'--host\', default=\'localhost\')\n'
+    + '        parser.add_argument(\'-i\', \'--host\', default=\'localhost\')\n\n'
 
     + '    default の値を変更することで、引数を省略した場合に使用される初期値を変更できます。\n\n'
 
@@ -73,19 +73,23 @@ python.pythonGenerator.forBlock['server_join'] = function (block) {
 
     + '【マスの情報】\n'
     + '    行動関数が返すマップ情報は、以下のいずれかの種類です。\n'
-    + '    「Floor」:なしもない\n'
+    + '    「Floor」:なにもない\n'
     + '    「Enemy」:相手\n'
     + '    「Block」:ブロック\n'
     + '    「Item」 :アイテム\n\n'
 
     + '【マップ情報の構造】\n'
-    + '    行動関数は、行動後の周囲9マスの情報を以下の順番でリストとして返します。\n\n'
+    + '    get_ready() と walk()/put() は、自分を中心とする周囲9マスの情報\n'
+    + '    (walk/put は行動後の位置での情報) を以下の順番でリストとして返します。\n\n'
 
     + '    「UpLeft」  |  「Up」   |「UpRight」\n'
     + '    -----------+-----------+-----------\n'
     + '    「Left」    |「Center」 |  「Right」\n'
     + '    -----------+-----------+-----------\n'
-    + '    「DownLeft」| 「Down」  |「DownRight」\n'
+    + '    「DownLeft」| 「Down」  |「DownRight」\n\n'
+
+    + '    look() と search() は別の範囲の9マスを返します。詳しくは lib/pyCHaser.py の\n'
+    + '    先頭の説明を参照してください。\n'
     + '"""\n\n';
 
   var globals = [];
