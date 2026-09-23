@@ -740,6 +740,7 @@ function self_prompt(message, callback) {
   pdiv.appendChild(pddiv);
 
   document.body.appendChild(pdiv);
+  pidiv.focus();
 
 };
 
@@ -801,6 +802,7 @@ function self_prompt_b(message, callback) {
   pdiv.appendChild(pddiv);
 
   document.body.appendChild(pdiv);
+  pidiv.focus();
 
 };
 

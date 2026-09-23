@@ -618,14 +618,14 @@ class Client:
         return forwardRight[direction]
 
     # 指定方向の左前方向
-    def fowardLeft(self, direction):
-        fowardLeft = {
+    def forwardLeft(self, direction):
+        forwardLeft = {
             Up    : UpLeft,
             Down  : DownRight,
             Right : UpRight,
             Left  : DownLeft
         }
-        return fowardLeft[direction]
+        return forwardLeft[direction]
 
     # 指定方向の右後方向
     def backRight(self, direction):
@@ -637,7 +637,7 @@ class Client:
         }
         return backRight[direction]
 
-    # 指定方向の左前方向
+    # 指定方向の左後方向
     def backLeft(self, direction):
         backLeft = {
             Up    : DownLeft,
@@ -662,9 +662,12 @@ class Client:
         if len(legalMove) > 0:
             # 移動可能な中からランダムに選択
             selectedMove = random.choice(legalMove)
-        else:
+        elif direction is not None:
             # 迂回できないときは後退を選択
             selectedMove = self.backward(direction)
+        else:
+            # 進行方向の指定がなく全方向ブロックのときは、どこにも動けないので任意の方向
+            selectedMove = random.choice([Up, Down, Left, Right])
 
         # 選んだ方向に移動
         return self.walk(selectedMove), selectedMove

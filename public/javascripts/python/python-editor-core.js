@@ -127,25 +127,72 @@
         // ダウンロード/アップロード
         var DEFAULT_DOWNLOAD_NAME = { player: 'my_program', opponent: 'my_opponent', map: 'my_map' };
         var DOWNLOAD_EXTENSION = { player: '.py', opponent: '.py', map: '.json' };
+        // Electron では window.prompt() が使えないため、ページ内ダイアログでファイル名を入力する。
+        // キャンセル時は callback(null) を返す。
+        function askFileName(message, defaultValue, callback) {
+            function createElement(tag, css, text) {
+                var e = document.createElement(tag);
+                e.style.cssText = css;
+                if (text) e.textContent = text;
+                return e;
+            }
+            var buttonCss = 'padding:6px 16px;font-size:15px;font-weight:bold;border-radius:5px;cursor:pointer;';
+
+            var overlay = createElement('div', 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.4);' +
+                'display:flex;align-items:center;justify-content:center;');
+            var box = createElement('div', 'background:#fff;color:#222;border-radius:12px;padding:16px;' +
+                'width:80%;max-width:360px;box-shadow:2px 2px 8px rgba(0,0,0,0.4);font-size:15px;');
+            var label = createElement('div', 'font-weight:bold;margin-bottom:8px;', message);
+            var input = createElement('input', 'width:100%;box-sizing:border-box;padding:6px;font-size:15px;' +
+                'border:1px solid #c0c0c0;border-radius:5px;');
+            input.type = 'text';
+            input.maxLength = 25;
+            input.value = defaultValue || '';
+            var buttons = createElement('div', 'display:flex;justify-content:flex-end;gap:8px;margin-top:12px;');
+            var cancelBtn = createElement('button', buttonCss + 'background:#eee;color:#222;border:1px solid #bbb;', 'キャンセル');
+            var okBtn = createElement('button', buttonCss + 'background:#2b7de9;color:#fff;border:1px solid #2b7de9;', 'OK');
+            cancelBtn.type = okBtn.type = 'button';
+
+            function close(result) {
+                overlay.remove();
+                callback(result);
+            }
+            okBtn.addEventListener('click', function () { close(input.value); });
+            cancelBtn.addEventListener('click', function () { close(null); });
+            input.addEventListener('keydown', function (e) {
+                // IME 変換確定の Enter では決定しない
+                if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); close(input.value); }
+                else if (e.key === 'Escape') { e.preventDefault(); close(null); }
+            });
+
+            buttons.append(cancelBtn, okBtn);
+            box.append(label, input, buttons);
+            overlay.append(box);
+            document.body.append(overlay);
+            input.focus();
+            input.select();
+        }
+
         var downloadBtn = document.getElementById('download-button');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', function () {
                 var code = getActiveEditor().getValue();
+                var extension = DOWNLOAD_EXTENSION[activeEditorKey];
                 var defaultName = DEFAULT_DOWNLOAD_NAME[activeEditorKey];
-                var filename = prompt('ファイル名を入力してください（拡張子は不要です）:', defaultName);
-                if (filename === null) return;
-                filename = filename.trim();
-                if (filename === '') { alert('ファイル名が空です。'); return; }
-                var fullFilename = filename + DOWNLOAD_EXTENSION[activeEditorKey];
-                var blob = new Blob([code], { type: 'text/plain' });
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = fullFilename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                askFileName('ファイル名を入力してください（拡張子は不要です）', defaultName, function (filename) {
+                    if (filename === null) return;
+                    filename = filename.trim();
+                    if (filename === '') { alert('ファイル名が空です。'); return; }
+                    var blob = new Blob([code], { type: 'text/plain' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename + extension;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
             });
         }
 

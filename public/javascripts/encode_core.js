@@ -847,6 +847,7 @@ function initEncodeRuntime(options) {
     pdiv.appendChild(pddiv);
 
     document.body.appendChild(pdiv);
+    pidiv.focus();
 
   };
 
@@ -908,6 +909,7 @@ function initEncodeRuntime(options) {
     pdiv.appendChild(pddiv);
 
     document.body.appendChild(pdiv);
+    pidiv.focus();
 
   };
 
