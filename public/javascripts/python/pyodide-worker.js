@@ -73,6 +73,26 @@ importScripts('/javascripts/vendor/pyodide/pyodide.js', '/javascripts/python/run
         '        return _json.dumps([True, bool(stop.value)])\n' +
         '    return _json.dumps([False, code])\n';
 
+    // チュートリアル: transformer.py の tutorial_new_turn / tutorial_step を、
+    // オンライン対戦と共通の newTurn / step コマンドから呼べるようにする
+    var TUTORIAL_HELPERS =
+        'def _chaser_new_turn():\n' +
+        '    tutorial_new_turn()\n' +
+        'def _chaser_step(value):\n' +
+        '    return tutorial_step(value)\n';
+
+    // チュートリアルの生徒コードの大きさの上限
+    var MAX_TUTORIAL_CODE_LENGTH = 100000;
+
+    // 周辺9マスの初期値。不正な形式なら null (Python 側で 0 が9個になる)
+    function sanitizeMapInfo(value) {
+        if (!Array.isArray(value) || value.length !== 9) return null;
+        for (var i = 0; i < 9; i++) {
+            if (typeof value[i] !== 'number' || !isFinite(value[i]) || value[i] < 0 || value[i] > 3) return null;
+        }
+        return value.slice();
+    }
+
     var handlers = {
         init: async function () {
             pyodide = await loadPyodide({ indexURL: '/javascripts/vendor/pyodide/' });
@@ -120,6 +140,28 @@ importScripts('/javascripts/vendor/pyodide/pyodide.js', '/javascripts/python/run
                 if (arg && arg.destroy) arg.destroy();
                 stepFn.destroy();
             }
+        },
+
+        // チュートリアル: 生徒のコードを変換して読み込む。
+        // 戻り値: { ok: true } または { ok: false, message }。以降は newTurn / step で1歩ずつ進める
+        loadTutorial: async function (payload) {
+            if (typeof payload.playerCode !== 'string' || payload.playerCode.length > MAX_TUTORIAL_CODE_LENGTH) {
+                throw new Error('invalid code');
+            }
+            if (typeof payload.chaserCode !== 'string' || typeof payload.transformerCode !== 'string') {
+                throw new Error('invalid payload');
+            }
+            await pyodide.runPythonAsync(payload.transformerCode);
+
+            pyodide.globals.set('tutorial_source', payload.playerCode);
+            pyodide.globals.set('tutorial_lib', payload.chaserCode);
+            var initialMap = sanitizeMapInfo(payload.initialMapInfo);
+            pyodide.globals.set('tutorial_initial_map', initialMap ? JSON.stringify(initialMap) : null);
+            var json = await pyodide.runPythonAsync(
+                'tutorial_load(tutorial_source, tutorial_lib, tutorial_initial_map)\n'
+            );
+            await pyodide.runPythonAsync(TUTORIAL_HELPERS);
+            return JSON.parse(json);
         },
 
         // オフライン練習: プレイヤーと対戦AIのコードを変換して読み込む

@@ -6,6 +6,7 @@
     "mode": "gethart",
     "get_hart_value": 7,
     "block_limit": 6,
+    "python_line_goal": 3,
     "load_workspace": "02.xml",
     "map": {
         "name": "ステージ 2-3",
