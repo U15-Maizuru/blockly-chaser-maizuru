@@ -353,7 +353,8 @@ function stage_result(status = false) {
     //満たしていない場合はクリアのテキストを変更
     var block_limit_flag = true;
     if (stage_data["block_limit"] && result_flag) {
-        if(stage_data["block_limit"] < Code.workspace.getAllBlocks().length){
+        // 制限を超えているかの判定は画面ごとに異なる(Blockly 版はブロック数。Python 版は評価しない)
+        if(Code.isOverBlockLimit()){
             var message_text = "次は目標ブロック数でのクリアを目指してみよう！";
             var message_title = "ブロック数オーバー！";
             block_limit_flag = false;
@@ -390,20 +391,14 @@ function stage_result(status = false) {
         img.src = '/images/stageclear.png';
         document.getElementById("game_board").appendChild(result);
 
-        var state = Blockly.serialization.workspaces.save(Code.workspace);
-        var jsonText = JSON.stringify(state, null, 2);
-
-        //オートセーブがオンの場合、ブロック数制約を満たしている場合のみセーブ
-        if(localStorage["AUTO_SAVE"] && block_limit_flag){
-            if (localStorage["AUTO_SAVE"] == "on") {
-                localStorage.setItem(stage_data["stage_id"], jsonText);
-            }
-        }
+        // クリア状態の保存(保存する内容は画面ごとに異なる。Blockly 版はワークスペース、Python 版はコード)
+        Code.saveClearState(block_limit_flag);
 
         document.getElementById('overlay').classList.add("overlay_on");
 
         //ブロック数の制約を満たしている場合、満たしていない場合とでメッセージを変更
-        document.getElementById("result_message_area").textContent = message_text;
+        var clear_hint = block_limit_flag ? Code.getClearHint() : "";
+        document.getElementById("result_message_area").textContent = clear_hint ? message_text + " " + clear_hint : message_text;
         document.getElementById("result_message_title").textContent = message_title;
         if(block_limit_flag){
             result.appendChild(img);
