@@ -16,6 +16,7 @@ const { json } = require('express/lib/response.js');
 
 const config = require('../config/config.js');
 const validate_room = require('../tool/validate_room.js');
+const socket_guard = require('../tool/socket_guard.js');
 const { classifyCell, scanCells } = require('./board_scan.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
@@ -915,8 +916,14 @@ const RoomTimeoutCheck =async () => {
 // Socket.io はイベントハンドラ内の例外を捕捉しないため、
 // 想定外の入力による例外がそのままプロセス全体を停止させてしまう。
 // すべてのハンドラをこのラッパ経由で登録し、例外は該当ソケットへのエラー通知に留める
+const socket_rate_limiter = socket_guard.createRateLimiter();
+
 function safeOn(socket, event, handler) {
     socket.on(event, function (...args) {
+        // 切断時の後始末は必ず実行する。それ以外は受付上限を超えた分を無視する
+        if (event !== SOCKET_EVENTS.DISCONNECT && !socket_rate_limiter.allow(socket.id)) {
+            return;
+        }
         const onError = function (e) {
             logger.error('socket handler error (' + event + '): ' + (e && e.message));
             console.error(e);
@@ -978,6 +985,7 @@ io.on('connection', function (socket) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
             return;
         }
+        msg.name = socket_guard.sanitizeName(msg.name, 'プレイヤー');
 
         if (!server_store[msg.room_id]) {
             var room_id_check = msg.room_id.split("?")[0];
@@ -1230,7 +1238,7 @@ io.on('connection', function (socket) {
     safeOn(socket, SOCKET_EVENTS.MATCH_START, function (msg) {
         // 認証 → 存在確認 → 状態変更 の順を守る。
         // 順序を入れ替えると、認証前に未検証の room_id で状態を参照することになる
-        if (!msg || msg.room_id != match_room_store[msg.key]) {
+        if (!socket_guard.ownsMatchRoom(match_room_store, msg)) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
             return;
         }
@@ -1274,6 +1282,7 @@ io.on('connection', function (socket) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
             return;
         }
+        msg.name = socket_guard.sanitizeName(msg.name, 'プレイヤー');
 
         if (!server_store[msg.room_id]) {
             var room_id_check = msg.room_id.split("?")[0];
@@ -1288,7 +1297,7 @@ io.on('connection', function (socket) {
             }
         }
 
-        if (msg.room_id == match_room_store[msg.key]) {
+        if (socket_guard.ownsMatchRoom(match_room_store, msg)) {
             if (!server_store[msg.room_id].cool.status) {
                 server_store[msg.room_id].cool.name = "接続待機中";
             }
@@ -1347,7 +1356,7 @@ io.on('connection', function (socket) {
 
     safeOn(socket, SOCKET_EVENTS.RELEASE, function (msg) {
         try {
-            if (msg.room_id == match_room_store[msg.key]) {
+            if (socket_guard.ownsMatchRoom(match_room_store, msg)) {
                 if (!server_store[msg.room_id].release) {
                     server_store[msg.room_id].release = {};
                 }
@@ -1445,6 +1454,7 @@ io.on('connection', function (socket) {
     });
 
     safeOn(socket, SOCKET_EVENTS.DISCONNECT, function () {
+        socket_rate_limiter.forget(socket.id);
         if (store[socket.id] && server_store[store[socket.id].room]) {
             if (server_store[store[socket.id].room].cool.status && server_store[store[socket.id].room].hot.status && !server_store[store[socket.id].room].match) {
                 if (store[socket.id].chara == "cool") {
@@ -1534,7 +1544,7 @@ io.on('connection', function (socket) {
     });
 
     safeOn(socket, SOCKET_EVENTS.MATCH_END, function (msg) {
-        if (msg.room_id == match_room_store[msg.key]) {
+        if (socket_guard.ownsMatchRoom(match_room_store, msg)) {
             if (match_room_store[socket.id]) {
                 delete match_room_store[socket.id];
             }
