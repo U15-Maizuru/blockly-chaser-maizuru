@@ -10,7 +10,7 @@
 //     joinEvent: SOCKET_EVENTS.PLAYER_JOIN_MATCH,
 //     buildJoinPayload: function () { return {room_id, name, chara, key}; }
 //   });
-//   bridge.runProgram(doTurnPyProxy, { onGameOver: function(info) {...} });
+//   bridge.runProgram(driver); // driver: { newTurn(), step(recData) } (py-worker-host.js 経由)
 (function (root, factory) {
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = factory(require('../socket_events.js'));
@@ -114,51 +114,51 @@
         }
 
         // do_turn ジェネレータ(1ターン分)を最後まで駆動する。
+        // driver.step(recData) は Promise<{ done, value }> を返す。
+        //   done=false: value が2文字の命令コード
+        //   done=true : value は do_turn の戻り値(ループを続けるか)
         // 戻り値: { stopped: true } (ゲーム終了により打ち切り) または
         //         { stopped: false, continueLoop: true/false } (do_turnが正常終了)
-        function driveTurn(gen) {
-            var sendValue;
+        function driveTurn(driver) {
+            var sendValue = null;
             var yieldedAny = false;
             function step() {
                 if (gameOver) return Promise.resolve({ stopped: true });
-                var result = gen.next(sendValue);
-                if (result.done) {
-                    // 正常なターンは必ずget_ready()由来で最低1回yieldする。
-                    // 0回のまま終了するのは、ネストした関数内の行動呼び出しが
-                    // transformer.pyで検出できないパターン(辞書経由の呼び出し等)で
-                    // yield from化されず、サーバーに何も送信されなかった異常系。
-                    // 何もフィードバックせず10秒タイムアウトを待つよりはましなので警告する。
-                    if (!yieldedAny && typeof writeToConsole === 'function') {
-                        writeToConsole('警告: このターンで行動がサーバーに送信されませんでした。ネストした関数の中でwalk/put等を呼んでいる場合、対戦モードでは正しく動かないことがあります。');
+                return driver.step(sendValue).then(function (result) {
+                    if (result.done) {
+                        // 正常なターンは必ずget_ready()由来で最低1回yieldする。
+                        // 0回のまま終了するのは、ネストした関数内の行動呼び出しが
+                        // transformer.pyで検出できないパターン(辞書経由の呼び出し等)で
+                        // yield from化されず、サーバーに何も送信されなかった異常系。
+                        // 何もフィードバックせず10秒タイムアウトを待つよりはましなので警告する。
+                        if (!yieldedAny && typeof writeToConsole === 'function') {
+                            writeToConsole('警告: このターンで行動がサーバーに送信されませんでした。ネストした関数の中でwalk/put等を呼んでいる場合、対戦モードでは正しく動かないことがあります。');
+                        }
+                        return { stopped: false, continueLoop: !!result.value };
                     }
-                    return Promise.resolve({ stopped: false, continueLoop: !!result.value });
-                }
-                yieldedAny = true;
-                var code = result.value;
-                return sendAction(code).then(function (recData) {
-                    sendValue = recData;
-                    return step();
+                    yieldedAny = true;
+                    return sendAction(result.value).then(function (recData) {
+                        sendValue = recData;
+                        return step();
+                    });
                 });
             }
             return step();
         }
 
-        // doTurnFn: main() が返した do_turn 関数の PyProxy (呼び出すたびに新しい
-        // ジェネレータを生成する)。ゲーム終了 or do_turn が False を返すまで
-        // ターンを繰り返す。
-        function runProgram(doTurnFn) {
+        // driver: { newTurn(): Promise, step(recData): Promise<{ done, value }> }
+        // ゲーム終了 or do_turn が False を返すまでターンを繰り返す。
+        function runProgram(driver) {
             function playTurn() {
                 if (gameOver) return;
-                var gen = doTurnFn();
-                Promise.resolve().then(function () {
-                    return driveTurn(gen);
+                Promise.resolve(driver.newTurn()).then(function () {
+                    return driveTurn(driver);
                 }).then(function (res) {
-                    try { if (gen.destroy) gen.destroy(); } catch (e) { /* noop */ }
                     if (res.stopped || !res.continueLoop) return;
                     playTurn();
                 }).catch(function (e) {
-                    try { if (gen.destroy) gen.destroy(); } catch (e2) { /* noop */ }
-                    console.error('[py-bridge] turn error:', e);
+                    if (options.onTurnError) options.onTurnError(e);
+                    else console.error('[py-bridge] turn error:', e);
                 });
             }
             playTurn();

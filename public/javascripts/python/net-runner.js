@@ -1,4 +1,5 @@
 // モード①（オンライン対戦）専用のPyodideブートストラップ。
+// Pyodide は Web Worker (pyodide-worker.js) の中で動かし、py-worker-host.js 経由で操作する。
 // lib/pyCHaser.py には public/javascripts/python/lib/pyCHaser.net.py の内容を書き込み、
 // transformer.py の transform_code_net でASTを変換してから実行する。
 // 実際のSocket.IO通信は py-bridge.js が担当する。
@@ -6,19 +7,23 @@
 
     var DEFAULT_PLAYER_CODE = RUNNER_SHARED.DEFAULT_PLAYER_CODE;
 
+    // 1回の呼び出し(コードの読み込み・1ステップの実行)に許す時間。
+    // サーバーの1手番の既定タイムアウトに合わせる。
+    var CALL_TIMEOUT_MS = 10000;
+
     function createNetRunner(editorCore, bridgeOptions) {
-        var pyodideReadyPromise = loadPyodide({ indexURL: '/javascripts/vendor/pyodide/' });
         var chaserCodePromise = RUNNER_SHARED.fetchText('/javascripts/python/lib/pyCHaser.net.py');
         var transformerCodePromise = RUNNER_SHARED.fetchText('/javascripts/python/transformer.py');
 
-        var pyodide = null;
+        var host = null;
+        var hostReady = null;
         var bridge = null;
         var running = false;
+        var runSeq = 0;
         var coolName = null;
         var hotName = null;
 
         function updateGameDisplay(gameState, turn, scores, coolName, hotName) {
-            if (scores && scores.toJs) scores = scores.toJs();
             var built = GAME_DISPLAY.renderBoard('game_board', gameState, {});
             GAME_DISPLAY.renderInfoPanel('game_info', {
                 turn: turn,
@@ -31,52 +36,62 @@
         }
         root.updateGameDisplayNet = updateGameDisplay;
 
-        async function ready() {
-            pyodide = await pyodideReadyPromise;
-            var chaserCode = await chaserCodePromise;
-            var transformerCode = await transformerCodePromise;
+        root.writeToConsole = editorCore.writeToConsole;
 
-            editorCore.writeToConsole('読み込みが完了しました');
-
-            root.writeToConsole = editorCore.writeToConsole;
-            RUNNER_SHARED.installConsoleBridge(pyodide);
-
-            if (!pyodide.FS.analyzePath('lib').exists) pyodide.FS.mkdir('lib');
-            pyodide.FS.writeFile('lib/pyCHaser.py', chaserCode);
-            await pyodide.runPythonAsync(transformerCode);
+        function startHost(showReadyMessage) {
+            host = PY_WORKER_HOST.createHost({ onConsole: editorCore.writeToConsole });
+            hostReady = host.call('init').then(function () {
+                if (showReadyMessage) editorCore.writeToConsole('読み込みが完了しました');
+            });
+            return hostReady;
         }
-        var readyPromise = ready();
+        startHost(true);
 
         function stop() {
             running = false;
+            runSeq++;
+            if (host && host.isBusy()) host.terminate();
             if (bridge) bridge.leaveRoom();
         }
 
         async function run() {
-            await readyPromise;
-            editorCore.clearConsole();
             stop();
-            running = true;
+            var myRun = runSeq;
+            if (!host.isAlive()) startHost(false);
+            var currentHost = host;
 
-            var playerCode = editorCore.playerEditor.getValue();
+            function isCurrent() {
+                return running && myRun === runSeq;
+            }
+
+            // この実行専用のドライバ。停止・再実行された後は呼び出しを受け付けない。
+            var driver = {
+                newTurn: function () {
+                    if (!isCurrent()) return Promise.reject(createStoppedError());
+                    return currentHost.call('newTurn', {}, CALL_TIMEOUT_MS);
+                },
+                step: function (recData) {
+                    if (!isCurrent()) return Promise.reject(createStoppedError());
+                    return currentHost.call('step', { value: recData }, CALL_TIMEOUT_MS);
+                }
+            };
 
             try {
-                await pyodide.runPythonAsync(
-                    'import sys\n' +
-                    "sys.modules.pop('lib.pyCHaser', None)\n" +
-                    "sys.modules.pop('lib', None)\n"
-                );
+                await hostReady;
+                if (myRun !== runSeq) return;
+                editorCore.clearConsole();
+                running = true;
 
-                pyodide.globals.set('player_code', playerCode);
-                await pyodide.runPythonAsync(
-                    "player_transformed = transform_code_net(player_code)\n"
-                );
+                var playerCode = editorCore.playerEditor.getValue();
+                var chaserCode = await chaserCodePromise;
+                var transformerCode = await transformerCodePromise;
+                await currentHost.call('loadNet', {
+                    chaserCode: chaserCode,
+                    transformerCode: transformerCode,
+                    playerCode: playerCode
+                }, CALL_TIMEOUT_MS);
 
-                await pyodide.runPythonAsync(
-                    "player_ns = {'__name__': '__chaser_player__'}\n" +
-                    'exec(player_transformed, player_ns)\n' +
-                    "do_turn_player = player_ns['main']()\n"
-                );
+                if (!isCurrent()) return;
 
                 bridge = PY_BRIDGE.createBridge(Object.assign({}, bridgeOptions, {
                     onBoardUpdate: function (msg) {
@@ -85,6 +100,7 @@
                     },
                     onGameOver: function (info) {
                         running = false;
+                        if (currentHost.isBusy()) currentHost.terminate();
                         editorCore.writeToConsole('\nゲーム終了: ' + JSON.stringify(info));
                         bridgeOptions.onGameOver && bridgeOptions.onGameOver(info);
                     },
@@ -93,16 +109,34 @@
                         hotName = msg.hot_name || null;
                         editorCore.writeToConsole('部屋に参加しました');
                         bridgeOptions.onJoinedRoom && bridgeOptions.onJoinedRoom(msg);
+                    },
+                    onTurnError: function (err) {
+                        if (!isCurrent()) return;
+                        reportRunError(err);
+                        if (err && err.code === 'timeout' && bridge) bridge.leaveRoom();
                     }
                 }));
 
-                var doTurnPlayer = pyodide.globals.get('do_turn_player');
-                bridge.runProgram(doTurnPlayer);
+                bridge.runProgram(driver);
             } catch (err) {
-                editorCore.writeToConsole(err.message || String(err));
-                bridgeOptions.onRunError && bridgeOptions.onRunError(err);
-                running = false;
+                if (myRun !== runSeq) return;
+                reportRunError(err);
             }
+        }
+
+        function createStoppedError() {
+            var err = new Error('stopped');
+            err.code = 'stopped';
+            return err;
+        }
+
+        function reportRunError(err) {
+            var message = err && err.code === 'timeout'
+                ? '実行に時間がかかりすぎたため停止しました'
+                : ((err && err.message) || String(err));
+            editorCore.writeToConsole(message);
+            bridgeOptions.onRunError && bridgeOptions.onRunError(new Error(message));
+            running = false;
         }
 
         return {

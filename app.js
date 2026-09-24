@@ -58,6 +58,11 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 app.use(cookieParser());
+// Python実行用Workerの通信先を同一オリジンに限定する
+app.use('/javascripts/python/pyodide-worker.js', (req, res, next) => {
+  res.setHeader('Content-Security-Policy', "connect-src 'self'");
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 var mode_path = config_load.electron_conf_load();
