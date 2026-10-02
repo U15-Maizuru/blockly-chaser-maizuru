@@ -189,6 +189,27 @@ test('取得ゲート: 先が壁と分かっている袋小路のアイテムは
     }
 });
 
+test('取得ゲート: 見送った袋小路のアイテムへ、近づいては離れる往復をしない', () => {
+    let upRuns = 0;
+    for (let i = 0; i < 80; i++) {
+        const strategy = createStrategy('p3');
+        const view = [0, 0, 0, 0, 0, 0, 2, 3, 2];
+        const first = strategy.decide(view);
+        assert.strictEqual(first.type, 'look');
+        first.onResult([2, 2, 2, 2, 2, 2, 2, 2, 2]);
+        const second = strategy.decide(view);
+        assert.strictEqual(second.type, 'move');
+        assert.notStrictEqual(second.dir, 'bottom');
+        if (second.dir === 'top') {
+            upRuns += 1;
+            // 上へ動いた直後、見送ったアイテム(2マス下)へ引き返してはいけない
+            const third = strategy.decide([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+            assert.notDeepStrictEqual({ type: third.type, dir: third.dir }, { type: 'move', dir: 'bottom' });
+        }
+    }
+    assert.ok(upRuns > 0);
+});
+
 test('自己対戦: 例外なく終了し、gate 付き戦略は壁への自滅・自縛をしない', () => {
     const profiles = ['p1', 'p2', 'p3'];
     for (const a of profiles) {
