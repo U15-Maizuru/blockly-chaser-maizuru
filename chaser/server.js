@@ -17,6 +17,7 @@ const { json } = require('express/lib/response.js');
 const config = require('../config/config.js');
 const validate_room = require('../tool/validate_room.js');
 const socket_guard = require('../tool/socket_guard.js');
+const { filterPlayerName } = require('../tool/name_filter.js');
 const { classifyCell, scanCells } = require('./board_scan.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
@@ -987,6 +988,9 @@ io.on('connection', function (socket) {
         }
         msg.name = socket_guard.sanitizeName(msg.name, 'プレイヤー');
 
+        // 対戦相手・観戦者に公開される表示名のため、以降の参照より前にフィルタする
+        msg.name = filterPlayerName(msg.name);
+
         if (!server_store[msg.room_id]) {
             var room_id_check = msg.room_id.split("?")[0];
             //コピーもとが存在するかチェック
@@ -1283,6 +1287,9 @@ io.on('connection', function (socket) {
             return;
         }
         msg.name = socket_guard.sanitizeName(msg.name, 'プレイヤー');
+
+        // 対戦相手・観戦者に公開される表示名のため、以降の参照より前にフィルタする
+        msg.name = filterPlayerName(msg.name);
 
         if (!server_store[msg.room_id]) {
             var room_id_check = msg.room_id.split("?")[0];
