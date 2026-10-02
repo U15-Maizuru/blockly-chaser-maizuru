@@ -10,7 +10,7 @@
         "turn": false
     },
     "cpu": {
-        "level": 2,
+        "level": 4,
         "turn": "hot"
     },
     "map": {
