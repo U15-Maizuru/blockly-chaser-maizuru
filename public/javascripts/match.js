@@ -36,6 +36,7 @@ if (query_list.room_id) {
                 var server_init = {};
                 server_init.room_id = query_list.room_id + "?" + query_list.room_token;
                 if (query_list.my_chara) server_init.player_chara = query_list.my_chara;
+                if (query_list.cpu_level !== undefined) server_init.cpu_level = parseInt(query_list.cpu_level, 10);
                 socket.emit(SOCKET_EVENTS.MATCH_INIT, server_init);
             }
             else {
@@ -196,7 +197,8 @@ function game_result_display(winner, info) {
     var re_button_link = document.createElement('a');
     re_button_link.classList.add("button_link");
     var re_chara_param = query_list.my_chara ? "&my_chara=" + query_list.my_chara : "";
-    re_button_link.href = "/match?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token + re_chara_param;
+    var re_level_param = query_list.cpu_level !== undefined ? "&cpu_level=" + query_list.cpu_level : "";
+    re_button_link.href = "/match?room_id=" + query_list.room_id + "&room_token=" + query_list.room_token + re_chara_param + re_level_param;
     re_button_link.innerText = "もう一度";
     re_button.appendChild(re_button_link);
 
