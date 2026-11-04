@@ -8,6 +8,7 @@ var morgan = require('morgan');
 var helmet = require('helmet');
 var rateLimit = require('express-rate-limit');
 const logger = require('./bin/logger.js');
+const { workerCspHeaderForRequest } = require('./tool/worker_csp.js');
 
 var indexRouter = require('./routes/index');
 
@@ -59,9 +60,9 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 app.use(cookieParser());
-// Python実行用Workerの通信先を同一オリジンに限定する
+// Python実行用Workerの通信先をPyodideの配置先だけに限定する
 app.use('/javascripts/python/pyodide-worker.js', (req, res, next) => {
-  res.setHeader('Content-Security-Policy', "connect-src 'self'");
+  res.setHeader('Content-Security-Policy', workerCspHeaderForRequest(req));
   next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
