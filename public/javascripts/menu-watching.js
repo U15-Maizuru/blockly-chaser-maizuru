@@ -140,6 +140,16 @@ function server_info(id, get_list) {
   var vs_btn   = null;
   var auto_btn = null;
   var selectedChara = null;
+  var selectedCpuLevel = null;
+  // CPUの強さ (5段階)。値は chaser/cpu_level_table.js の段階と同じ
+  var CPU_LEVEL_OPTIONS = [
+    { value: 1, label: 'とてもやさしい' },
+    { value: 2, label: 'やさしい' },
+    { value: 3, label: 'ふつう' },
+    { value: 4, label: 'むずかしい' },
+    { value: 5, label: 'とてもむずかしい' }
+  ];
+  var DEFAULT_CPU_LEVEL = 3;
 
   if (hasVsMode) {
     vs_btn = document.createElement('button');
@@ -179,7 +189,8 @@ function server_info(id, get_list) {
     var token = encodeURIComponent(server_token_input.value);
     if (token === '') token = Math.random().toString(36).slice(2, 10);
     var charaParam = (currentMode !== 'vs' && selectedChara) ? '&my_chara=' + selectedChara : '';
-    window.location.href = '/match?room_id=' + effectiveId + '&room_token=' + token + charaParam;
+    var levelParam = (currentMode !== 'vs' && selectedCpuLevel !== null) ? '&cpu_level=' + selectedCpuLevel : '';
+    window.location.href = '/match?room_id=' + effectiveId + '&room_token=' + token + charaParam + levelParam;
   });
 
   var server_watch_button = document.createElement('button');
@@ -229,6 +240,29 @@ function server_info(id, get_list) {
         chara_div.appendChild(btn);
       });
       server_info_turn.appendChild(chara_div);
+
+      // CPUの強さ選択 (選んだ段階をMATCH_INITで送る)
+      selectedCpuLevel = DEFAULT_CPU_LEVEL;
+      var level_div = document.createElement('div');
+      level_div.setAttribute('id', 'cpu_level_select_div');
+      var level_label = document.createElement('label');
+      level_label.setAttribute('for', 'cpu_level_select');
+      level_label.textContent = 'CPUの強さ';
+      var level_select = document.createElement('select');
+      level_select.setAttribute('id', 'cpu_level_select');
+      CPU_LEVEL_OPTIONS.forEach(function(opt) {
+        var option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        if (opt.value === selectedCpuLevel) option.selected = true;
+        level_select.appendChild(option);
+      });
+      level_select.addEventListener('change', function() {
+        selectedCpuLevel = parseInt(level_select.value, 10);
+      });
+      level_div.appendChild(level_label);
+      level_div.appendChild(level_select);
+      server_info_turn.appendChild(level_div);
     }
 
     if (vs_btn)   vs_btn.classList.toggle('mode_btn_active', mode === 'vs');

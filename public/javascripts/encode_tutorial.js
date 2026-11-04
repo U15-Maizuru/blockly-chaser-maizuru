@@ -414,6 +414,27 @@ Code.stopJS = function () {
   }
 };
 
+// tutorial_board.js が呼ぶフック(Python 版は python/tutorial-runner.js が別の実装を提供する)
+Code.isOverBlockLimit = function () {
+  return stage_data["block_limit"] < Code.workspace.getAllBlocks().length;
+};
+
+Code.getClearHint = function () {
+  return "";
+};
+
+Code.saveClearState = function (block_limit_flag) {
+  var state = Blockly.serialization.workspaces.save(Code.workspace);
+  var jsonText = JSON.stringify(state, null, 2);
+
+  //オートセーブがオンの場合、ブロック数制約を満たしている場合のみセーブ
+  if (localStorage["AUTO_SAVE"] && block_limit_flag) {
+    if (localStorage["AUTO_SAVE"] == "on") {
+      localStorage.setItem(stage_data["stage_id"], jsonText);
+    }
+  }
+};
+
 Code.download = function () {
   var state = Blockly.serialization.workspaces.save(Code.workspace);
   var jsonText = JSON.stringify(state, null, 2);

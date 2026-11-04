@@ -244,6 +244,8 @@ var tutorial_reset = function () {
             .then(function (json) {
                 for (var tutorial_data_name in json) {
                     localStorage.removeItem(tutorial_data_name);
+                    // Python 版のクリア状態(コード)も一緒に消す
+                    localStorage.removeItem('py_' + tutorial_data_name);
                 }
             });
     }

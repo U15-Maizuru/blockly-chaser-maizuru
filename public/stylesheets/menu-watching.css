@@ -665,3 +665,7 @@ td img {
 .chara_select_btn { flex: 1; box-sizing: border-box; display: flex; align-items: center; justify-content: center; min-height: var(--bc-touch-min); padding: 6px 0; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 10px; border: 2px solid #88d9ce; background: #e0f5f0; color: #215c57; transition: background 0.15s, color 0.15s, border-color 0.15s; }
 .chara_select_btn_cool_active { background: linear-gradient(135deg, var(--bc-color-primary-soft), var(--bc-color-primary)); color: #fff; border-color: transparent; }
 .chara_select_btn_hot_active  { background: linear-gradient(135deg, var(--bc-color-danger-soft), var(--bc-color-danger)); color: #fff; border-color: transparent; }
+
+#cpu_level_select_div { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px 4px; }
+#cpu_level_select_div label { font-size: 13px; font-weight: bold; color: #215c57; white-space: nowrap; }
+#cpu_level_select { flex: 1; box-sizing: border-box; min-height: var(--bc-touch-min); padding: 4px 8px; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 10px; border: 2px solid #88d9ce; background: #e0f5f0; color: #215c57; }

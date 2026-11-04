@@ -22,7 +22,14 @@
 
   <%- include('./common/config', {LNG: C_LNG}) %>
 
-  <% const headerActionsHtml = `<button id="configButton" class="bc-btn-labeled" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}">${LNG["CONFIG"]}</button>`; %>
+  <%
+    const headerActionsHtml = `
+      <div class="tutorial_mode_switch" role="group" aria-label="解きかた">
+        <button type="button" class="tutorial_mode_button active" data-mode="blockly" aria-pressed="true">ブロック</button>
+        <button type="button" class="tutorial_mode_button" data-mode="python" aria-pressed="false">Python</button>
+      </div>
+      <button id="configButton" class="bc-btn-labeled" title="${LNG["CONFIG"]}" aria-label="${LNG["CONFIG"]}">${LNG["CONFIG"]}</button>`;
+  %>
   <%- include('./common/header', { backHref: '../', titleSpan: 'チュートリアル', titleHtml: title, actionsHtml: headerActionsHtml }) %>
 
   <div id="scale_root">

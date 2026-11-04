@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1680, user-scalable=no">
+  <meta name="google" value="notranslate">
+  <title>
+    CHaser Tutorial (Python)
+    <% if (stagedata && stagedata.name) { %>
+      - <%= stagedata.name %>
+    <% } %>
+  </title>
+  <link rel="icon" href="/images/favicon.ico">
+
+  <script>
+    var stage_data = <%- stage_json %>;
+    var reset_data = <%- stage_json %>;
+    // tutorial_board.js が参照するフック(Blockly 版では code.js が定義する)。中身は python/tutorial-runner.js が提供する
+    var Code = {};
+  </script>
+
+  <script src="/javascripts/howler.min.js"></script>
+  <script src="/javascripts/tutorial_board.js"></script>
+
+  <%- include('./common/head-assets') %>
+  <link rel='stylesheet' href='/javascripts/vendor/codemirror/lib/codemirror.css' />
+  <link rel='stylesheet' href='/javascripts/vendor/codemirror/theme/monokai.css' />
+  <link rel='stylesheet' href='/stylesheets/game-display.css' />
+  <link rel='stylesheet' href='/stylesheets/blockly.css' />
+  <link rel='stylesheet' href='/stylesheets/tutorial.css' />
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/tutorial-python.css' />
+</head>
+
+<body>
+  <%- include('./common/config', {LNG: C_LNG}) %>
+
+  <div id="overlay">
+    <div id="result_area">
+      <div id="result_message_title" class="result_title">ステージクリア！</div>
+      <div id="result_message_area" class="result_message">他のステージにもチャレンジしてみよう！</div>
+      <div id="result_button_area">
+        <div id="back_menu" class="result_button">ステージ選択<a href="/menu-tutorial"></a></div>
+        <div id="resetButton" class="result_button">再挑戦</div>
+      </div>
+    </div>
+  </div>
+
+  <%
+    const headerActionsHtml = `
+      <button id="runButton" class="bc-btn-labeled" title="実行" aria-label="実行">実行</button>
+      <button id="reloadButton" class="bc-btn-labeled Button_hidden" title="リセット" aria-label="リセット">リセット</button>
+      <button id="stopButton" class="bc-btn-labeled" title="停止" aria-label="停止">停止</button>
+      <button id="download-button" class="bc-btn-labeled" title="保存" aria-label="保存">保存</button>
+      <button id="upload-button" class="bc-btn-labeled" title="開く" aria-label="開く">開く</button>
+      <input type="file" id="file-input" accept=".py" style="display:none;">
+      <button id="configButton" class="bc-btn-labeled" title="設定" aria-label="設定">設定</button>
+    `;
+  %>
+  <%- include('./common/header', { backHref: '/menu-tutorial', titleSpan: 'チュートリアル (Python)', titleHtml: title, actionsHtml: headerActionsHtml }) %>
+
+  <div id="scale_root">
+    <div id="main_area">
+      <div class="left_area python_tutorial_left">
+        <div class="python_tutorial_tab">Python</div>
+        <div class="python_tutorial_editor">
+          <textarea id="editor"></textarea>
+        </div>
+      </div>
+
+      <div class="right_area">
+
+        <div class="game_area">
+          <div id="game_board"></div>
+          <div id="game_info">
+            <div id="turn_area">
+              <div class="game_info_title">残りターン数</div>
+              <div id="turn_now"></div>
+            </div>
+          </div>
+        </div>
+        <div class="console_area" id="console-output"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/javascripts/vendor/codemirror/lib/codemirror.js"></script>
+  <script src="/javascripts/vendor/codemirror/mode/python/python.js"></script>
+  <script src="/javascripts/vendor/codemirror/keymap/sublime.js"></script>
+  <script src="/javascripts/vendor/codemirror/addon/edit/matchbrackets.js"></script>
+  <script src="/javascripts/python/python-editor-core.js"></script>
+  <script src="/javascripts/python/py-worker-host.js"></script>
+  <script src="/javascripts/python/runner-shared.js"></script>
+  <script src="/javascripts/python/tutorial-bridge.js"></script>
+  <script src="/javascripts/python/tutorial-runner.js"></script>
+  <script>
+    makeTable("game_board");
+
+    var editorCore = PYTHON_EDITOR_CORE.initPythonEditor({
+      defaultPlayerCode: TUTORIAL_RUNNER.STARTER_CODE
+    });
+    var runner = TUTORIAL_RUNNER.createTutorialRunner(editorCore);
+  </script>
+
+</body>
+
+</html>

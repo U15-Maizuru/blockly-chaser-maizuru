@@ -415,3 +415,29 @@ td img {
 #stage_detail.display_off * {
     display: none !important;
 }
+
+/* ブロック / Python の切替 (ヘッダー右側) */
+.tutorial_mode_switch {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.tutorial_mode_button {
+    border: none;
+    background: #e6f7f5;
+    color: #215c57;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.tutorial_mode_button.active {
+    background: #2faea1;
+    color: #ffffff;
+}
