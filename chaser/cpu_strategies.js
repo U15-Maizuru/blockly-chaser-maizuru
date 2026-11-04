@@ -68,6 +68,8 @@ function createStrategy(profileName) {
     const lastVisitTurn = new Map();
     let gateLookTurn = -999;
     let gateLookDir = null;
+    // 袋小路のため見送ったアイテム。記憶から追う対象にしない (近づいては離れる往復を防ぐ)
+    const skippedItems = new Set();
     let lastEnemyPos = null;
     let lastEnemyTurn = -999;
     let lastLookTurn = -999;
@@ -131,6 +133,7 @@ function createStrategy(profileName) {
                     return 'look';
                 }
             } else if (beyond === BLOCK) {
+                skippedItems.add(key(myX + dx, myY + dy));
                 return 'skip';
             }
         }
@@ -270,7 +273,7 @@ function createStrategy(profileName) {
         let nearest = null;
         let nearestKey = null;
         for (const [k, value] of memory) {
-            if (value === ITEM) {
+            if (value === ITEM && !skippedItems.has(k)) {
                 const [x, y] = k.split(',').map(Number);
                 const manhattan = Math.abs(x - myX) + Math.abs(y - myY);
                 if (manhattan <= profile.pursuitRange) {
