@@ -16,7 +16,11 @@ const { json } = require('express/lib/response.js');
 
 const config = require('../config/config.js');
 const validate_room = require('../tool/validate_room.js');
+const socket_guard = require('../tool/socket_guard.js');
+const { filterPlayerName } = require('../tool/name_filter.js');
+const cpu_level_table = require('./cpu_level_table.js');
 const { classifyCell, scanCells } = require('./board_scan.js');
+const cpu_strategies = require('./cpu_strategies.js');
 
 var game_server = JSON.parse(JSON.stringify(server_data.load()));
 
@@ -478,7 +482,7 @@ function game_result_check(room, chara, effect_t = "r", effect_d = false, winner
             }
 
             if (server_store[room].cpu && server_store[room][server_store[room].cpu.turn].turn) {
-                cpu(room, server_store[room].cpu.level, server_store[room].cpu.turn);
+                cpu(room, server_store[room].cpu.turn);
             }
         }
     }
@@ -915,8 +919,14 @@ const RoomTimeoutCheck =async () => {
 // Socket.io はイベントハンドラ内の例外を捕捉しないため、
 // 想定外の入力による例外がそのままプロセス全体を停止させてしまう。
 // すべてのハンドラをこのラッパ経由で登録し、例外は該当ソケットへのエラー通知に留める
+const socket_rate_limiter = socket_guard.createRateLimiter();
+
 function safeOn(socket, event, handler) {
     socket.on(event, function (...args) {
+        // 切断時の後始末は必ず実行する。それ以外は受付上限を超えた分を無視する
+        if (event !== SOCKET_EVENTS.DISCONNECT && !socket_rate_limiter.allow(socket.id)) {
+            return;
+        }
         const onError = function (e) {
             logger.error('socket handler error (' + event + '): ' + (e && e.message));
             console.error(e);
@@ -978,6 +988,10 @@ io.on('connection', function (socket) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
             return;
         }
+        msg.name = socket_guard.sanitizeName(msg.name, 'プレイヤー');
+
+        // 対戦相手・観戦者に公開される表示名のため、以降の参照より前にフィルタする
+        msg.name = filterPlayerName(msg.name);
 
         if (!server_store[msg.room_id]) {
             var room_id_check = msg.room_id.split("?")[0];
@@ -1091,7 +1105,7 @@ io.on('connection', function (socket) {
                     }
 
                     if (server_store[room].cpu && server_store[room].cool.name == "cpu") {
-                        cpu(room, server_store[room].cpu.level, server_store[room].cpu.turn);
+                        cpu(room, server_store[room].cpu.turn);
                     }
                 }
                 setTimeout(game_start_timer, 500, store[socket.id].room);
@@ -1194,6 +1208,15 @@ io.on('connection', function (socket) {
                         server_store[msg.room_id][cpuChara].getready = true;
                         server_store[msg.room_id][cpuChara].score = 0;
                         server_store[msg.room_id][cpuChara].name = "cpu";
+
+                        // プレイヤーが選択したCPUレベルで上書きする。マップ側の既定値(JSON)は
+                        // 書き換えず、このルームインスタンスはgame_server_reset()で対戦終了後に
+                        // 既定値へ戻るため、選択は毎回このマッチ限りで有効
+                        if (cpu_level_table.isValidCpuLevel(msg.cpu_level)) {
+                            server_store[msg.room_id].cpu.level = msg.cpu_level;
+                        }
+                        //このマッチで動かすCPUを決める (候補が複数ある段階はここで抽選する)
+                        server_store[msg.room_id].cpu.spec = cpu_level_table.pickCpuSpec(server_store[msg.room_id].cpu.level);
                     }
                 }
                 else {
@@ -1230,7 +1253,7 @@ io.on('connection', function (socket) {
     safeOn(socket, SOCKET_EVENTS.MATCH_START, function (msg) {
         // 認証 → 存在確認 → 状態変更 の順を守る。
         // 順序を入れ替えると、認証前に未検証の room_id で状態を参照することになる
-        if (!msg || msg.room_id != match_room_store[msg.key]) {
+        if (!socket_guard.ownsMatchRoom(match_room_store, msg)) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "不正な操作です");
             return;
         }
@@ -1261,7 +1284,7 @@ io.on('connection', function (socket) {
                 }
 
                 if (server_store[room].cpu && server_store[room].cool.name == "cpu") {
-                    cpu(room, server_store[room].cpu.level, server_store[room].cpu.turn);
+                    cpu(room, server_store[room].cpu.turn);
                 }
             }
             setTimeout(game_start_timer, 500, msg.room_id);
@@ -1274,6 +1297,10 @@ io.on('connection', function (socket) {
             io.to(socket.id).emit(SOCKET_EVENTS.ERROR, "ルームIDが正しくありません");
             return;
         }
+        msg.name = socket_guard.sanitizeName(msg.name, 'プレイヤー');
+
+        // 対戦相手・観戦者に公開される表示名のため、以降の参照より前にフィルタする
+        msg.name = filterPlayerName(msg.name);
 
         if (!server_store[msg.room_id]) {
             var room_id_check = msg.room_id.split("?")[0];
@@ -1288,7 +1315,7 @@ io.on('connection', function (socket) {
             }
         }
 
-        if (msg.room_id == match_room_store[msg.key]) {
+        if (socket_guard.ownsMatchRoom(match_room_store, msg)) {
             if (!server_store[msg.room_id].cool.status) {
                 server_store[msg.room_id].cool.name = "接続待機中";
             }
@@ -1347,7 +1374,7 @@ io.on('connection', function (socket) {
 
     safeOn(socket, SOCKET_EVENTS.RELEASE, function (msg) {
         try {
-            if (msg.room_id == match_room_store[msg.key]) {
+            if (socket_guard.ownsMatchRoom(match_room_store, msg)) {
                 if (!server_store[msg.room_id].release) {
                     server_store[msg.room_id].release = {};
                 }
@@ -1445,6 +1472,7 @@ io.on('connection', function (socket) {
     });
 
     safeOn(socket, SOCKET_EVENTS.DISCONNECT, function () {
+        socket_rate_limiter.forget(socket.id);
         if (store[socket.id] && server_store[store[socket.id].room]) {
             if (server_store[store[socket.id].room].cool.status && server_store[store[socket.id].room].hot.status && !server_store[store[socket.id].room].match) {
                 if (store[socket.id].chara == "cool") {
@@ -1534,7 +1562,7 @@ io.on('connection', function (socket) {
     });
 
     safeOn(socket, SOCKET_EVENTS.MATCH_END, function (msg) {
-        if (msg.room_id == match_room_store[msg.key]) {
+        if (socket_guard.ownsMatchRoom(match_room_store, msg)) {
             if (match_room_store[socket.id]) {
                 delete match_room_store[socket.id];
             }
@@ -1555,34 +1583,25 @@ exports.reloadRoom = reloadRoom;
 
 
 //cpu
-function cpu(room, level, chara) {
+//このマッチで動かすCPU(spec)を返す。対戦開始時(MATCH_INIT)に決まっていなければ、レベルから決める
+function get_cpu_spec(room) {
+    var cpu_conf = server_store[room].cpu;
+    if (!cpu_conf.spec) {
+        cpu_conf.spec = cpu_level_table.pickCpuSpec(cpu_conf.level);
+    }
+    return cpu_conf.spec;
+}
+
+function cpu(room, chara) {
 
     var cpu_map_date = get_ready(room, chara);
     const delay_time = 100;
 
     if (cpu_map_date) {
-        //levelの変数の型が文字列の場合は数値に変換
-        if (typeof level == "string") {
-            if (level[0] == "0") {
-                level = 0;
-            }
-            else if (level[0] == "1") {
-                level = 1;
-            }
-            else if (level[0] == "2") {
-                level = 2;
-            }
-            else {
-                level = 0;
-            }
-        }
-        //ずっと上を確認する
-        if (level == 0) {
-            setTimeout(look, delay_time, room, chara, "top");
-        }
+        var spec = get_cpu_spec(room);
 
         //壁じゃない方向にランダムに移動する
-        else if (level == 1) {
+        if (spec.kind == "random") {
             var random_list = [];
             if (cpu_map_date[1] != 2) {
                 random_list.push('top');
@@ -1605,8 +1624,8 @@ function cpu(room, level, chara) {
         }
 
         //別関数に移動，関数内でCPUの行動を決定
-        else if (level == 2) {
-            next_action = cpu_action(room, cpu_map_date);//CPU関数による行動決定
+        else if (spec.kind == "action") {
+            next_action = cpu_action(room, cpu_map_date, spec.params);//CPU関数による行動決定
             //console.log(next_action);
 
             if (next_action[0] == "attack") {
@@ -1620,6 +1639,34 @@ function cpu(room, level, chara) {
             }
 
         }
+
+        //戦略ロジック(cpu_strategies.js)による行動決定
+        else if (spec.kind == "strategy") {
+            if (!room_info[room]) {
+                room_info[room] = {};
+            }
+            if (!room_info[room].strategy) {
+                room_info[room].strategy = cpu_strategies.createStrategy(spec.profile);
+            }
+            const act = room_info[room].strategy.decide(cpu_map_date);
+
+            if (act.type == "attack") {
+                setTimeout(put_wall, delay_time, room, chara, act.dir);
+            }
+            else if (act.type == "move") {
+                setTimeout(move_player, delay_time, room, chara, act.dir);
+            }
+            else {
+                setTimeout(function () {
+                    const readings = look(room, chara, act.dir);
+                    if (readings && act.onResult) {
+                        act.onResult(readings);
+                    }
+                }, delay_time);
+            }
+        }
+
+        //ずっと上を確認する
         else {
             setTimeout(look, delay_time, room, chara, "top");
         }
@@ -1627,11 +1674,10 @@ function cpu(room, level, chara) {
 }
 
 //与えられた周辺情報を元に、CPUの行動を決定する
-function cpu_action(room, map_data) {
+function cpu_action(room, map_data, params) {
     //map_dataの中身は自分を中心とした周囲9マスの情報
     //map_data[4]が自分の情報, map_data[0]が左上の情報, map_data[8]が右下の情報
 
-    //server_store[room]で部屋のcpu_levelを取得可能
     //=0:何もない， =2:壁，=3:アイテム，=1or2:自分または敵
     item_num = 3;
     wall_num = 2;
@@ -1645,31 +1691,16 @@ function cpu_action(room, map_data) {
 
     } else {
         action_history = ["mode_direction", "mode_direction", "mode_direction", "mode_direction", "mode_direction"];
-        cpu_info = {};
-        cpu_level = server_store[room].cpu.level;
-
-        if (typeof cpu_level == "string") {
-            //後ろのパラメータを取得　ex/"2?item=10&holdAttack=3"
-            //まずは?移行があるかどうかを確認
-            if (cpu_level.indexOf("?") != -1) {
-                //?以降を取得
-                paramater = cpu_level.split("?")[1];
-                //&で分割
-                paramater_list = paramater.split("&");
-
-                for (i = 0; i < paramater_list.length; i++) {
-                    //=で分割
-                    paramater_key = paramater_list[i].split("=")[0];
-                    paramater_value = parseInt(paramater_list[i].split("=")[1], 10);
-                    cpu_info[paramater_key] = paramater_value;
-                }
-            }
-        }
+        //levelに応じた制限(item/holdAttack/naname)。空なら標準の動き
+        cpu_info = Object.assign({}, params);
         room_info[room] = { "cpu": cpu_info };
         room_info[room].cpu.now_item = 0;
         room_info[room].turn = 0;
         room_info[room].cpu.wall3 = 0;//前ターンに3面壁処理が行われたかどうか
     }
+
+    //複数の部屋で同時に動いても設定が混ざらないよう、この部屋の設定を使う
+    cpu_info = room_info[room].cpu;
 
     //turnのカウント
     room_info[room].turn += 1;

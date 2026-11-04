@@ -4,6 +4,9 @@
 // (モード①はプレイヤータブのみ、モード③はプレイヤー/対戦AI/マップの3タブ)。
 (function (root) {
 
+    // アップロードできるファイルの大きさの上限(マップの JSON も含む)
+    var MAX_UPLOAD_BYTES = 1024 * 1024;
+
     function initPythonEditor(options) {
         options = options || {};
         var hasOpponentTab = !!options.hasOpponentTab;
@@ -203,6 +206,12 @@
             fileInput.addEventListener('change', function (event) {
                 var file = event.target.files[0];
                 if (!file) return;
+                // 極端に大きいファイルは読み込まない
+                if (file.size > MAX_UPLOAD_BYTES) {
+                    alert('ファイルが大きすぎます。');
+                    event.target.value = '';
+                    return;
+                }
                 var reader = new FileReader();
                 reader.onload = function (e) {
                     getActiveEditor().setValue(replaceTabsWithSpaces(e.target.result));

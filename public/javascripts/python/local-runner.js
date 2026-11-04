@@ -1,10 +1,14 @@
 // モード③（オフライン練習）専用のPyodideブートストラップ+実行ループ。
 // Python-CHaser-Webのローカルシミュレーション方式(yield from変換なし、
 // プレイヤー・対戦AI双方を同一Pyodide内で動かす)をそのまま踏襲する。
+// Pyodide は Web Worker (pyodide-worker.js) の中で動かし、py-worker-host.js 経由で操作する。
 // lib/pyCHaser.py には public/javascripts/python/lib/pyCHaser.local.py の内容を書き込む。
 (function (root) {
 
     var DEFAULT_PLAYER_CODE = RUNNER_SHARED.DEFAULT_PLAYER_CODE;
+
+    // 1回の呼び出し(コードの読み込み・1ターンの実行)に許す時間
+    var CALL_TIMEOUT_MS = 10000;
 
     // Python-CHaser-Web本家のデフォルト対戦AI(index.html内のopponentEditor初期値)をそのまま移植。
     // 発見したものを記憶しながらアイテムを回収しつつ、隣接した相手にはputで応戦する。
@@ -192,18 +196,16 @@ if __name__ == "__main__":
 `;
 
     function createLocalRunner(editorCore, mapEditorAdapter) {
-        var pyodideReadyPromise = loadPyodide({ indexURL: '/javascripts/vendor/pyodide/' });
         var chaserCodePromise = RUNNER_SHARED.fetchText('/javascripts/python/lib/pyCHaser.local.py');
         var transformerCodePromise = RUNNER_SHARED.fetchText('/javascripts/python/transformer.py');
 
-        var pyodide = null;
-        var chaserCode = null;
-        var transformerCode = null;
+        var host = null;
+        var hostReady = null;
         var turnTimeout = null;
         var gameRunning = false;
+        var runSeq = 0;
 
         function updateGameDisplay(gameState, turn, scores) {
-            if (scores.toJs) scores = scores.toJs();
             var built = GAME_DISPLAY.renderBoard('game_board', gameState, {});
             GAME_DISPLAY.renderInfoPanel('game_info', {
                 turn: turn,
@@ -215,94 +217,84 @@ if __name__ == "__main__":
             });
         }
 
-        async function ready() {
-            pyodide = await pyodideReadyPromise;
-            chaserCode = await chaserCodePromise;
-            transformerCode = await transformerCodePromise;
-
-            editorCore.writeToConsole('読み込みが完了しました');
-
-            root.writeToConsole = editorCore.writeToConsole;
-            root.updateGameDisplay = updateGameDisplay;
-            RUNNER_SHARED.installConsoleBridge(pyodide);
+        function startHost(showReadyMessage) {
+            host = PY_WORKER_HOST.createHost({
+                onConsole: editorCore.writeToConsole,
+                onDisplay: function (display) {
+                    updateGameDisplay(display.gameState, display.turn, display.scores);
+                }
+            });
+            hostReady = host.call('init').then(function () {
+                if (showReadyMessage) editorCore.writeToConsole('読み込みが完了しました');
+            });
+            return hostReady;
         }
-        var readyPromise = ready();
+        startHost(true);
 
         function stop() {
             if (turnTimeout) { clearTimeout(turnTimeout); turnTimeout = null; }
             gameRunning = false;
+            runSeq++;
+            if (host && host.isBusy()) host.terminate();
+        }
+
+        function reportRunError(err) {
+            editorCore.writeToConsole(err && err.code === 'timeout'
+                ? '実行に時間がかかりすぎたため停止しました'
+                : ((err && err.message) || String(err)));
+            gameRunning = false;
         }
 
         async function run() {
-            await readyPromise;
-            editorCore.clearConsole();
             stop();
-
-            pyodide.globals.clear();
-
-            var playerCode = editorCore.playerEditor.getValue();
-            var opponentCode = editorCore.opponentEditor.getValue();
-            var mapData = '';
-            if (mapEditorAdapter.isCustomMapEnabled()) {
-                mapData = mapEditorAdapter.getValue();
-            }
+            var myRun = runSeq;
+            if (!host.isAlive()) startHost(false);
+            var currentHost = host;
 
             try {
-                await pyodide.runPythonAsync(transformerCode);
+                await hostReady;
+                if (myRun !== runSeq) return;
+                editorCore.clearConsole();
 
-                if (!pyodide.FS.analyzePath('lib').exists) pyodide.FS.mkdir('lib');
-                pyodide.FS.writeFile('lib/pyCHaser.py', chaserCode);
+                var playerCode = editorCore.playerEditor.getValue();
+                var opponentCode = editorCore.opponentEditor.getValue();
+                var mapData = '';
+                if (mapEditorAdapter.isCustomMapEnabled()) {
+                    mapData = mapEditorAdapter.getValue();
+                }
 
-                await pyodide.runPythonAsync(
-                    "import sys\n" +
-                    "sys.modules.pop('lib.pyCHaser', None)\n" +
-                    "sys.modules.pop('lib', None)\n"
-                );
-
-                pyodide.globals.set('player_code', playerCode);
-                pyodide.globals.set('opponent_code', opponentCode);
-                await pyodide.runPythonAsync(
-                    "player_transformed = transform_code_local(player_code, player_id=0, client_name='player')\n" +
-                    "opponent_transformed = transform_code_local(opponent_code, player_id=1, client_name='opponent')\n"
-                );
-
-                pyodide.globals.set('map_data', mapData || null);
-                await pyodide.runPythonAsync(
-                    "player_ns = {'__name__': '__chaser_player__'}\n" +
-                    "opponent_ns = {'__name__': '__chaser_opponent__'}\n" +
-                    'exec(player_transformed, player_ns)\n' +
-                    'exec(opponent_transformed, opponent_ns)\n\n' +
-                    'import lib.pyCHaser as _chaser_mod\n' +
-                    '_chaser_mod.set_custom_map(map_data)\n\n' +
-                    "do_turn_player = player_ns['main']()\n" +
-                    "do_turn_opponent = opponent_ns['main']()\n"
-                );
+                var chaserCode = await chaserCodePromise;
+                var transformerCode = await transformerCodePromise;
+                await currentHost.call('loadLocal', {
+                    chaserCode: chaserCode,
+                    transformerCode: transformerCode,
+                    playerCode: playerCode,
+                    opponentCode: opponentCode,
+                    mapData: mapData
+                }, CALL_TIMEOUT_MS);
+                if (myRun !== runSeq) return;
 
                 gameRunning = true;
-                runTurn();
+                runTurn(currentHost, myRun);
             } catch (err) {
-                editorCore.writeToConsole(err.message || String(err));
+                if (myRun !== runSeq) return;
+                reportRunError(err);
             }
         }
 
-        function runTurn() {
-            if (!gameRunning) return;
-            var doTurnOpponent = pyodide.globals.get('do_turn_opponent');
-            var doTurnPlayer = pyodide.globals.get('do_turn_player');
-            try {
-                var continueOpponent = doTurnOpponent();
-                var continuePlayer = doTurnPlayer();
-                var isOver = pyodide.runPython('_chaser_mod.get_shared_game().is_game_over()');
-
-                if (continueOpponent && continuePlayer && !isOver) {
-                    turnTimeout = setTimeout(runTurn, 500);
+        function runTurn(currentHost, myRun) {
+            if (!gameRunning || myRun !== runSeq) return;
+            currentHost.call('localTurn', {}, CALL_TIMEOUT_MS).then(function (turn) {
+                if (!gameRunning || myRun !== runSeq) return;
+                if (turn.continueOpponent && turn.continuePlayer && !turn.isOver) {
+                    turnTimeout = setTimeout(function () { runTurn(currentHost, myRun); }, 500);
                 } else {
                     gameRunning = false;
                 }
-            } catch (err) {
-                editorCore.writeToConsole(err.message || String(err));
-                gameRunning = false;
-            }
+            }).catch(function (err) {
+                if (myRun !== runSeq) return;
+                reportRunError(err);
+            });
         }
 
         return {

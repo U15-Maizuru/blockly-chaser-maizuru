@@ -1,4 +1,58 @@
-﻿function createStageList(stageList) {
+﻿// ブロックで解くか、Python で解くか。リンク先とクリア済みの判定キーだけがモードで変わる
+const TUTORIAL_MODE_KEY = 'TUTORIAL_MODE';
+// Python でクリアしたコードは localStorage['py_<stage_id>'] に保存される(Blockly 版の保存とは別)
+const PYTHON_CLEAR_PREFIX = 'py_';
+
+let tutorialMode = readTutorialMode();
+let stageListCache = null;
+let selectedStageId = null;
+
+function readTutorialMode() {
+  try {
+    return localStorage.getItem(TUTORIAL_MODE_KEY) === 'python' ? 'python' : 'blockly';
+  } catch (e) {
+    return 'blockly';
+  }
+}
+
+function stageStartUrl(stageId) {
+  const base = tutorialMode === 'python' ? '/tutorial-python' : '/tutorial';
+  return base + '?stage=' + encodeURIComponent(stageId);
+}
+
+function isStageCleared(stageId) {
+  const key = tutorialMode === 'python' ? PYTHON_CLEAR_PREFIX + stageId : stageId;
+  return !!localStorage[key];
+}
+
+// モードの切替後に、表示中のクリア状態・リンク・ブロック数の表示を作り直す
+function applyTutorialMode() {
+  document.querySelectorAll('.stage_div').forEach(div => {
+    const status = div.querySelector('.stage_status');
+    if (status) {
+      status.classList.toggle('stage_clear', isStageCleared(div.dataset.stageId));
+    }
+  });
+  document.querySelectorAll('.tutorial_mode_button').forEach(button => {
+    const active = button.dataset.mode === tutorialMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  if (stageListCache && selectedStageId) {
+    stage_info_create(selectedStageId, stageListCache);
+  }
+}
+
+function setTutorialMode(mode) {
+  tutorialMode = mode === 'python' ? 'python' : 'blockly';
+  try {
+    localStorage.setItem(TUTORIAL_MODE_KEY, tutorialMode);
+  } catch (e) { /* 保存できなくても切替は有効にする */ }
+  applyTutorialMode();
+}
+
+function createStageList(stageList) {
+  stageListCache = stageList;
   const groupMap = {};
   for (const key in stageList) {
     const stage = stageList[key];
@@ -76,7 +130,7 @@ function createStageCard(stage, stageList) {
 
   const stageClear = document.createElement('div');
   stageClear.classList.add('stage_status');
-  if (localStorage[stage.stage_id]) {
+  if (isStageCleared(stage.stage_id)) {
     stageClear.classList.add('stage_clear');
   }
   stageDiv.appendChild(stageClear);
@@ -107,7 +161,7 @@ function createStageCard(stage, stageList) {
       return;
     }
     if (stageDetail && !stageDetail.classList.contains('display_off')) {
-      window.location.href = '/tutorial?stage=' + encodeURIComponent(this.dataset.stageId);
+      window.location.href = stageStartUrl(this.dataset.stageId);
     }
     e.stopPropagation();
   });
@@ -134,7 +188,7 @@ function createStageCard(stage, stageList) {
         return;
       }
       if (stageDetail && !stageDetail.classList.contains('display_off')) {
-        window.location.href = '/tutorial?stage=' + encodeURIComponent(this.dataset.stageId);
+        window.location.href = stageStartUrl(this.dataset.stageId);
       }
       e.stopPropagation();
     }
@@ -292,6 +346,8 @@ function stage_info_create(id, stageList) {
   if (blockInfo.value) {
     blockInfo.value.textContent = stage.block_limit;
   }
+  // Python ではブロック数を評価しないため、目標ブロック数は表示しない
+  blockInfo.row.classList.toggle('display_off', tutorialMode === 'python');
   if (turnInfo.value) {
     turnInfo.value.textContent = stage.turn;
   }
@@ -302,7 +358,8 @@ function stage_info_create(id, stageList) {
     stageJoinLink.classList.add('stage_join_link');
     stageJoinDiv.appendChild(stageJoinLink);
   }
-  stageJoinLink.href = '/tutorial?stage=' + encodeURIComponent(id);
+  stageJoinLink.href = stageStartUrl(id);
+  selectedStageId = id;
   stageJoinLink.innerText = 'はじめる';
 
   stageMap.appendChild(table);
@@ -311,6 +368,12 @@ function stage_info_create(id, stageList) {
 }
 
 window.addEventListener('load', function () {
+  document.querySelectorAll('.tutorial_mode_button').forEach(button => {
+    button.addEventListener('click', function () {
+      setTutorialMode(this.dataset.mode);
+    });
+  });
+  applyTutorialMode();
   getStageList();
 });
 

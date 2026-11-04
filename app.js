@@ -8,6 +8,7 @@ var morgan = require('morgan');
 var helmet = require('helmet');
 var rateLimit = require('express-rate-limit');
 const logger = require('./bin/logger.js');
+const { workerCspHeaderForRequest } = require('./tool/worker_csp.js');
 
 var indexRouter = require('./routes/index');
 
@@ -17,6 +18,7 @@ var menuProgrammingexpRouter = require('./routes/menu-programming-exp');
 var programmingexpRouter = require('./routes/programming-exp');
 var menuTutorialRouter = require('./routes/menu-tutorial');
 var tutorialRouter = require('./routes/tutorial');
+var tutorialPythonRouter = require('./routes/tutorial-python');
 var menuMatchRouter = require('./routes/menu-match');
 var matchRouter = require('./routes/match');
 var watchingRouter = require('./routes/watching');
@@ -58,6 +60,11 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 app.use(cookieParser());
+// Python実行用Workerの通信先をPyodideの配置先だけに限定する
+app.use('/javascripts/python/pyodide-worker.js', (req, res, next) => {
+  res.setHeader('Content-Security-Policy', workerCspHeaderForRequest(req));
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 var mode_path = config_load.electron_conf_load();
@@ -73,6 +80,7 @@ app.use('/menu-programming-exp', menuProgrammingexpRouter);
 app.use('/programming-exp', programmingexpRouter);
 app.use('/menu-tutorial', menuTutorialRouter);
 app.use('/tutorial', tutorialRouter);
+app.use('/tutorial-python', tutorialPythonRouter);
 app.use('/menu-match',menuMatchRouter);
 app.use('/match', matchRouter);
 app.use('/watching',watchingRouter);
