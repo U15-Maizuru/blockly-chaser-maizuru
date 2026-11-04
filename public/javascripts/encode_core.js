@@ -11,6 +11,24 @@ function initEncodeRuntime(options) {
   var look_info = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   var search_info = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
+  // 自分のターンではないときに行動ブロックが呼ばれた場合の処理。
+  // stage_data はチュートリアル画面でのみ定義されるため、存在確認してから参照する。
+  // 停止した場合は true を返す。
+  function stopIfOutOfTurn() {
+    if (typeof stage_data !== 'undefined' && stage_data["cpu"]) {
+      Code.stopJS();
+      return true;
+    }
+    if (typeof stage_data === 'undefined') {
+      // 対戦・プログラミング画面ではルール違反として案内して止める
+      if (outputArea) {
+        outputArea.value += '\n\n<< ターンの途中では行動できません。「準備(get_ready)」のあとに、行動ブロックは1回だけ使ってください >>';
+      }
+      Code.stopJS();
+      return true;
+    }
+    return false;
+  }
 
   class ObjInterpreter extends Interpreter {
     constructor(code, initAlert) {
@@ -134,8 +152,7 @@ function initEncodeRuntime(options) {
         getDate();
       }
       else {
-        if (stage_data["cpu"]) {
-          Code.stopJS();
+        if (stopIfOutOfTurn()) {
           return
         }
         callback(map_info.join(''));
@@ -162,8 +179,7 @@ function initEncodeRuntime(options) {
         getDate();
       }
       else {
-        if (stage_data["cpu"]) {
-          Code.stopJS();
+        if (stopIfOutOfTurn()) {
           return
         }
         callback(map_info.join(''));
@@ -213,8 +229,7 @@ function initEncodeRuntime(options) {
         getDate();
       }
       else {
-        if (stage_data["cpu"]) {
-          Code.stopJS();
+        if (stopIfOutOfTurn()) {
           return
         }
         callback(look_info.join(''));
@@ -239,8 +254,7 @@ function initEncodeRuntime(options) {
         getDate();
       }
       else {
-        if (stage_data["cpu"]) {
-          Code.stopJS();
+        if (stopIfOutOfTurn()) {
           return
         }
         callback(search_info.join(''));
